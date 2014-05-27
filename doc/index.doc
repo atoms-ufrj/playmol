@@ -1,0 +1,18 @@
+/*! 
+@mainpage
+
+<h2>Introduction</h2>
+
+Playmol is a another software for dealing with molecular structures.
+
+Its main 
+
+The sections of this manual are:
+
+@li @ref install : provides instructions for installing Playmol
+@li @ref commands : provides descriptions of all playmol commands
+@li @ref packmol : describes how Playmol can be integrated with Packmol
+
+@copyright GNU Public License.
+
+*/

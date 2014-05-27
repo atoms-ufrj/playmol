@@ -3,9 +3,10 @@ FOPTS = -O3 -march=native -ffast-math -funroll-loops -fstrict-aliasing -cpp -Wun
 
 SRCDIR  = ./src
 OBJDIR  = $(SRCDIR)/obj
+BINDIR  = ./bin
 DOCDIR  = ./doc
 
-exec = ./bin/playmol
+exec = playmol
 src  = ./src
 
 all: $(exec)
@@ -17,15 +18,16 @@ doc:
 
 clean:
 	rm -rf $(OBJDIR)
-	rm -rf $(exec)
+	rm -rf $(BINDIR)
 	rm -rf $(DOCDIR)/html/
 	rm -rf $(DOCDIR)/latex/
 
 install:
-	cp -f $(exec) /usr/local/bin
+	cp -f $(BINDIR)/$(exec) /usr/local/bin
 
 $(exec): $(SRCDIR)/playmol.f90 $(OBJDIR)/mData.o $(OBJDIR)/mStruc.o $(OBJDIR)/mString.o $(OBJDIR)/mGlobal.o
-	$(FORT) $(FOPTS) -J$(OBJDIR) -o $@ $^
+	mkdir -p $(BINDIR)
+	$(FORT) $(FOPTS) -J$(OBJDIR) -o $(BINDIR)/$@ $^
 
 $(OBJDIR)/mData.o: $(SRCDIR)/mData.f90 $(OBJDIR)/mStruc.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<

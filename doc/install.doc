@@ -1,0 +1,11 @@
+/*! @page install Installation
+
+Souce code compilation:
+
+@verbatim
+make
+make doc
+make install
+@endverbatim
+
+*/
