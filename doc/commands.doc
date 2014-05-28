@@ -1,20 +1,22 @@
 /*! @page commands Commands
 
+Playmol is designed to execute text-file scripts containing the commands described below:
+
 @secreflist
-  @refitem atom_type_sec atom_type
-  @refitem bond_type_sec bond_type
-  @refitem angle_type_sec angle_type
-  @refitem dihedral_type_sec dihedral_type
-  @refitem improper_type_sec improper_type
-  @refitem mass_sec mass
-  @refitem atom_sec atom
-  @refitem bond_sec bond
-  @refitem improper_sec improper
-  @refitem xyz_sec xyz
-  @refitem box_sec box
-  @refitem prefix_sec prefix
-  @refitem include_sec include
-  @refitem write_sec write
+@refitem atom_type_sec atom_type
+@refitem bond_type_sec bond_type
+@refitem angle_type_sec angle_type
+@refitem dihedral_type_sec dihedral_type
+@refitem improper_type_sec improper_type
+@refitem mass_sec mass
+@refitem atom_sec atom
+@refitem bond_sec bond
+@refitem improper_sec improper
+@refitem xyz_sec xyz
+@refitem box_sec box
+@refitem prefix_sec prefix
+@refitem include_sec include
+@refitem write_sec write
 @endsecreflist
 
 <hr>
@@ -26,26 +28,32 @@
 @b Syntax:
 
 @verbatim
-atom_type	name attribute-list
+atom_type	id attribute-list
 @endverbatim
 
-@li @a name = name of the atom type being defined @n
-@li @a attribute-list = list of attributes related to the defined atom type
+@li @a id = a name assigned to the atom type being defined
+@li @a attribute-list = a list of attributes related to the atom type being defined
 
 @b Examples:
 
 @verbatim
 atom_type	CH3 0.1947 3.75
-atom_type	CH2 0.0914 3.95
+atom_type	CH2 lj/cut 0.0914 3.95
 @endverbatim
 
 @b Description:
 
-This command defines an atom type with its related attributes.
+This command defines an atom type and its related attributes. One or more atom types must necessarily be defined before any @ref atom_sec "atom" is created and
+before any @ref bond_type_sec "bond type", @ref angle_type_sec "angle type", @ref dihedral_type_sec "dihedral type", or @ref improper_type_sec "improper type" is
+defined.
 
-The parameter @a name is a single character string without spaces and without wildcard characters * and ?.
+The parameter @a id must be a single string with no comment tags (#) and no wildcard characters (* or ?). If a type @ref prefix_sec "prefix" has been previously
+activated, then the actual atom type identifier will contain such prefix, followed by the specified @a id. Two atom types cannot have the same identifier.
 
-@sa @ref atom_sec
+The parameter @attribute-list can be a sequence of strings containing any characters except comment tags (#). When a LAMMPS data file is generated using the
+command @ref write_sec "write", then @attribute-list is assumed to contain the parameters of the LAMMPS pair style associated with the atom type in question.
+
+@sa @ref atom_sec, @ref bond_type_sec, @ref angle_type_sec, @ref dihedral_type_sec, @ref improper_type_sec, @ref prefix_sec
 
 <hr>
 
@@ -56,11 +64,11 @@ The parameter @a name is a single character string without spaces and without wi
 @b Syntax:
 
 @verbatim
-bond_type	atom-type-1 atom-type-2 attribute-list
+bond_type	type-1 type-2 attribute-list
 @endverbatim
 
-@li @a atom-type-x = name of a previously defined atom type @n
-@li @a attribute-list = list of attributes related to the defined bond type
+@li @a type-x = identifier of a previously defined atom type
+@li @a attribute-list = list of attributes related to the bond type being defined
 
 @b Examples:
 
@@ -72,14 +80,18 @@ bond_type	C* C* 95.877 1.54
 
 @b Description:
 
-This command defines a bond type with its related attributes. The bond type is identified by the
-types of the atoms involved, which must have been previously defined.
+This command defines a bond type and its related attributes. One or more bond types must necessarily be defined before any chemical @ref bond_sec "bond"
+is created. A bond type is identified by the types of the two atoms involved.
 
-The parameters @a atom-type-1 and @a atom-type-2 are names of atom types that have already been
-defined. In both @a atom-type-1 and @a atom-type-2, one can use wildcard characters to make
-simultaneous reference to more than one atom type.
+The parameters @a type-1 and @a type-2 are identifiers of previously defined atom types. Wildcard characters (? and *) can be used to refer to multiple
+atom types. Two bond types cannot refer to the same pair of atom types, regardless of the order of @a type-1 and @a type-2. If a type @ref prefix_sec
+"prefix" has been previously activated, then the actual identifiers of both atom types will contain such prefix, followed by the specified parameters
+@a type-1 and @a type-2.
 
-@sa @ref atom_type_sec, @ref bond_sec
+The parameter @attribute-list can be a sequence of strings containing any characters except comment tags (#). When a LAMMPS data file is generated using the
+command @ref write_sec "write", then @attribute-list is assumed to contain the parameters of the LAMMPS bond style associated with the bond type in question.
+
+@sa @ref atom_type_sec, @ref bond_sec, @ref write_sec
 
 <hr>
 
