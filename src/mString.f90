@@ -22,16 +22,15 @@ contains
   elemental function match_str( a, b ) result( match )
     character(*), intent(in) :: a, b
     logical                  :: match
-    integer :: n, i
-    i = 1
-    match = .true.
-    n = min(len_trim(a),len_trim(b))
-    do while (match.and.(i <= n))
-      if ((a(i:i) == "*").or.(b(i:i) == "*")) return
-      match = (a(i:i) == b(i:i)).or.(a(i:i) == "?").or.(b(i:i) == "?")
-      i = i + 1
-    end do
-    if (match) match = len_trim(a) == len_trim(b)
+    logical :: has_macros_a
+    has_macros_a = has_macros(a)
+    if (has_macros_a.and.has_macros(b)) then
+      match = trim(a) == trim(b)
+    else if (has_macros_a) then
+      match = match_wild( a, b )
+    else
+      match = match_wild( b, a )
+    end if
   end function match_str
 
   !=================================================================================================
@@ -192,6 +191,142 @@ contains
     write(str,*) a
     str = adjustl(str)
   end function real2str
+
+  !=================================================================================================
+
+  elemental logical function match_wild(pattern, string)
+
+    ! Compare given string for match to pattern which may contain wildcard characters:
+    ! "?" matching any one character, and
+    ! "*" matching any zero or more characters.
+    ! Both strings may have trailing spaces which are ignored.
+    ! Authors: clive page, userid: cgp  domain: le.ac.uk, 2003 (original code)
+    !          rolf sander, 2005 (bug fixes and pattern preprocessing)
+    ! Minor bug fixed by clive page, 2005 nov 29, bad comment fixed 2005 dec 2.
+    ! Serious bug fixed by  robert h mcclanahan, 2011 april 11th
+    !
+    ! * Reproduced under the terms of the GNU GPL version 3
+
+    implicit none
+
+    character(len=*), intent(in) :: pattern ! pattern may contain * and ?
+    character(len=*), intent(in) :: string  ! string to be compared
+    integer :: lenp, lenp2, lens, n, p2, p, s
+    integer :: n_question, n_asterisk
+    logical :: found
+
+    character(len=len(pattern)) :: pattern2
+    lens = len_trim(string)
+    lenp = len_trim(pattern)
+
+    ! if the pattern is empty, always return true
+    if (lenp == 0) then
+      match_wild = .true.
+      return
+    endif
+
+    ! the pattern must be preprocessed. all consecutive occurrences of
+    ! one or more question marks ('?') and asterisks ('*') are sorted and
+    ! compressed. the result is stored in pattern2.
+
+    pattern2(:)=''
+    p  = 1 ! current position in pattern
+    p2 = 1 ! current position in pattern2
+    do
+      if ((pattern(p:p) == '?').or.(pattern(p:p) == '*')) then
+        ! a special character was found in the pattern
+        n_question = 0
+        n_asterisk = 0
+        do while (p <= lenp)
+          ! count the consecutive question marks and asterisks
+          if ((pattern(p:p) /= '?').and.(pattern(p:p) /= '*')) exit
+          if (pattern(p:p) == '?') n_question = n_question + 1
+          if (pattern(p:p) == '*') n_asterisk = n_asterisk + 1
+          p = p + 1
+        enddo
+        if (n_question>0) then ! first, all the question marks
+          pattern2(p2:p2+n_question-1) = repeat('?',n_question)
+          p2 = p2 + n_question
+        endif
+        if (n_asterisk>0) then ! next, the asterisk (only one!)
+          pattern2(p2:p2) = '*'
+          p2 = p2 + 1
+        endif
+      else
+      ! just a normal character
+        pattern2(p2:p2) = pattern(p:p)
+        p2 = p2 + 1
+        p = p + 1
+      endif
+      if (p > lenp) exit
+    enddo
+    !!   lenp2 = p2 - 1
+    lenp2 = len_trim(pattern2)
+
+    ! the modified wildcard in pattern2 is compared to the string:
+    p2 = 1
+    s = 1
+    match_wild = .false.
+    do
+      if (pattern2(p2:p2) == '?') then
+        ! accept any char in string
+        p2 = p2 + 1
+        s = s + 1
+      elseif (pattern2(p2:p2) == "*") then
+        p2 = p2 + 1
+        if (p2 > lenp2) then
+          ! anything goes in rest of string
+          match_wild = .true.
+          exit ! .true.
+        else
+          ! search string for char at p2
+          n = index(string(s:), pattern2(p2:p2))
+          if (n == 0) exit  ! .false.
+          s = n + s - 1
+        endif
+      elseif (pattern2(p2:p2) == string(s:s)) then
+        ! single char match
+        p2 = p2 + 1
+        s = s + 1
+     else
+        ! non-match
+        !       exit ! .false.
+        ! previous line buggy because failure to match one character in the pattern
+        ! does not mean that a match won't be found later. back up through pattern string
+        ! until first wildcard character is found and start over with the exact character
+        ! match. if the end of the string is reached, then return .false.
+        !      04/11/2011 robert mcclanahan    robert.mcclanahan   <<at>>   aecc.com
+        !
+        found = .false.
+        do while (p2 > 0 .and. .not. found)
+          p2 = p2 - 1
+          if (p2 == 0) exit  !  .false.
+          if (pattern(p2:p2) == '*' .or. pattern(p2:p2) == '?') found = .true.
+        end do
+        s = s + 1
+      endif
+
+      if (p2 > lenp2 .and. s > lens) then
+        ! end of both pattern2 and string
+        match_wild = .true.
+        exit ! .true.
+      endif
+
+      if (s > lens .and. p2 == lenp) then
+        if(pattern2(p2:p2) == "*") then
+          ! "*" at end of pattern2 represents an empty string
+          match_wild = .true.
+          exit
+        endif
+      endif
+
+      if (p2 > lenp2 .or. s > lens) then
+        ! end of either pattern2 or string
+        exit ! .false.
+      endif
+    enddo
+
+  end function match_wild
 
   !=================================================================================================
 
