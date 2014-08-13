@@ -3,16 +3,22 @@
 
 <h2>Introduction</h2>
 
-Playmol is a another software for dealing with molecular structures.
+Playmol is just a another software for building molecular models.
 
-Its main 
+Its main distinguishing features are:
+
+@li Molecules are created with very simple scripts consisting of a small set of commands (as described @ref commands "here").
+@li Molecular topology arises naturally when atoms are bonded together (angles and dihedrals are automatically detected when new bonds are added).
+@li Multiple copies of a molecule are automatically created when new coordinates are set for their atoms.
+@li Easy integration with @a Packmol provides a way of creating complex molecular systems.
+@li Generation of @a LAMMPS input data files provides a way of performing efficient molecular dynamics simulations.
 
 The sections of this manual are:
 
-@li @ref install : provides instructions for installing Playmol
-@li @ref commands : provides descriptions of all playmol commands
-@li @ref packmol : describes how Playmol can be integrated with Packmol
+@li @ref install "Installation": provides instructions for installing Playmol
+@li @ref commands "Commands": provides descriptions of all playmol commands
+@li @ref packmol "Integration with Packmol": describes how Playmol can be integrated with Packmol
 
-@copyright GNU Public License.
+@copyright Playmol is copyrighted under the GNU Public License (GPL) terms.
 
 */
