@@ -1,10 +1,6 @@
 /*! @page commands Commands
 
-<<<<<<< HEAD
-@addindex command_list
-=======
 Playmol is designed to execute text-file scripts containing the commands described below:
->>>>>>> 841e8900babc3f692eec1056cbc4374ac10009c0
 
 @secreflist
 @refitem atom_type_sec atom_type
@@ -32,19 +28,11 @@ Playmol is designed to execute text-file scripts containing the commands describ
 @b Syntax:
 
 @verbatim
-<<<<<<< HEAD
-atom_type	name attributes
-@endverbatim
-
-@li @a name = name of the atom type being defined @n
-@li @a attributes = space-separated list of attributes related to the defined atom type
-=======
 atom_type	id attribute-list
 @endverbatim
 
 @li @a id = a name assigned to the atom type being defined
 @li @a attribute-list = a list of attributes related to the atom type being defined
->>>>>>> 841e8900babc3f692eec1056cbc4374ac10009c0
 
 @b Examples:
 
@@ -76,19 +64,11 @@ command @ref write_sec "write", then @attribute-list is assumed to contain the p
 @b Syntax:
 
 @verbatim
-<<<<<<< HEAD
-bond_type	atom-type-1 atom-type-2 attributes
-@endverbatim
-
-@li @a atom-type-x = name of a previously defined atom type @n
-@li @a attributes = space-separated list of attributes related to the defined bond type
-=======
 bond_type	type-1 type-2 attribute-list
 @endverbatim
 
 @li @a type-x = identifier of a previously defined atom type
 @li @a attribute-list = list of attributes related to the bond type being defined
->>>>>>> 841e8900babc3f692eec1056cbc4374ac10009c0
 
 @b Examples:
 
@@ -122,11 +102,11 @@ command @ref write_sec "write", then @attribute-list is assumed to contain the p
 @b Syntax:
 
 @verbatim
-angle_type	atom-type-1 atom-type-2 atom-type-3 attributes
+angle_type	atom-type-1 atom-type-2 atom-type-3 attribute-list
 @endverbatim
 
 @li @a atom-type-x = name of a previously defined atom type @n
-@li @a attributes = space-separated list of attributes related to the defined angle type
+@li @a attribute-list = list of attributes related to the defined angle type
 
 @b Examples:
 
@@ -150,11 +130,11 @@ This command defines....
 @b Syntax:
 
 @verbatim
-dihedral_type	atom-type-1 atom-type-2 atom-type-3 atom-type-4 attributes
+dihedral_type	atom-type-1 atom-type-2 atom-type-3 atom-type-4 attribute-list
 @endverbatim
 
 @li @a atom-type-x = name of a previously defined atom type @n
-@li @a attributes = space-separated list of attributes related to the defined dihedral type
+@li @a attribute-list = list of attributes related to the defined dihedral type
 
 @b Examples:
 
@@ -178,11 +158,11 @@ This command defines....
 @b Syntax:
 
 @verbatim
-improper_type	atom-type atom-type atom-type atom-type attributes
+improper_type	atom-type atom-type atom-type atom-type attribute-list
 @endverbatim
 
 @li @a atom-type-x = name of a previously defined atom type @n
-@li @a attributes = space-separated list of attributes related to the defined improper type
+@li @a attribute-list = list of attributes related to the defined improper type
 
 @b Examples:
 
