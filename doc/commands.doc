@@ -1,5 +1,7 @@
 /*! @page commands Commands
 
+@addindex command_list
+
 @secreflist
   @refitem atom_type_sec atom_type
   @refitem bond_type_sec bond_type
@@ -26,11 +28,11 @@
 @b Syntax:
 
 @verbatim
-atom_type	name attribute-list
+atom_type	name attributes
 @endverbatim
 
 @li @a name = name of the atom type being defined @n
-@li @a attribute-list = list of attributes related to the defined atom type
+@li @a attributes = space-separated list of attributes related to the defined atom type
 
 @b Examples:
 
@@ -56,11 +58,11 @@ The parameter @a name is a single character string without spaces and without wi
 @b Syntax:
 
 @verbatim
-bond_type	atom-type-1 atom-type-2 attribute-list
+bond_type	atom-type-1 atom-type-2 attributes
 @endverbatim
 
 @li @a atom-type-x = name of a previously defined atom type @n
-@li @a attribute-list = list of attributes related to the defined bond type
+@li @a attributes = space-separated list of attributes related to the defined bond type
 
 @b Examples:
 
@@ -90,11 +92,11 @@ simultaneous reference to more than one atom type.
 @b Syntax:
 
 @verbatim
-angle_type	atom-type-1 atom-type-2 atom-type-3 attribute-list
+angle_type	atom-type-1 atom-type-2 atom-type-3 attributes
 @endverbatim
 
 @li @a atom-type-x = name of a previously defined atom type @n
-@li @a attribute-list = list of attributes related to the defined angle type
+@li @a attributes = space-separated list of attributes related to the defined angle type
 
 @b Examples:
 
@@ -118,11 +120,11 @@ This command defines....
 @b Syntax:
 
 @verbatim
-dihedral_type	atom-type-1 atom-type-2 atom-type-3 atom-type-4 attribute-list
+dihedral_type	atom-type-1 atom-type-2 atom-type-3 atom-type-4 attributes
 @endverbatim
 
 @li @a atom-type-x = name of a previously defined atom type @n
-@li @a attribute-list = list of attributes related to the defined dihedral type
+@li @a attributes = space-separated list of attributes related to the defined dihedral type
 
 @b Examples:
 
@@ -146,11 +148,11 @@ This command defines....
 @b Syntax:
 
 @verbatim
-improper_type	atom-type atom-type atom-type atom-type attribute-list
+improper_type	atom-type atom-type atom-type atom-type attributes
 @endverbatim
 
 @li @a atom-type-x = name of a previously defined atom type @n
-@li @a attribute-list = list of attributes related to the defined improper type
+@li @a attributes = space-separated list of attributes related to the defined improper type
 
 @b Examples:
 

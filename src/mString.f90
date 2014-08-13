@@ -296,7 +296,6 @@ contains
         ! until first wildcard character is found and start over with the exact character
         ! match. if the end of the string is reached, then return .false.
         !      04/11/2011 robert mcclanahan    robert.mcclanahan   <<at>>   aecc.com
-        !
         found = .false.
         do while (p2 > 0 .and. .not. found)
           p2 = p2 - 1
