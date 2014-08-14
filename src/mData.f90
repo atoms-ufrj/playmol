@@ -444,9 +444,9 @@ contains
     call write_count( na, "angles" )
     call write_count( nd, "dihedrals" )
     call write_count( ni, "impropers" )
-    write(unit,'(/,"xlo xhi ",A)') trim(me % xrange)
-    write(unit,'(  "ylo yhi ",A)') trim(me % yrange)
-    write(unit,'(  "zlo zhi ",A)') trim(me % zrange)
+    write(unit,'(/,A," xlo xhi")') trim(me % xrange)
+    write(unit,'(  A," ylo yhi")') trim(me % yrange)
+    write(unit,'(  A," zlo zhi")') trim(me % zrange)
     call write_masses
     call write_type( "Pair Coeffs", me % atom_type_list )
     call write_type( "Bond Coeffs", me % bond_type_list )
