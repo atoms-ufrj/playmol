@@ -63,6 +63,7 @@ contains
         case ("xyz"); call xyz_command
         case ("write"); call write_command
         case ("include"); call include_command
+        case ("quit"); stop
         case default; call error( "unrecognizable command", arg(1) )
       end select
       call next_command( unit, narg, arg )

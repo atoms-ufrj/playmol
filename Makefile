@@ -9,7 +9,7 @@ DOCDIR  = ./doc
 exec = playmol
 src  = ./src
 
-all: $(exec)
+all: $(BINDIR)/$(exec)
 
 .PHONY: install doc clean
 
@@ -25,9 +25,12 @@ clean:
 install:
 	cp -f $(BINDIR)/$(exec) /usr/local/bin
 
-$(exec): $(SRCDIR)/playmol.f90 $(OBJDIR)/mData.o $(OBJDIR)/mStruc.o $(OBJDIR)/mString.o $(OBJDIR)/mGlobal.o
+$(BINDIR)/$(exec): $(OBJDIR)/playmol.o $(OBJDIR)/mData.o $(OBJDIR)/mStruc.o $(OBJDIR)/mString.o $(OBJDIR)/mGlobal.o
 	mkdir -p $(BINDIR)
-	$(FORT) $(FOPTS) -J$(OBJDIR) -o $(BINDIR)/$@ $^
+	$(FORT) $(FOPTS) -J$(OBJDIR) -o $@ $^
+
+$(OBJDIR)/playmol.o: $(SRCDIR)/playmol.f90 $(OBJDIR)/mData.o $(OBJDIR)/mStruc.o $(OBJDIR)/mString.o $(OBJDIR)/mGlobal.o
+	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mData.o: $(SRCDIR)/mData.f90 $(OBJDIR)/mStruc.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
