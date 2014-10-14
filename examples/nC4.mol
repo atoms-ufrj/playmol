@@ -1,0 +1,28 @@
+prefix		types C4_
+prefix		atoms C4_
+
+atom_type	CH3 0.1947 3.75
+atom_type	CH2 0.0914 3.95
+
+mass		CH3 15.035
+mass		CH2 14.027
+
+bond_type	CH3 CH2 95.877 1.54
+bond_type	CH2 CH2 95.877 1.54
+
+angle_type	CH3 CH2 CH2 62.0965 114
+angle_type	CH2 CH2 CH2 62.0965 114
+
+dihedral_type	CH3 CH2 CH2 CH2 1.41095 -0.27100 3.14484 0
+dihedral_type	CH2 CH2 CH2 CH2 1.41095 -0.27100 3.14484 0
+
+atom		1	CH2	0	0.0000000	0.0000000	0.0000000
+atom		2	CH2	0	0.8387441	0.0000000	1.2915527
+atom		3	CH2	0	0.0000000	0.0000000	2.5831053
+atom		4	CH2	0	0.8387441	0.0000000	3.8746580
+
+bond		1 2
+bond		2 3
+bond		3 4
+bond		4 1
+

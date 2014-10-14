@@ -18,6 +18,7 @@ type StrucList
   character(sl)        :: name = ""
   integer              :: number = 0
   character(sl)        :: prefix = ""
+  logical              :: two_way = .true.
   type(Struc), pointer :: first => null()
   type(Struc), pointer :: last  => null()
   contains
@@ -47,12 +48,13 @@ contains
 
   !=================================================================================================
 
-  function Struc_match_id( me, id ) result( match )
+  function Struc_match_id( me, id, two_way ) result( match )
     class(Struc),  intent(in) :: me
     character(sl), intent(in) :: id(:)
+    logical,       intent(in) :: two_way
     logical                   :: match
-    match = all(match_str( me % id, id )) .or. &
-            all(match_str( me % id, id(size(id):1:-1) ))
+    match = all(match_str( me % id, id ))
+    if (two_way) match = match .or. all(match_str( me % id, id(size(id):1:-1) ))
   end function Struc_match_id
 
   !=================================================================================================
@@ -123,7 +125,7 @@ contains
     i = 0
     do while (associated(current).and.(.not.found))
       i = i + 1
-      found = current % match_id( id )
+      found = current % match_id( id, me % two_way )
       if (.not.found) current => current % next
     end do
     if (found) then

@@ -1,0 +1,57 @@
+#!/usr/local/bin/playmol
+
+prefix		types	none
+prefix		atoms	none
+
+box		0. 12. 0. 12. 0. 12.
+
+atom_type	CH3 0.1947 3.75
+atom_type	CH2 0.0914 3.95
+
+pair		CH3 CH2 0.1334 3.85 # Lorentz-Berthelot
+
+mass		CH3 15.035
+mass		CH2 14.027
+
+bond_type	CH2 CH? 95.877 1.54
+
+angle_type	C* C* C* 62.0965 114
+
+dihedral_type	CH? CH2 CH2 CH2 1.41095 -0.27100 3.14484 0
+#dihedral_type	CH2 CH2 CH2 CH2 1 2 3
+
+improper_type	CH2 CH2 CH2 CH2 1 2 3
+
+atom		A1	CH3
+atom		B2	CH2
+atom		B1	CH2
+atom		B5	CH2
+atom		B6	CH2
+atom		B4	CH2
+atom		B7	CH2
+atom		B8	CH2
+atom		A2	CH3
+atom		B3	CH2
+
+#charge		A*	0.0
+#charge		B*	0.0
+
+bond		B1 B2
+bond		B4 B5
+bond		B5 B6
+bond		B8 A2
+bond		B2 B3
+bond		A1 B1
+bond		B6 B7
+bond		B3 B4
+bond		B7 B8
+
+improper	B4 B5 B6 B7
+
+xyz	nC10.xyz
+
+
+write	lammps nC10.lammps_data
+write	playmol nC10_new.mol
+
+

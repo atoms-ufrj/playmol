@@ -44,10 +44,9 @@ contains
   !=================================================================================================
 
   subroutine writeln( msg, msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9, advance )
-    character(*), intent(in)           :: msg
-    character(*), intent(in), optional :: msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9
+    character(*), intent(in), optional :: msg, msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9
     logical,      intent(in), optional :: advance
-    call write_msg( "", trim(msg) )
+    if (present(msg))  call write_msg( "", trim(msg) )
     if (present(msg1)) call write_msg( " ", trim(msg1) )
     if (present(msg2)) call write_msg( " ", trim(msg2) )
     if (present(msg3)) call write_msg( " ", trim(msg3) )

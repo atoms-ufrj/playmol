@@ -1,0 +1,28 @@
+# Define atom types:
+
+atom_type	H	0.000 0.000
+mass		H	1.008
+
+atom_type	O	0.102 3.188
+mass		O	15.9994
+
+atom_type	C	0.102 3.188
+
+# Define other structures:
+
+bond_type	H O	450.0 0.9572
+
+angle_type	H O C	55.0 104.52
+
+dihedral_type	H O H O	55.0 104.52
+
+improper_type	imp1	55.0 104.52
+
+atom		1	H	0.0	0.0	0.0	0.415
+atom		2	O	0.9572	0.0 	0.0
+atom		3	H	1.19719	0.92663	0.0
+
+bond		1 2
+bond		2 3
+
+improper	1 2 3 1 imp1

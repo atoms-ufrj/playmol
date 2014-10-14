@@ -6,13 +6,13 @@ use mStruc
 implicit none
 
 type tData
-  integer :: nmol = 0
-  character(sl) :: xrange = "", yrange = "", zrange = ""
+  integer  :: nmol = 0
+  real(rb) :: density = 0.0_rb, aspect(3) = 1.0_rb
   type(StrucList) :: atom_type_list = StrucList( name = "atom_type", number = 1 )
   type(StrucList) :: bond_type_list = StrucList( name = "bond_type", number = 2 )
   type(StrucList) :: angle_type_list = StrucList( name = "angle_type", number = 3 )
-  type(StrucList) :: dihedral_type_list = StrucList( name = "dihedral_type", number = 4 )
-  type(StrucList) :: improper_type_list = StrucList( name = "improper_type", number = 4 )
+  type(StrucList) :: dihedral_type_list = StrucList( name = "dihedral_type", number = 4, two_way = .false. )
+  type(StrucList) :: improper_type_list = StrucList( name = "improper_type", number = 4, two_way = .false. )
   type(StrucList) :: mass_list = StrucList( name = "mass", number = 1 )
   type(StrucList) :: pair_list = StrucList( name = "pair", number = 2 )
   type(StrucList) :: atom_list = StrucList( name = "atom", number = 1 )
@@ -28,7 +28,9 @@ type tData
     procedure :: write => tData_write
     procedure :: write_lammps => tData_write_lammps
     procedure :: read_xyz => tData_read_xyz
+    procedure :: summarize => tData_summarize
     procedure :: fuse_molecules => tData_fuse_molecules
+    procedure :: count_molecules => tData_count_molecules
     procedure :: update_structure => tData_update_structure
     procedure :: get_types => tData_get_types
     procedure :: check_types => tData_check_types
@@ -63,6 +65,7 @@ contains
         case ("xyz"); call xyz_command
         case ("write"); call write_command
         case ("include"); call include_command
+        case ("print_summary"); call me % summarize
         case ("quit"); stop
         case default; call error( "unrecognizable command", arg(1) )
       end select
@@ -82,10 +85,18 @@ contains
       end subroutine prefix_command
       !---------------------------------------------------------------------------------------------
       subroutine box_command
-        if (narg < 7) call error( "invalid box command")
-        me % xrange = join(arg(2:3))
-        me % yrange = join(arg(4:5))
-        me % zrange = join(arg(6:7))
+        integer :: i
+        select case (narg)
+          case (2)
+            me % density = str2real(arg(2))
+          case (5)
+            me % density = str2real(arg(2))
+            me % aspect = [(str2real(arg(2+i)),i=1,3)]
+          case default
+            call error( "invalid box command" )
+        end select
+        call writeln( "Defining box density =", arg(2) )
+        if (narg == 5) call writeln( "Defining box aspect = ", join(arg(3:5)) )
       end subroutine box_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_type_command
@@ -173,7 +184,7 @@ contains
         open( newunit = unit, file = arg(3), status = "replace" )
         select case (arg(2))
           case ("playmol"); call me % write( unit )
-          case ("lammps"); call me % write_lammps( unit )
+          case ("lammps");  call me % write_lammps( unit )
         end select
         close(unit)
       end subroutine write_command
@@ -242,6 +253,46 @@ contains
 
   !=================================================================================================
 
+  subroutine tData_summarize( me )
+    class(tData), intent(inout) :: me
+    integer :: imol, molcount(me % nmol)
+    real(rb) :: mass(me % nmol), charge(me % nmol)
+    call writeln( repeat("-",80) )
+    call writeln( "SUMMARY" )
+    call writeln( repeat("-",80) )
+    call writeln( "Specified:")
+    call writeln( "*", int2str(me % atom_type_list % count()), "atom type(s)")
+    call writeln( "*", int2str(me % bond_type_list % count()), "bond type(s)" )
+    call writeln( "*", int2str(me % angle_type_list % count()), "angle type(s)" )
+    call writeln( "*", int2str(me % dihedral_type_list % count()), "dihedral type(s)" )
+    call writeln( "*", int2str(me % improper_type_list % count()), "improper type(s)" )
+    call writeln( "*", int2str(me % atom_list % count()), "atom(s)" )
+    call writeln( "*", int2str(me % bond_list % count()),"bond(s)" )
+    call writeln( "*", int2str(me % improper_list % count()), "improper(s)" )
+    call writeln( "Detected:")
+    call writeln( "*", int2str(me % angle_list % count()), "angle(s)" )
+    call writeln( "*", int2str(me % dihedral_list % count()), "dihedral(s)" )
+    call writeln( "*", int2str(me % nmol), "molecule(s)" )
+    call me % count_molecules( molcount, mass, charge )
+    if (me % nmol > 1) then
+      call writeln
+      do imol = 1, me % nmol
+        call writeln( "Molecule[", int2str(imol),"]:" )
+        call writeln( "- Amount:", int2str(molcount(imol)) )
+        call writeln( "- Mass:", real2str(mass(imol)) )
+        call writeln( "- Charge:", real2str(charge(imol)) )
+      end do
+    end if
+    call writeln
+    call writeln( "All molecules:" )
+    call writeln( "- Amount:", int2str(sum(molcount)) )
+    call writeln( "- Mass:", real2str(sum(molcount*mass)) )
+    call writeln( "- Charge:", real2str(sum(molcount*charge)) )
+    call writeln( repeat("-",80) )
+  end subroutine tData_summarize
+
+  !=================================================================================================
+
   subroutine tData_fuse_molecules( me, atom )
     class(tData),    intent(inout) :: me
     character(sl),   intent(in)    :: atom(2)
@@ -276,6 +327,43 @@ contains
       end subroutine rename_molecule
       !---------------------------------------------------------------------------------------------
   end subroutine tData_fuse_molecules
+
+  !=================================================================================================
+
+  subroutine tData_count_molecules( me, number, mass, charge )
+    class(tData),  intent(in)            :: me
+    integer,       intent(out), optional :: number(me % nmol)
+    real(rb),      intent(out), optional :: mass(me % nmol), charge(me % nmol)
+    integer  :: imol, iatom, natoms(me % nmol)
+    character(sl) :: atom(1), atom_type(1)
+    type(Struc), pointer :: ptr
+    natoms = me % atoms_in_molecules()
+    if (present(number)) then
+      number = 0
+      ptr => me % coordinate_list % first
+      do while (associated(ptr))
+        imol = str2int(me % molecule_list % parameters( ptr%id ) )
+        number(imol) = number(imol) + 1
+        do iatom = 1, natoms(imol)
+          ptr => ptr % next
+        end do
+      end do
+    end if
+
+    if (present(mass).or.present(charge)) then
+      ptr => me % molecule_list % first
+      do while (associated(ptr))
+        atom = ptr % id
+        imol = str2int( ptr % params )
+        call me % get_types( atom, atom_type )
+        if (present(mass)) &
+          mass(imol) = mass(imol) + str2real( me % mass_list % parameters( atom_type ) )
+        if (present(charge)) &
+          charge(imol) = charge(imol) + str2real( me % charge_list % parameters( atom ) )
+        ptr => ptr % next
+      end do
+    end if
+  end subroutine tData_count_molecules
 
   !=================================================================================================
 
@@ -318,7 +406,7 @@ contains
       do while (associated(b2 % next))
         do i = 1, 2
           do j = 1, 2
-            if (me % bond_list % last % match_id( [b1%id(i), b2%id(j)] )) then
+            if (me % bond_list % last % match_id( [b1%id(i), b2%id(j)], two_way = .true. )) then
               atoms = [ b1%id(3-i), b1%id(i), b2%id(j), b2%id(3-j) ]
               call add( me % dihedral_list, me % dihedral_type_list )
             end if
@@ -425,8 +513,8 @@ contains
   !=================================================================================================
 
   subroutine tData_write_lammps( me, unit )
-    class(tData), intent(in) :: me
-    integer,      intent(in) :: unit
+    class(tData),  intent(in) :: me
+    integer,       intent(in) :: unit
     integer :: nb, na, nd, ni, natoms(me % nmol)
     natoms = me % atoms_in_molecules()
     write(unit,'("LAMMPS data file",/,"# Generated by playmol",/)')
@@ -445,9 +533,7 @@ contains
     call write_count( na, "angles" )
     call write_count( nd, "dihedrals" )
     call write_count( ni, "impropers" )
-    write(unit,'(/,A," xlo xhi")') trim(me % xrange)
-    write(unit,'(  A," ylo yhi")') trim(me % yrange)
-    write(unit,'(  A," zlo zhi")') trim(me % zrange)
+    if (me % density > 0.0_rb) call write_box_limits
     call write_masses
     call write_type( "Pair Coeffs", me % atom_type_list )
     call write_type( "Bond Coeffs", me % bond_type_list )
@@ -466,6 +552,17 @@ contains
         character(*), intent(in) :: name
         if (n > 0) write(unit,'(A,X,A)') trim(int2str(n)), name
       end subroutine write_count
+      !---------------------------------------------------------------------------------------------
+      subroutine write_box_limits
+        integer  :: molcount(me % nmol)
+        real(rb) :: mass(me % nmol), V, L
+        call me % count_molecules( molcount, mass )
+        V = sum(molcount*mass) / me % density
+        L = (V/product(me % aspect))**(1.0_rb/3.0_rb)
+        write(unit,'(/,A," xlo xhi")') "0 "//trim(real2str(L * me % aspect(1)))
+        write(unit,'(  A," ylo yhi")') "0 "//trim(real2str(L * me % aspect(2)))
+        write(unit,'(  A," zlo zhi")') "0 "//trim(real2str(L * me % aspect(3)))
+      end subroutine write_box_limits
       !---------------------------------------------------------------------------------------------
       subroutine write_type( name, list )
         character(*),     intent(in) :: name
@@ -554,7 +651,7 @@ contains
               itype = 1
               struc_type => type_list % first
               do while (associated(struc_type))
-                if (struc_type % match_id(types)) then
+                if (struc_type % match_id(types,two_way=.true.)) then
                   istruc = istruc + 1
                   line = join(int2str([istruc, itype, last_atom + str_find(struct%id, atom_id)]))
                   if (.not.present(count)) then
