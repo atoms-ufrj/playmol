@@ -414,11 +414,11 @@ This command.....
 @b Syntax:
 
 @verbatim
-write		write-style file-name
+write		style [file-name]
 @endverbatim
 
-@li @a write-style = @a playmol or @a lammps @n
-@li @a file-name = name of the file to be created
+@li @a style = @a playmol or @a lammps or @a summary @n
+@li @a file-name (optional) = name of a file to be created
 
 @b Examples:
 
@@ -429,7 +429,7 @@ write		lammps water.lammps_data
 
 @b Description:
 
-This command writes down the molecular system into a file.
+This command writes down the molecular system in a file (if specified) or in the standard output device.
 
 <hr>
 

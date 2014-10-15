@@ -6,6 +6,8 @@ OBJDIR  = $(SRCDIR)/obj
 BINDIR  = ./bin
 DOCDIR  = ./doc
 
+PACKMOL = ./lib
+
 exec = playmol
 src  = ./src
 
@@ -27,7 +29,7 @@ install:
 
 $(BINDIR)/$(exec): $(OBJDIR)/playmol.o $(OBJDIR)/mData.o $(OBJDIR)/mStruc.o $(OBJDIR)/mString.o $(OBJDIR)/mGlobal.o
 	mkdir -p $(BINDIR)
-	$(FORT) $(FOPTS) -J$(OBJDIR) -o $@ $^
+	$(FORT) $(FOPTS) -J$(OBJDIR) -L$(PACKMOL) -lpackmol -o $@ $^
 
 $(OBJDIR)/playmol.o: $(SRCDIR)/playmol.f90 $(OBJDIR)/mData.o $(OBJDIR)/mStruc.o $(OBJDIR)/mString.o $(OBJDIR)/mGlobal.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<

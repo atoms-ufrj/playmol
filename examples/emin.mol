@@ -105,9 +105,11 @@ improper	CWE	NM	CWM	HWM
 
 xyz		emin_one.xyz
 
-print_summary
+write		summary
 
-box		1.0	1 1 2
+box		1.0 1 1 2
 
-write		lammps emin.lmpdata 
+packmol		50 5634
+
+write		lammps emin.lmpdata
 

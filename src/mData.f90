@@ -65,7 +65,7 @@ contains
         case ("xyz"); call xyz_command
         case ("write"); call write_command
         case ("include"); call include_command
-        case ("print_summary"); call me % summarize
+        case ("packmol"); call packmol_command
         case ("quit"); stop
         case default; call error( "unrecognizable command", arg(1) )
       end select
@@ -178,15 +178,20 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine write_command
         integer :: unit
-        if (narg < 3) call error( "invalid write command")
-        if ((arg(2) /= "playmol").and.(arg(2) /= "lammps")) call error( "invalid write command" )
-        call writeln( "Writing data to file", arg(3), "in", arg(2), "format..." )
-        open( newunit = unit, file = arg(3), status = "replace" )
+        if ((narg < 2).or.(narg > 4)) call error( "invalid write command" )
+        if ( .not.any(arg(2) == ["playmol","lammps ","summary"]) ) call error( "invalid write command" )
+        if (narg == 3) then
+          open( newunit = unit, file = arg(3), status = "replace" )
+          call writeln( "Writing data to file", arg(3), "in", arg(2), "format..." )
+        else
+          unit = stdout
+        end if
         select case (arg(2))
           case ("playmol"); call me % write( unit )
           case ("lammps");  call me % write_lammps( unit )
+          case ("summary"); call me % summarize( unit )
         end select
-        close(unit)
+        if (unit /= stdout) close(unit)
       end subroutine write_command
       !---------------------------------------------------------------------------------------------
       subroutine include_command
@@ -199,6 +204,10 @@ contains
         call me % Read( input )
         close(input)
       end subroutine include_command
+      !---------------------------------------------------------------------------------------------
+      subroutine packmol_command
+        
+      end subroutine packmol_command
       !---------------------------------------------------------------------------------------------
   end subroutine tData_Read
 
@@ -250,46 +259,6 @@ contains
       end if
     end if
   end subroutine tData_read_xyz
-
-  !=================================================================================================
-
-  subroutine tData_summarize( me )
-    class(tData), intent(inout) :: me
-    integer :: imol, molcount(me % nmol)
-    real(rb) :: mass(me % nmol), charge(me % nmol)
-    call writeln( repeat("-",80) )
-    call writeln( "SUMMARY" )
-    call writeln( repeat("-",80) )
-    call writeln( "Specified:")
-    call writeln( "*", int2str(me % atom_type_list % count()), "atom type(s)")
-    call writeln( "*", int2str(me % bond_type_list % count()), "bond type(s)" )
-    call writeln( "*", int2str(me % angle_type_list % count()), "angle type(s)" )
-    call writeln( "*", int2str(me % dihedral_type_list % count()), "dihedral type(s)" )
-    call writeln( "*", int2str(me % improper_type_list % count()), "improper type(s)" )
-    call writeln( "*", int2str(me % atom_list % count()), "atom(s)" )
-    call writeln( "*", int2str(me % bond_list % count()),"bond(s)" )
-    call writeln( "*", int2str(me % improper_list % count()), "improper(s)" )
-    call writeln( "Detected:")
-    call writeln( "*", int2str(me % angle_list % count()), "angle(s)" )
-    call writeln( "*", int2str(me % dihedral_list % count()), "dihedral(s)" )
-    call writeln( "*", int2str(me % nmol), "molecule(s)" )
-    call me % count_molecules( molcount, mass, charge )
-    if (me % nmol > 1) then
-      call writeln
-      do imol = 1, me % nmol
-        call writeln( "Molecule[", int2str(imol),"]:" )
-        call writeln( "- Amount:", int2str(molcount(imol)) )
-        call writeln( "- Mass:", real2str(mass(imol)) )
-        call writeln( "- Charge:", real2str(charge(imol)) )
-      end do
-    end if
-    call writeln
-    call writeln( "All molecules:" )
-    call writeln( "- Amount:", int2str(sum(molcount)) )
-    call writeln( "- Mass:", real2str(sum(molcount*mass)) )
-    call writeln( "- Charge:", real2str(sum(molcount*charge)) )
-    call writeln( repeat("-",80) )
-  end subroutine tData_summarize
 
   !=================================================================================================
 
@@ -349,7 +318,6 @@ contains
         end do
       end do
     end if
-
     if (present(mass).or.present(charge)) then
       ptr => me % molecule_list % first
       do while (associated(ptr))
@@ -509,6 +477,58 @@ contains
       end do
     end if
   end subroutine tData_write
+
+  !=================================================================================================
+
+  subroutine tData_summarize( me, unit )
+    class(tData), intent(inout) :: me
+    integer,      intent(in)    :: unit
+    integer :: imol, molcount(me % nmol)
+    real(rb) :: mass(me % nmol), charge(me % nmol)
+    type(Struc), pointer :: ptr
+    character(sl) :: atoms
+    write(unit,'(A)') repeat("-",80)
+    write(unit,'(A)') "SUMMARY"
+    write(unit,'(A)') repeat("-",80)
+    write(unit,'(A)') "Specified:"
+    write(unit,'(I5," atom type(s).")') me % atom_type_list % count()
+    write(unit,'(I5," bond type(s).")') me % bond_type_list % count()
+    write(unit,'(I5," angle type(s).")') me % angle_type_list % count()
+    write(unit,'(I5," dihedral type(s).")') me % dihedral_type_list % count()
+    write(unit,'(I5," improper type(s).")') me % improper_type_list % count()
+    write(unit,'(I5," atom(s).")') me % atom_list % count()
+    write(unit,'(I5," bonds(s).")') me % bond_list % count()
+    write(unit,'(I5," improper(s).")') me % improper_list % count()
+    write(unit,'(/,A)') "Detected:"
+    write(unit,'(I5," angle(s).")') me % angle_list % count()
+    write(unit,'(I5," dihedral(s).")') me % dihedral_list % count()
+    write(unit,'(I5," molecule(s).")') me % nmol
+    call me % count_molecules( molcount, mass, charge )
+    do imol = 1, me % nmol
+      write(unit,'(/,"Molecule[",A,"]:")') trim(int2str(imol))
+      write(unit,'("- Amount: ",A)') trim(int2str(molcount(imol)))
+      write(unit,'("- Mass: ",A)') trim(real2str(mass(imol)))
+      write(unit,'("- Charge: ",A)') trim(real2str(charge(imol)))
+      atoms = "- Atoms:"
+      ptr => me % molecule_list % first
+      do while (associated(ptr))
+        if (str2int(ptr % params) == imol) then
+          if (len_trim(atoms) + len_trim(ptr % id(1)) > 79) then
+            write(unit,'(A)') trim(atoms)
+            atoms = ""
+          end if
+          atoms = trim(atoms)//" "//ptr % id(1)
+        end if
+        ptr => ptr % next
+      end do
+      write(unit,'(A)') trim(atoms)
+    end do
+    write(unit,'(/,"System:")')
+    write(unit,'("- Molecules: ",A)') trim(int2str(sum(molcount)))
+    write(unit,'("- Total mass: ",A)') trim(real2str(sum(molcount*mass)))
+    write(unit,'("- Residual charge: ",A)') trim(real2str(sum(molcount*charge)))
+    write(unit,'(A)') repeat("-",80)
+  end subroutine tData_summarize
 
   !=================================================================================================
 
