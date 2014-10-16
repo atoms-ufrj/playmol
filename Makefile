@@ -27,17 +27,20 @@ clean:
 install:
 	cp -f $(BINDIR)/$(exec) /usr/local/bin
 
-$(BINDIR)/$(exec): $(OBJDIR)/playmol.o $(OBJDIR)/mData.o $(OBJDIR)/mStruc.o $(OBJDIR)/mString.o $(OBJDIR)/mGlobal.o
+$(BINDIR)/$(exec): $(OBJDIR)/playmol.o $(OBJDIR)/mData.o $(OBJDIR)/mStruc.o $(OBJDIR)/mPackmol.o $(OBJDIR)/mString.o $(OBJDIR)/mGlobal.o
 	mkdir -p $(BINDIR)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -L$(PACKMOL) -lpackmol -o $@ $^
 
-$(OBJDIR)/playmol.o: $(SRCDIR)/playmol.f90 $(OBJDIR)/mData.o $(OBJDIR)/mStruc.o $(OBJDIR)/mString.o $(OBJDIR)/mGlobal.o
+$(OBJDIR)/playmol.o: $(SRCDIR)/playmol.f90 $(OBJDIR)/mData.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/mData.o: $(SRCDIR)/mData.f90 $(OBJDIR)/mStruc.o
+$(OBJDIR)/mData.o: $(SRCDIR)/mData.f90 $(OBJDIR)/mPackmol.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/mStruc.o: $(SRCDIR)/mStruc.f90 $(OBJDIR)/mString.o $(OBJDIR)/mGlobal.o
+$(OBJDIR)/mPackmol.o: $(SRCDIR)/mPackmol.f90 $(OBJDIR)/mStruc.o
+	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
+
+$(OBJDIR)/mStruc.o: $(SRCDIR)/mStruc.f90 $(OBJDIR)/mString.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mString.o: $(SRCDIR)/mString.f90 $(OBJDIR)/mGlobal.o

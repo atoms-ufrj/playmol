@@ -109,7 +109,7 @@ write		summary
 
 box		1.0 1 1 2
 
-packmol		50 5634
+packmol		5634 3.0 100
 
 write		lammps emin.lmpdata
 

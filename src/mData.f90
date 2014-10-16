@@ -2,6 +2,7 @@ module mData
 
 use mGlobal
 use mStruc
+use mPackmol
 
 implicit none
 
@@ -95,8 +96,12 @@ contains
           case default
             call error( "invalid box command" )
         end select
+        if (me % density <= 0.0_rb) call error( "invalid box command" )
         call writeln( "Defining box density =", arg(2) )
-        if (narg == 5) call writeln( "Defining box aspect = ", join(arg(3:5)) )
+        if (narg == 5) then
+          if (any(me % aspect <= 0.0_rb)) call error( "invalid box command" )
+          call writeln( "Defining box aspect = ", join(arg(3:5)) )
+        end if
       end subroutine box_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_type_command
@@ -197,7 +202,7 @@ contains
       subroutine include_command
         logical :: file_exists
         integer :: input
-        if (narg == 1) call error( "invalid include command" )
+        if (narg < 2) call error( "invalid include command" )
         inquire( file = arg(2), exist = file_exists )
         if (.not.file_exists) call error( "file", arg(2), "does not exist" )
         open( newunit = input, file = arg(2), status = "old" )
@@ -206,8 +211,25 @@ contains
       end subroutine include_command
       !---------------------------------------------------------------------------------------------
       subroutine packmol_command
-        
-      end subroutine packmol_command
+        integer :: i, seed, molcount(me % nmol)
+        real(rb) :: tolerance, mass(me % nmol)
+        if (me % density == 0.0_rb) call error( "packmol requires previous box definition" )
+        if (narg /= 3 + me % nmol) then
+          call error( "invalid packmol command - number of molecules =", int2str(me % nmol) )
+        end if
+        seed = str2int(arg(2))
+        tolerance = str2real(arg(3))
+        molcount = [(str2int(arg(3+i)),i=1,me%nmol)]
+        call writeln( "Executing Packmol with:" )
+        call writeln( "   seed:", arg(2) )
+        call writeln( "   tolerance:", arg(3) )
+        do i  = 1, me % nmol
+          call writeln( "   copies of molecule", int2str(i), ":", arg(3+i) )
+        end do
+        call me % count_molecules( mass = mass )
+        call Run_Packmol( me % molecule_list, me % coordinate_list, seed, tolerance, &
+                          molcount, mass, me % density, me % aspect )
+       end subroutine packmol_command
       !---------------------------------------------------------------------------------------------
   end subroutine tData_Read
 
