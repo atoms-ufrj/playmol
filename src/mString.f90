@@ -188,9 +188,32 @@ contains
   elemental function real2str( a ) result( str )
     real(rb), intent(in) :: a
     character(sl)        :: str
-    write(str,*) a
+    real(4) :: b
+    b = a
+    write(str,*) b
     str = adjustl(str)
   end function real2str
+
+  !=================================================================================================
+
+  elemental function is_int( arg ) result( ok )
+    character(sl), intent(in) :: arg
+    logical                   :: ok
+    integer :: ioerr, i
+    read(arg,*,iostat=ioerr) i
+    ok = ioerr == 0
+  end function is_int
+
+  !=================================================================================================
+
+  elemental function is_real( arg ) result( ok )
+    character(sl), intent(in) :: arg
+    logical                   :: ok
+    integer  :: ioerr
+    real(rb) :: r
+    read(arg,*,iostat=ioerr) r
+    ok = ioerr == 0
+  end function is_real
 
   !=================================================================================================
 

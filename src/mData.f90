@@ -3,17 +3,19 @@ module mData
 use mGlobal
 use mStruc
 use mPackmol
+use mBox
 
 implicit none
 
 type tData
+  type(tBox) :: box
   integer  :: nmol = 0
-  real(rb) :: density = 0.0_rb, aspect(3) = 1.0_rb
-  type(StrucList) :: atom_type_list = StrucList( name = "atom_type", number = 1 )
-  type(StrucList) :: bond_type_list = StrucList( name = "bond_type", number = 2 )
-  type(StrucList) :: angle_type_list = StrucList( name = "angle_type", number = 3 )
-  type(StrucList) :: dihedral_type_list = StrucList( name = "dihedral_type", number = 4, two_way = .false. )
-  type(StrucList) :: improper_type_list = StrucList( name = "improper_type", number = 4, two_way = .false. )
+!  real(rb) :: density = 0.0_rb, aspect(3) = 1.0_rb
+  type(StrucList) :: atom_type_list = StrucList( name = "atom type", number = 1 )
+  type(StrucList) :: bond_type_list = StrucList( name = "bond type", number = 2 )
+  type(StrucList) :: angle_type_list = StrucList( name = "angle type", number = 3 )
+  type(StrucList) :: dihedral_type_list = StrucList( name = "dihedral type", number = 4, two_way = .false. )
+  type(StrucList) :: improper_type_list = StrucList( name = "improper type", number = 4, two_way = .false. )
   type(StrucList) :: mass_list = StrucList( name = "mass", number = 1 )
   type(StrucList) :: pair_list = StrucList( name = "pair", number = 2 )
   type(StrucList) :: atom_list = StrucList( name = "atom", number = 1 )
@@ -23,12 +25,14 @@ type tData
   type(StrucList) :: dihedral_list = StrucList( name = "dihedral", number = 4 )
   type(StrucList) :: improper_list = StrucList( name = "improper", number = 4 )
   type(StrucList) :: molecule_list = StrucList( name = "molecule", number = 1 )
-  type(StrucList) :: coordinate_list = StrucList( name = "coordinate", number = 1 )
+  type(StrucList) :: coordinate_list = StrucList( name = "position of atom", number = 1 )
+  type(StrucList) :: packmol_list = StrucList( name = "packmol molecule", number = 1 )
   contains
     procedure :: read => tData_Read
     procedure :: write => tData_write
     procedure :: write_lammps => tData_write_lammps
     procedure :: read_xyz => tData_read_xyz
+    procedure :: write_xyz => tData_write_xyz
     procedure :: summarize => tData_summarize
     procedure :: fuse_molecules => tData_fuse_molecules
     procedure :: count_molecules => tData_count_molecules
@@ -87,21 +91,21 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine box_command
         integer :: i
-        select case (narg)
-          case (2)
-            me % density = str2real(arg(2))
-          case (5)
-            me % density = str2real(arg(2))
-            me % aspect = [(str2real(arg(2+i)),i=1,3)]
-          case default
-            call error( "invalid box command" )
+        if (narg < 3) call error( "invalid box command" )
+        select case (arg(2))
+          case ("density")
+            if (narg > 3) call error( "invalid box command" )
+            call writeln( "Defining box density =", arg(3) )
+            call me % box % define_density( str2real(arg(3)) )
+          case ("volume")
+            if (narg > 3) call error( "invalid box command" )
+            call writeln( "Defining box volume =", arg(3) )
+            call me % box % define_volume( str2real(arg(3)) )
+          case ("aspect")
+            call writeln( "Defining box aspect = ", join(arg(3:5)) )
+            me % box % aspect = [(str2real(arg(2+i)),i=1,3)]
+           case default; call error( "invalid box command" )
         end select
-        if (me % density <= 0.0_rb) call error( "invalid box command" )
-        call writeln( "Defining box density =", arg(2) )
-        if (narg == 5) then
-          if (any(me % aspect <= 0.0_rb)) call error( "invalid box command" )
-          call writeln( "Defining box aspect = ", join(arg(3:5)) )
-        end if
       end subroutine box_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_type_command
@@ -171,11 +175,13 @@ contains
         logical :: file_exists
         integer :: xyz
         if (narg == 1) then
+          call writeln("Reading xyz data...")
           call me % read_xyz( unit )
         else
           inquire( file = arg(2), exist = file_exists )
           if (.not.file_exists) call error( "file", arg(2), "does not exist" )
           open( newunit = xyz, file = arg(2), status = "old" )
+          call writeln("Reading xyz data from file", trim(arg(2))//"..." )
           call me % read_xyz( xyz )
           close( xyz )
         end if
@@ -184,7 +190,9 @@ contains
       subroutine write_command
         integer :: unit
         if ((narg < 2).or.(narg > 4)) call error( "invalid write command" )
-        if ( .not.any(arg(2) == ["playmol","lammps ","summary"]) ) call error( "invalid write command" )
+        if (.not.any(arg(2) == [character(7)::"playmol","lammps","summary","xyz"]) ) then
+          call error( "invalid write command" )
+        end if
         if (narg == 3) then
           open( newunit = unit, file = arg(3), status = "replace" )
           call writeln( "Writing data to file", arg(3), "in", arg(2), "format..." )
@@ -195,6 +203,7 @@ contains
           case ("playmol"); call me % write( unit )
           case ("lammps");  call me % write_lammps( unit )
           case ("summary"); call me % summarize( unit )
+          case ("xyz"); call me % write_xyz( unit )
         end select
         if (unit /= stdout) close(unit)
       end subroutine write_command
@@ -211,25 +220,57 @@ contains
       end subroutine include_command
       !---------------------------------------------------------------------------------------------
       subroutine packmol_command
-        integer :: i, seed, molcount(me % nmol)
+        if (narg < 4) call error( "invalid packmol command" )
+        select case (arg(2))
+          case ("molecule"); call packmol_molecule_style( narg-2, arg(3:) )
+          case ("run"); call packmol_run_style( narg-2, arg(3:) )
+          case default; call error( "invalid packmol command" )
+        end select
+      end subroutine packmol_command
+      !---------------------------------------------------------------------------------------------
+      subroutine packmol_molecule_style( narg, arg )
+        integer,       intent(in) :: narg
+        character(sl), intent(inout) :: arg(narg)
+        integer  :: i
+        call me % packmol_list % add( narg, arg, repeatable = .true. )
+        i = str2int(arg(1))
+        if ((i < 1).or.(i > me%nmol)) call error( "invalid index in packmol command" )
+        select case (arg(2))
+          case ("move","fix")
+            if (narg /= 5) call error( "invalid packmol command" )
+            do i = 1, 3
+              if (.not.all(is_real(arg(3:5)))) call error( "invalid value in packmol command" )
+            end do
+          case ("copy","pack")
+            if (narg /= 3) call error( "invalid packmol command" )
+            if (.not.is_int(arg(3))) call error( "invalid number in packmol command" )
+          case default
+            call error( "invalid packmol command" )
+        end select
+      end subroutine packmol_molecule_style
+      !---------------------------------------------------------------------------------------------
+      subroutine packmol_run_style( narg, arg )
+        integer,       intent(in) :: narg
+        character(sl), intent(in) :: arg(narg)
+        integer :: seed, natoms(me % nmol)
         real(rb) :: tolerance, mass(me % nmol)
-        if (me % density == 0.0_rb) call error( "packmol requires previous box definition" )
-        if (narg /= 3 + me % nmol) then
-          call error( "invalid packmol command - number of molecules =", int2str(me % nmol) )
+        if (narg /= 2) call error( "invalid packmol command" )
+        if (.not. me % box % exists()) then
+          call error( "packmol run command requires box density or volume definition" )
         end if
-        seed = str2int(arg(2))
-        tolerance = str2real(arg(3))
-        molcount = [(str2int(arg(3+i)),i=1,me%nmol)]
+        if (.not.associated(me % packmol_list % first)) then
+          call error( "no molecule has been chosen set up for packmol excecution" )
+        end if
         call writeln( "Executing Packmol with:" )
-        call writeln( "   seed:", arg(2) )
-        call writeln( "   tolerance:", arg(3) )
-        do i  = 1, me % nmol
-          call writeln( "   copies of molecule", int2str(i), ":", arg(3+i) )
-        end do
+        seed = str2int(arg(1))
+        call writeln( "   seed:", arg(1) )
+        tolerance = str2real(arg(2))
+        call writeln( "   tolerance:", arg(2) )
+        natoms = me % atoms_in_molecules()
         call me % count_molecules( mass = mass )
-        call Run_Packmol( me % molecule_list, me % coordinate_list, seed, tolerance, &
-                          molcount, mass, me % density, me % aspect )
-       end subroutine packmol_command
+        call Run_Packmol( me % packmol_list, me % molecule_list, me % coordinate_list, &
+                          seed, tolerance, natoms, mass, me % box )
+      end subroutine packmol_run_style
       !---------------------------------------------------------------------------------------------
   end subroutine tData_Read
 
@@ -239,14 +280,13 @@ contains
     class(tData), intent(inout) :: me
     integer,      intent(in)    :: unit
     integer       :: N, i, narg, imol, iatom
-    character(sl) :: arg(4), line, catom
+    character(sl) :: arg(5), line, catom
     integer :: natoms(me % nmol)
     logical :: new_molecule
     type(Struc), pointer :: atom
     character(sl), allocatable :: prev(:)
     natoms = me % atoms_in_molecules()
     allocate( prev(maxval(natoms)) )
-    call writeln("Reading xyz data...")
     call next_command( unit, narg, arg )
     if (narg > 0) then
       call writeln( "Number of coordinates: ", arg(1) )
@@ -256,6 +296,7 @@ contains
       do i = 1, N
         read(unit,'(A'//csl//')') line
         call split( line, narg, arg )
+        if (narg /= 4) call error( "invalid xyz file format" )
         catom = trim(me % atom_list % prefix)//arg(1)
         call me % molecule_list % search( [catom], atom )
         if (associated(atom)) then
@@ -273,6 +314,7 @@ contains
           end if
         end if
         call me % coordinate_list % add( narg, arg, me % atom_list, repeatable = .true. )
+        if (.not.all(is_real(arg(2:4)))) call error( "invalid coordinate" )
         prev(iatom) = arg(1)
         new_molecule = iatom == natoms(imol)
       end do
@@ -281,6 +323,21 @@ contains
       end if
     end if
   end subroutine tData_read_xyz
+
+  !=================================================================================================
+
+  subroutine tData_write_xyz( me, unit )
+    class(tData), intent(inout) :: me
+    integer,      intent(in)    :: unit
+    type(Struc), pointer :: ptr
+    write(unit,'(A)') trim(int2str(me % coordinate_list % count()))
+    write(unit,'("# Generated by playmol")')
+    ptr => me % coordinate_list % first
+    do while (associated(ptr))
+      write(unit,'(A)') trim(ptr % id(1))//" "//trim(ptr % params)
+      ptr => ptr % next
+    end do
+  end subroutine tData_write_xyz
 
   !=================================================================================================
 
@@ -555,8 +612,8 @@ contains
   !=================================================================================================
 
   subroutine tData_write_lammps( me, unit )
-    class(tData),  intent(in) :: me
-    integer,       intent(in) :: unit
+    class(tData),  intent(inout) :: me
+    integer,       intent(in)    :: unit
     integer :: nb, na, nd, ni, natoms(me % nmol)
     natoms = me % atoms_in_molecules()
     write(unit,'("LAMMPS data file",/,"# Generated by playmol",/)')
@@ -575,7 +632,7 @@ contains
     call write_count( na, "angles" )
     call write_count( nd, "dihedrals" )
     call write_count( ni, "impropers" )
-    if (me % density > 0.0_rb) call write_box_limits
+    if (me % box % exists()) call write_box_limits
     call write_masses
     call write_type( "Pair Coeffs", me % atom_type_list )
     call write_type( "Bond Coeffs", me % bond_type_list )
@@ -597,13 +654,12 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine write_box_limits
         integer  :: molcount(me % nmol)
-        real(rb) :: mass(me % nmol), V, L
+        real(rb) :: mass(me % nmol)
         call me % count_molecules( molcount, mass )
-        V = sum(molcount*mass) / me % density
-        L = (V/product(me % aspect))**(1.0_rb/3.0_rb)
-        write(unit,'(/,A," xlo xhi")') "0 "//trim(real2str(L * me % aspect(1)))
-        write(unit,'(  A," ylo yhi")') "0 "//trim(real2str(L * me % aspect(2)))
-        write(unit,'(  A," zlo zhi")') "0 "//trim(real2str(L * me % aspect(3)))
+        call me % box % compute_lengths( sum(molcount*mass) )
+        write(unit,'(/,A," xlo xhi")') "0 "//trim(real2str(me % box % length(1)))
+        write(unit,'(  A," ylo yhi")') "0 "//trim(real2str(me % box % length(2)))
+        write(unit,'(  A," zlo zhi")') "0 "//trim(real2str(me % box % length(3)))
       end subroutine write_box_limits
       !---------------------------------------------------------------------------------------------
       subroutine write_type( name, list )
