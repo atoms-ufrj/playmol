@@ -30,6 +30,7 @@ type StrucList
     procedure :: find => StrucList_find
     procedure :: count => StrucList_count
     procedure :: print => StrucList_print
+    procedure :: destroy => StrucList_destroy
 end type StrucList
 
 contains
@@ -213,6 +214,19 @@ contains
       current => current % next
     end do
   end subroutine StrucList_print
+
+  !=================================================================================================
+
+  subroutine StrucList_destroy( me )
+    class(StrucList), intent(in)           :: me
+    type(Struc), pointer :: current, aux
+    current => me % first
+    do while (associated(current))
+      aux => current
+      current => current % next
+      deallocate(aux)
+    end do
+  end subroutine StrucList_destroy
 
   !=================================================================================================
 

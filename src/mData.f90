@@ -50,7 +50,7 @@ contains
     class(tData), intent(inout) :: me
     integer,      intent(in)    :: unit
     integer       :: narg
-    character(sl) :: arg(10)
+    character(sl) :: arg(50)
     call next_command( unit, narg, arg )
     do while (narg > 0)
       select case (trim(arg(1)))
@@ -220,57 +220,53 @@ contains
       end subroutine include_command
       !---------------------------------------------------------------------------------------------
       subroutine packmol_command
-        if (narg < 4) call error( "invalid packmol command" )
-        select case (arg(2))
-          case ("molecule"); call packmol_molecule_style( narg-2, arg(3:) )
-          case ("run"); call packmol_run_style( narg-2, arg(3:) )
-          case default; call error( "invalid packmol command" )
-        end select
-      end subroutine packmol_command
-      !---------------------------------------------------------------------------------------------
-      subroutine packmol_molecule_style( narg, arg )
-        integer,       intent(in) :: narg
-        character(sl), intent(inout) :: arg(narg)
-        integer  :: i
-        call me % packmol_list % add( narg, arg, repeatable = .true. )
-        i = str2int(arg(1))
-        if ((i < 1).or.(i > me%nmol)) call error( "invalid index in packmol command" )
-        select case (arg(2))
-          case ("move","fix")
-            if (narg /= 5) call error( "invalid packmol command" )
-            do i = 1, 3
-              if (.not.all(is_real(arg(3:5)))) call error( "invalid value in packmol command" )
-            end do
-          case ("copy","pack")
-            if (narg /= 3) call error( "invalid packmol command" )
-            if (.not.is_int(arg(3))) call error( "invalid number in packmol command" )
-          case default
-            call error( "invalid packmol command" )
-        end select
-      end subroutine packmol_molecule_style
-      !---------------------------------------------------------------------------------------------
-      subroutine packmol_run_style( narg, arg )
-        integer,       intent(in) :: narg
-        character(sl), intent(in) :: arg(narg)
-        integer :: seed, natoms(me % nmol)
-        real(rb) :: tolerance, mass(me % nmol)
-        if (narg /= 2) call error( "invalid packmol command" )
+        integer :: seed, iarg, imol, last, nopts, i, n, molcount(me%nmol)
+        real(rb) :: tol, pos(3), mass(me%nmol)
+        character(sl) :: action
         if (.not. me % box % exists()) then
-          call error( "packmol run command requires box density or volume definition" )
+          call error( "packmol run command requires previous box definition" )
         end if
-        if (.not.associated(me % packmol_list % first)) then
-          call error( "no molecule has been chosen set up for packmol excecution" )
+        if (narg < 8) call error( "invalid packmol command" )
+        action = arg(narg)
+        if (all(["setup  ","execute","persist"] /= action)) then
+          call error( "invalid packmol command - last argument must be an action" )
         end if
-        call writeln( "Executing Packmol with:" )
-        seed = str2int(arg(1))
-        call writeln( "   seed:", arg(1) )
-        tolerance = str2real(arg(2))
+        call writeln( "Configuring packmol with:" )
         call writeln( "   tolerance:", arg(2) )
-        natoms = me % atoms_in_molecules()
+        tol = str2real(arg(2))
+        call writeln( "   seed:", arg(3) )
+        seed = str2int(arg(3))
+        if (arg(4) /= "molecule") call error( "invalid packmol command" )
+        iarg = 4
+        last = narg-1
+        molcount = 0
+        do while (arg(iarg) == "molecule")
+          if (iarg+2 > last) call error( "invalid packmol command" )
+          select case (arg(iarg+2))
+            case ("move","fix"); nopts = 3
+            case ("copy","pack"); nopts = 1
+            case default; call error( "invalid packmol command" )
+          end select
+          call me % packmol_list % add( nopts+2, arg(iarg+1:iarg+2+nopts), repeatable = .true. )
+          imol = str2int(arg(iarg+1))
+          if ((imol < 1).or.(imol > me%nmol)) call error( "last molecule is", int2str(me%nmol) )
+          select case (arg(iarg+2))
+            case ("move","fix")
+              pos = [(str2real(arg(iarg+2+i)),i=1,3)]
+              molcount(imol) = molcount(imol) + 1
+            case ("copy","pack")
+              n = str2int(arg(iarg+3))
+              molcount(imol) = molcount(imol) + n
+          end select
+          iarg = iarg + 3 + nopts
+        end do
+        if (iarg /= narg) call error( "invalid packmol command" )
         call me % count_molecules( mass = mass )
-        call Run_Packmol( me % packmol_list, me % molecule_list, me % coordinate_list, &
-                          seed, tolerance, natoms, mass, me % box )
-      end subroutine packmol_run_style
+        call me % box % compute_lengths( sum(mass*molcount) )
+        call run_packmol( me % packmol_list, me % molecule_list, me % coordinate_list, &
+                          me % nmol, me % atoms_in_molecules(), me % box % length, &
+                          seed, tol, action )
+      end subroutine packmol_command
       !---------------------------------------------------------------------------------------------
   end subroutine tData_Read
 
@@ -653,13 +649,17 @@ contains
       end subroutine write_count
       !---------------------------------------------------------------------------------------------
       subroutine write_box_limits
-        integer  :: molcount(me % nmol)
+        integer :: i, molcount(me % nmol)
         real(rb) :: mass(me % nmol)
+        character :: dir(3) = ["x","y","z"]
+        character(sl) :: limits
         call me % count_molecules( molcount, mass )
         call me % box % compute_lengths( sum(molcount*mass) )
-        write(unit,'(/,A," xlo xhi")') "0 "//trim(real2str(me % box % length(1)))
-        write(unit,'(  A," ylo yhi")') "0 "//trim(real2str(me % box % length(2)))
-        write(unit,'(  A," zlo zhi")') "0 "//trim(real2str(me % box % length(3)))
+        write(unit,'()')
+        do i = 1, 3
+          limits = join(real2str( me%box%length(i)*[-0.5_rb,+0.5_rb] ))
+          write(unit,'(A," ",A,"lo ",A,"hi")') trim(limits), dir(i), dir(i)
+        end do
       end subroutine write_box_limits
       !---------------------------------------------------------------------------------------------
       subroutine write_type( name, list )
