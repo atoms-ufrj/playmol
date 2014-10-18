@@ -31,7 +31,7 @@ $(BINDIR)/$(exec): $(OBJDIR)/playmol.o $(OBJDIR)/mData.o $(OBJDIR)/mStruc.o  \
                    $(OBJDIR)/mPackmol.o $(OBJDIR)/mBox.o $(OBJDIR)/mString.o \
                    $(OBJDIR)/mGlobal.o
 	mkdir -p $(BINDIR)
-	$(FORT) $(FOPTS) -J$(OBJDIR) -L$(PACKMOL) -lpackmol -o $@ $^
+	$(FORT) $(FOPTS) -J$(OBJDIR) -o $@ $^ -L$(PACKMOL) -lpackmol
 
 $(OBJDIR)/playmol.o: $(SRCDIR)/playmol.f90 $(OBJDIR)/mData.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<

@@ -231,10 +231,8 @@ contains
         if (all(["setup  ","execute","persist"] /= action)) then
           call error( "invalid packmol command - last argument must be an action" )
         end if
-        call writeln( "Configuring packmol with:" )
-        call writeln( "   tolerance:", arg(2) )
+        call writeln( "Configuring packmol with tolerance", arg(2), "and seed", arg(3) )
         tol = str2real(arg(2))
-        call writeln( "   seed:", arg(3) )
         seed = str2int(arg(3))
         if (arg(4) /= "molecule") call error( "invalid packmol command" )
         iarg = 4
@@ -266,6 +264,7 @@ contains
         call run_packmol( me % packmol_list, me % molecule_list, me % coordinate_list, &
                           me % nmol, me % atoms_in_molecules(), me % box % length, &
                           seed, tol, action )
+        me % nmol = sum(molcount)
       end subroutine packmol_command
       !---------------------------------------------------------------------------------------------
   end subroutine tData_Read

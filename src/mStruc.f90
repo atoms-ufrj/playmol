@@ -218,14 +218,17 @@ contains
   !=================================================================================================
 
   subroutine StrucList_destroy( me )
-    class(StrucList), intent(in)           :: me
+    class(StrucList), intent(inout) :: me
     type(Struc), pointer :: current, aux
     current => me % first
     do while (associated(current))
       aux => current
       current => current % next
+      call writeln( "Deleting ", me%name, join(aux % id) )
       deallocate(aux)
     end do
+    me % first => null()
+    me % last => null()
   end subroutine StrucList_destroy
 
   !=================================================================================================
