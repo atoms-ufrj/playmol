@@ -1,6 +1,22 @@
-!> A module containing global variables and subroutines
-!! @author Charlles R. A. Abreu (abreu at eq.ufrj.br)
-!! @date 04/10/2014 11:39:15 AM
+!   This file is part of Playmol.
+!
+!    Playmol is free software: you can redistribute it and/or modify
+!    it under the terms of the GNU General Public License as published by
+!    the Free Software Foundation, either version 3 of the License, or
+!    (at your option) any later version.
+!
+!    Playmol is distributed in the hope that it will be useful,
+!    but WITHOUT ANY WARRANTY; without even the implied warranty of
+!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!    GNU General Public License for more details.
+!
+!    You should have received a copy of the GNU General Public License
+!    along with Playmol. If not, see <http://www.gnu.org/licenses/>.
+!
+!    Author: Charlles R. A. Abreu (abreu at eq.ufrj.br)
+!            Applied Thermodynamics and Molecular Simulation
+!            Federal University of Rio de Janeiro, Brazil
+
 module mGlobal
 
 integer,      parameter :: rb = 8      !< Default number of bytes for real numbers
@@ -9,6 +25,15 @@ character(3), parameter :: csl = "256" !< String with default character string l
 
 integer :: stdout = 6                  !< Standard output unit
 integer :: logunit = 0                 !< Output unit for logging
+
+!> A simple random number generator:
+type rng
+  integer, private :: jsr
+  contains
+    procedure :: init => rng_init
+    procedure :: i32 => rng_i32
+    procedure :: letters => rng_letters
+end type rng
 
 contains
 
@@ -99,6 +124,51 @@ contains
     call end_line
     stop
   end subroutine error
+
+  !=================================================================================================
+
+  subroutine delete_files( filename )
+    character(sl),   intent(in) :: filename(:)
+    integer :: ifile, unit, ierr
+    do ifile = 1, size(filename)
+      open( newunit = unit, file = filename(ifile), status = "old", iostat = ierr )
+      if (ierr == 0) close(unit, status = "delete")
+    end do
+  end subroutine delete_files
+
+  !=================================================================================================
+
+  subroutine rng_init( a, seed )
+    class(rng), intent(inout) :: a
+    integer,    intent(in)    :: seed
+    a%jsr = seed
+  end subroutine rng_init
+
+  !=================================================================================================
+
+  function rng_i32( a ) result( i32 )
+    class(rng), intent(inout) :: a
+    integer                   :: i32
+    integer :: jz
+    jz = a%jsr
+    a%jsr = ieor(a%jsr,ishft(a%jsr, 13))
+    a%jsr = ieor(a%jsr,ishft(a%jsr,-17))
+    a%jsr = ieor(a%jsr,ishft(a%jsr,  5))
+    i32 = jz + a%jsr
+  end function rng_i32
+
+  !=================================================================================================
+
+  function rng_letters( a, n ) result( word )
+    class(rng), intent(inout) :: a
+    integer,    intent(in)    :: n
+    character(sl)             :: word
+    integer :: i
+    word = ""
+    do i = 1, n
+      word = trim(word)//achar(97+mod(abs(a % i32()),26))
+    end do
+  end function rng_letters
 
   !=================================================================================================
 

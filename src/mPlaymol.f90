@@ -1,4 +1,23 @@
-module mData
+!   This file is part of Playmol.
+!
+!    Playmol is free software: you can redistribute it and/or modify
+!    it under the terms of the GNU General Public License as published by
+!    the Free Software Foundation, either version 3 of the License, or
+!    (at your option) any later version.
+!
+!    Playmol is distributed in the hope that it will be useful,
+!    but WITHOUT ANY WARRANTY; without even the implied warranty of
+!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!    GNU General Public License for more details.
+!
+!    You should have received a copy of the GNU General Public License
+!    along with Playmol. If not, see <http://www.gnu.org/licenses/>.
+!
+!    Author: Charlles R. A. Abreu (abreu at eq.ufrj.br)
+!            Applied Thermodynamics and Molecular Simulation
+!            Federal University of Rio de Janeiro, Brazil
+
+module mPlaymol
 
 use mGlobal
 use mStruc
@@ -7,10 +26,9 @@ use mBox
 
 implicit none
 
-type tData
+type tPlaymol
   type(tBox) :: box
   integer  :: nmol = 0
-!  real(rb) :: density = 0.0_rb, aspect(3) = 1.0_rb
   type(StrucList) :: atom_type_list = StrucList( name = "atom type", number = 1 )
   type(StrucList) :: bond_type_list = StrucList( name = "bond type", number = 2 )
   type(StrucList) :: angle_type_list = StrucList( name = "angle type", number = 3 )
@@ -28,26 +46,26 @@ type tData
   type(StrucList) :: coordinate_list = StrucList( name = "position of atom", number = 1 )
   type(StrucList) :: packmol_list = StrucList( name = "packmol molecule", number = 1 )
   contains
-    procedure :: read => tData_Read
-    procedure :: write => tData_write
-    procedure :: write_lammps => tData_write_lammps
-    procedure :: read_xyz => tData_read_xyz
-    procedure :: write_xyz => tData_write_xyz
-    procedure :: summarize => tData_summarize
-    procedure :: fuse_molecules => tData_fuse_molecules
-    procedure :: count_molecules => tData_count_molecules
-    procedure :: update_structure => tData_update_structure
-    procedure :: get_types => tData_get_types
-    procedure :: check_types => tData_check_types
-    procedure :: atoms_in_molecules => tData_atoms_in_molecules
-end type tData
+    procedure :: read => tPlaymol_Read
+    procedure :: write => tPlaymol_write
+    procedure :: write_lammps => tPlaymol_write_lammps
+    procedure :: read_xyz => tPlaymol_read_xyz
+    procedure :: write_xyz => tPlaymol_write_xyz
+    procedure :: summarize => tPlaymol_summarize
+    procedure :: fuse_molecules => tPlaymol_fuse_molecules
+    procedure :: count_molecules => tPlaymol_count_molecules
+    procedure :: update_structure => tPlaymol_update_structure
+    procedure :: get_types => tPlaymol_get_types
+    procedure :: check_types => tPlaymol_check_types
+    procedure :: atoms_in_molecules => tPlaymol_atoms_in_molecules
+end type tPlaymol
 
 contains
 
   !=================================================================================================
 
-  recursive subroutine tData_Read( me, unit )
-    class(tData), intent(inout) :: me
+  recursive subroutine tPlaymol_Read( me, unit )
+    class(tPlaymol), intent(inout) :: me
     integer,      intent(in)    :: unit
     integer       :: narg
     character(sl) :: arg(50)
@@ -62,7 +80,7 @@ contains
         case ("dihedral_type"); call dihedral_type_command
         case ("improper_type"); call improper_type_command
         case ("mass"); call mass_command
-        case ("pair"); call pair_command
+!        case ("pair"); call pair_command
         case ("atom"); call atom_command
         case ("charge"); call charge_command
         case ("bond"); call bond_command
@@ -71,8 +89,8 @@ contains
         case ("write"); call write_command
         case ("include"); call include_command
         case ("packmol"); call packmol_command
-        case ("quit"); stop
-        case default; call error( "unrecognizable command", arg(1) )
+        case ("quit"); stop "interrupted by quit command"
+        case default; call error( "unknown command", arg(1) )
       end select
       call next_command( unit, narg, arg )
     end do
@@ -91,21 +109,33 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine box_command
         integer :: i
+        real(rb) :: scalar, vector(3)
         if (narg < 3) call error( "invalid box command" )
         select case (arg(2))
-          case ("density")
-            if (narg > 3) call error( "invalid box command" )
-            call writeln( "Defining box density =", arg(3) )
-            call me % box % define_density( str2real(arg(3)) )
-          case ("volume")
-            if (narg > 3) call error( "invalid box command" )
-            call writeln( "Defining box volume =", arg(3) )
-            call me % box % define_volume( str2real(arg(3)) )
-          case ("aspect")
-            call writeln( "Defining box aspect = ", join(arg(3:5)) )
-            me % box % aspect = [(str2real(arg(2+i)),i=1,3)]
-           case default; call error( "invalid box command" )
+          case ("density","volume")
+            call writeln( "Defining box", arg(2), "as", arg(3) )
+            scalar = str2real(arg(3))
+            if (narg > 3) then
+              if ((narg /= 7).or.(arg(4) /= "aspect")) call error( "invalid box command" )
+              call writeln( "Defining box aspect as", join(arg(5:7)) )
+              vector = [(str2real(arg(4+i)),i=1,3)]
+            else
+              vector = 1.0_rb
+            end if
+          case ("size")
+            if (narg == 3) then
+              call writeln( "Defining box size as", arg(3) )
+              vector = str2real(arg(3))
+            else if (narg == 5) then
+              call writeln( "Defining box size as", join(arg(3:5)) )
+              vector = [(str2real(arg(2+i)),i=1,3)]
+            else
+              call error( "invalid box command" )
+            end if
+          case default
+             call error( "invalid box command" )
         end select
+        call me % box % define( arg(2), scalar, vector )
       end subroutine box_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_type_command
@@ -142,6 +172,7 @@ contains
         call me % atom_list % add( narg-1, arg(2:narg) )
         if (has_macros(arg(2))) call error( "invalid atom name" )
         call me % check_types( arg(2:2), me % atom_type_list )
+        if (.not.me % mass_list % find(arg(3:3))) call error( "atom type",arg(3), "has no mass" )
         me%nmol = me%nmol + 1
         arg(3) = int2str( me%nmol )
         call me % molecule_list % add( 2, arg(2:3) )
@@ -179,7 +210,7 @@ contains
           call me % read_xyz( unit )
         else
           inquire( file = arg(2), exist = file_exists )
-          if (.not.file_exists) call error( "file", arg(2), "does not exist" )
+          if (.not.file_exists) call error( "file", arg(2), "not found" )
           open( newunit = xyz, file = arg(2), status = "old" )
           call writeln("Reading xyz data from file", trim(arg(2))//"..." )
           call me % read_xyz( xyz )
@@ -260,19 +291,19 @@ contains
         end do
         if (iarg /= narg) call error( "invalid packmol command" )
         call me % count_molecules( mass = mass )
-        call me % box % compute_lengths( sum(mass*molcount) )
+        call me % box % compute( sum(mass*molcount) )
         call run_packmol( me % packmol_list, me % molecule_list, me % coordinate_list, &
                           me % nmol, me % atoms_in_molecules(), me % box % length, &
                           seed, tol, action )
         me % nmol = sum(molcount)
       end subroutine packmol_command
       !---------------------------------------------------------------------------------------------
-  end subroutine tData_Read
+  end subroutine tPlaymol_Read
 
   !=================================================================================================
 
-  subroutine tData_read_xyz( me, unit )
-    class(tData), intent(inout) :: me
+  subroutine tPlaymol_read_xyz( me, unit )
+    class(tPlaymol), intent(inout) :: me
     integer,      intent(in)    :: unit
     integer       :: N, i, narg, imol, iatom
     character(sl) :: arg(5), line, catom
@@ -317,12 +348,12 @@ contains
         call error( "coordinates of molecule", int2str(imol), "are incomplete" )
       end if
     end if
-  end subroutine tData_read_xyz
+  end subroutine tPlaymol_read_xyz
 
   !=================================================================================================
 
-  subroutine tData_write_xyz( me, unit )
-    class(tData), intent(inout) :: me
+  subroutine tPlaymol_write_xyz( me, unit )
+    class(tPlaymol), intent(inout) :: me
     integer,      intent(in)    :: unit
     type(Struc), pointer :: ptr
     write(unit,'(A)') trim(int2str(me % coordinate_list % count()))
@@ -332,12 +363,12 @@ contains
       write(unit,'(A)') trim(ptr % id(1))//" "//trim(ptr % params)
       ptr => ptr % next
     end do
-  end subroutine tData_write_xyz
+  end subroutine tPlaymol_write_xyz
 
   !=================================================================================================
 
-  subroutine tData_fuse_molecules( me, atom )
-    class(tData),    intent(inout) :: me
+  subroutine tPlaymol_fuse_molecules( me, atom )
+    class(tPlaymol),    intent(inout) :: me
     character(sl),   intent(in)    :: atom(2)
     integer :: i, mol(2), imin, imax
     type(Struc), pointer :: ptr
@@ -369,12 +400,12 @@ contains
         end do
       end subroutine rename_molecule
       !---------------------------------------------------------------------------------------------
-  end subroutine tData_fuse_molecules
+  end subroutine tPlaymol_fuse_molecules
 
   !=================================================================================================
 
-  subroutine tData_count_molecules( me, number, mass, charge )
-    class(tData),  intent(in)            :: me
+  subroutine tPlaymol_count_molecules( me, number, mass, charge )
+    class(tPlaymol),  intent(in)            :: me
     integer,       intent(out), optional :: number(me % nmol)
     real(rb),      intent(out), optional :: mass(me % nmol), charge(me % nmol)
     integer  :: imol, iatom, natoms(me % nmol)
@@ -405,12 +436,12 @@ contains
         ptr => ptr % next
       end do
     end if
-  end subroutine tData_count_molecules
+  end subroutine tPlaymol_count_molecules
 
   !=================================================================================================
 
-  subroutine tData_get_types( me, atom, atom_type )
-    class(tData),  intent(in)  :: me
+  subroutine tPlaymol_get_types( me, atom, atom_type )
+    class(tPlaymol),  intent(in)  :: me
     character(sl), intent(in)  :: atom(:)
     character(sl), intent(out) :: atom_type(:)
     integer :: i, narg
@@ -419,12 +450,12 @@ contains
       call me % atom_list % search( atom(i:i), ptr )
       call split( ptr % params, narg, atom_type(i:i) )
     end do
-  end subroutine tData_get_types
+  end subroutine tPlaymol_get_types
 
   !=================================================================================================
 
-  subroutine tData_check_types( me, atom, list )
-    class(tData),    intent(in) :: me
+  subroutine tPlaymol_check_types( me, atom, list )
+    class(tPlaymol),    intent(in) :: me
     character(sl),   intent(in) :: atom(:)
     type(StrucList), intent(in) :: list
     character(sl) :: atom_type(list % number)
@@ -432,12 +463,12 @@ contains
     if (.not.list % find( atom_type )) then
       call error( list%name, join(atom_type), "required, but not found" )
     end if
-  end subroutine tData_check_types
+  end subroutine tPlaymol_check_types
 
   !=================================================================================================
 
-  subroutine tData_update_structure( me )
-    class(tData), intent(inout) :: me
+  subroutine tPlaymol_update_structure( me )
+    class(tPlaymol), intent(inout) :: me
     type(Struc), pointer :: b1, b2
     integer :: i, j
     logical :: match(2,2)
@@ -502,12 +533,12 @@ contains
         end if
       end subroutine add
       !---------------------------------------------------------------------------------------------
-  end subroutine tData_update_structure
+  end subroutine tPlaymol_update_structure
 
   !=================================================================================================
 
-  function tData_atoms_in_molecules( me ) result( natoms )
-    class(tData), intent(in) :: me
+  function tPlaymol_atoms_in_molecules( me ) result( natoms )
+    class(tPlaymol), intent(in) :: me
     integer                  :: natoms(me%nmol)
     type(Struc), pointer :: atom
     integer :: i
@@ -518,12 +549,12 @@ contains
       natoms(i) = natoms(i) + 1
       atom => atom % next
     end do
-  end function tData_atoms_in_molecules
+  end function tPlaymol_atoms_in_molecules
 
   !=================================================================================================
 
-  subroutine tData_write( me, unit )
-    class(tData), intent(in) :: me
+  subroutine tPlaymol_write( me, unit )
+    class(tPlaymol), intent(in) :: me
     integer,      intent(in) :: unit
     integer :: N
     character(sl) :: CN
@@ -550,12 +581,12 @@ contains
         current => current % next
       end do
     end if
-  end subroutine tData_write
+  end subroutine tPlaymol_write
 
   !=================================================================================================
 
-  subroutine tData_summarize( me, unit )
-    class(tData), intent(inout) :: me
+  subroutine tPlaymol_summarize( me, unit )
+    class(tPlaymol), intent(inout) :: me
     integer,      intent(in)    :: unit
     integer :: imol, molcount(me % nmol)
     real(rb) :: mass(me % nmol), charge(me % nmol)
@@ -602,12 +633,12 @@ contains
     write(unit,'("- Total mass: ",A)') trim(real2str(sum(molcount*mass)))
     write(unit,'("- Residual charge: ",A)') trim(real2str(sum(molcount*charge)))
     write(unit,'(A)') repeat("-",80)
-  end subroutine tData_summarize
+  end subroutine tPlaymol_summarize
 
   !=================================================================================================
 
-  subroutine tData_write_lammps( me, unit )
-    class(tData),  intent(inout) :: me
+  subroutine tPlaymol_write_lammps( me, unit )
+    class(tPlaymol),  intent(inout) :: me
     integer,       intent(in)    :: unit
     integer :: nb, na, nd, ni, natoms(me % nmol)
     natoms = me % atoms_in_molecules()
@@ -653,7 +684,7 @@ contains
         character :: dir(3) = ["x","y","z"]
         character(sl) :: limits
         call me % count_molecules( molcount, mass )
-        call me % box % compute_lengths( sum(molcount*mass) )
+        call me % box % compute( sum(molcount*mass) )
         write(unit,'()')
         do i = 1, 3
           limits = join(real2str( me%box%length(i)*[-0.5_rb,+0.5_rb] ))
@@ -766,8 +797,8 @@ contains
         if (present(count)) count = istruc
       end subroutine handle_struc
       !---------------------------------------------------------------------------------------------
-  end subroutine tData_write_lammps
+  end subroutine tPlaymol_write_lammps
 
   !=================================================================================================
 
-end module mData
+end module mPlaymol

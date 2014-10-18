@@ -23,20 +23,24 @@ clean:
 	rm -rf $(BINDIR)
 	rm -rf $(DOCDIR)/html/
 	rm -rf $(DOCDIR)/latex/
+	cd $(PACKMOL) && make clean
 
 install:
 	cp -f $(BINDIR)/$(exec) /usr/local/bin
 
-$(BINDIR)/$(exec): $(OBJDIR)/playmol.o $(OBJDIR)/mData.o $(OBJDIR)/mStruc.o  \
+$(BINDIR)/$(exec): $(OBJDIR)/playmol.o $(OBJDIR)/mPlaymol.o $(OBJDIR)/mStruc.o  \
                    $(OBJDIR)/mPackmol.o $(OBJDIR)/mBox.o $(OBJDIR)/mString.o \
-                   $(OBJDIR)/mGlobal.o
+                   $(OBJDIR)/mGlobal.o $(PACKMOL)/libpackmol.a
 	mkdir -p $(BINDIR)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -o $@ $^ -L$(PACKMOL) -lpackmol
 
-$(OBJDIR)/playmol.o: $(SRCDIR)/playmol.f90 $(OBJDIR)/mData.o
+$(PACKMOL)/libpackmol.a:
+	cd $(PACKMOL) && make
+
+$(OBJDIR)/playmol.o: $(SRCDIR)/playmol.f90 $(OBJDIR)/mPlaymol.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/mData.o: $(SRCDIR)/mData.f90 $(OBJDIR)/mPackmol.o $(OBJDIR)/mBox.o
+$(OBJDIR)/mPlaymol.o: $(SRCDIR)/mPlaymol.f90 $(OBJDIR)/mPackmol.o $(OBJDIR)/mBox.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mPackmol.o: $(SRCDIR)/mPackmol.f90 $(OBJDIR)/mStruc.o $(OBJDIR)/mBox.o
