@@ -105,12 +105,10 @@ improper	CWE	NM	CWM	HWM
 
 xyz		emin_one.xyz
 
-write		summary
-
 box		density 0.5 aspect 1 1 2
 
 packmol		2.5 5634 molecule 1 fix 0.0 0.0 0.0 molecule 1 pack 100 persist
 
 write		lammps emin.lmpdata
-write		xyz emin_test.xyz
+write		summary
 

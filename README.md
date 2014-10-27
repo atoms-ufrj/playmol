@@ -34,7 +34,7 @@ Local documentation can be generated (if [Doxygen](http://www.doxygen.org) is av
 
     make doc
 
-To update Playmol, enter the playmol directory and execute the following command before reinstallation:
+To update Playmol, enter the playmol directory and execute the following command before recompilation and reinstallation:
 
     git pull
 
