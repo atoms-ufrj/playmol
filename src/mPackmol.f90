@@ -71,7 +71,7 @@ contains
     character(sl),   intent(out) :: molfile(:)
     logical,         intent(in)  :: print
 
-    integer :: i, n, ifile, nfiles, imol, unit, iatom, pos, minpos
+    integer :: i, ifile, nfiles, imol, unit, iatom, pos, minpos
     type(Struc), pointer :: ptr, coord
     integer, allocatable :: molecule(:)
 
@@ -87,17 +87,15 @@ contains
       ptr => ptr % next
     end do
 
-!    allocate( position(maxval(natoms)) )
     do ifile = 1, nfiles
       imol = molecule(ifile)
-      n = natoms(imol)
 
       if (print) call writeln( "Saving coordinate file", molfile(ifile) )
 
       i = 0
       minpos = lmol % count()
       ptr => lmol % first
-      do while (associated(ptr).and.(i < n))
+      do while (associated(ptr).and.(i < natoms(imol)))
         if (str2int(ptr % params) == imol) then
           i = i + 1
           pos = lcoord % index( ptr % id )

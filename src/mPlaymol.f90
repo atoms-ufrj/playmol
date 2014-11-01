@@ -122,12 +122,12 @@ contains
             else
               vector = 1.0_rb
             end if
-          case ("size")
+          case ("lengths")
             if (narg == 3) then
-              call writeln( "Defining box size as", arg(3) )
+              call writeln( "Defining box side lengths as", arg(3) )
               vector = str2real(arg(3))
             else if (narg == 5) then
-              call writeln( "Defining box size as", join(arg(3:5)) )
+              call writeln( "Defining box side lengths as", join(arg(3:5)) )
               vector = [(str2real(arg(2+i)),i=1,3)]
             else
               call error( "invalid box command" )
@@ -160,7 +160,7 @@ contains
       end subroutine improper_type_command
       !---------------------------------------------------------------------------------------------
       subroutine mass_command
-        call me % mass_list % add( narg-1, arg(2:narg), me % atom_type_list )
+        call me % mass_list % add( narg-1, arg(2:narg) )
       end subroutine mass_command
       !---------------------------------------------------------------------------------------------
       subroutine pair_command
