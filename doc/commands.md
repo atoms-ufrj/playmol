@@ -396,7 +396,7 @@ The example above specifies a cubic simulation box.
 
 	box	volume 27000
 
-The example above is completely equivalent to the preceding one, as default aspect is cubic.
+The example above is completely equivalent to the preceding one, since the default aspect is cubic.
 
 	box	density 0.602214 aspect 1 1 2
 
@@ -412,25 +412,44 @@ The example above specifies a simulation box with density equal to 0.602214 in L
 
 **Syntax**:
 
-	packmol 	<tolerance> <seed> molecule <index> <mode> [molecule <index> <mode> ...] <action>
+	packmol		<keyword> <arguments> [<keyword> <arguments> ...]
 
-* _tolerance_ = mininum non-bonded interatomic distance to be observed
-* _seed_ = an integer number for seeding Packmol's random number generator
-* _index_ = the index of an existing molecule
-* _mode_ = the mode of placing/replicating the molecule in the simulation box
-	* fix <x> <y> <z>: places the molecule in a specified position
-	* move <dx> <dy> <dz>: moves the molecule with a specified displacement
-	* copy <N>: places _N_ copies of the molecule in random positions, but same orientation
-	* pack <N>: packs _N_ copies of the molecule in random positions, with random orientations
-* _action_ = _setup_ or _execute_ or _persist_
+* _keyword_ =  _seed_ or _tolerance_ or _nloops_ or _change_ or _fix_ or _copy_ or _pack_ or _action_
+
+**Keywords and arguments**:
+
+* seed <iseed>
+	* _iseed_ = an integer number for seeding Packmol's random number generator (_default_ = 1234)
+* tolerance <tol>
+	* _tol_ = the mininum distance to be observed between atoms from distinct molecules (_default_ = 1.0)
+* nloops <N>
+	* _N_ = the maximum number of iterations of the Packmol algorithm (_default_ = 50)
+* change <factor>
+	* _factor_ = a scaling factor for tolerance in successive packing attemps (_default_ = 0.95)
+* fix <molecule> <x> <y> <z>
+	* _molecule_ = the index of an existing molecule
+	* _x_, _y_, _z_ = a spatial coordinate for placing the molecule's geometric center
+* copy <molecule> <N>
+	* _molecule_ = the index of an existing molecule
+	* _N_ = the number of randomly positioned copies of the molecule
+* pack <molecule> <N>
+	* _molecule_ = the index of an existing molecule
+	* _N_ = the number of randomly packed copies of the molecule
+* action <choice>
+	* _choice_ = _setup_ or _execute_ or _persist_
 
 **Description**:
 
-This command creates packmol input files or invokes packmol to 
+This command creates Packmol input files or invokes Packmol to build an mininum-overlap molecular packing inside a previously specified simulation box.
+
+
 
 **Examples**:
 
-	packmol ????		
+	box			density 0.602214
+	packmol		tolerance 3.0 change 0.9 fix 1 0.0 0.0 0.0 pack 2 1000 action persist
+
+The example above uses Packmol to create a random packing of molecules with density equal to 0.602214 Da/Å³ in which one copy of molecule 1 is centered at the origin and 1000 copies of molecule 2 are packed with random positions and random orientations. The desired mininum intermolecular atomic distance is initially set to 3.0 Å, but Packmol will keep reducing the tolerance in 90% until the packing is successful.
 
 **See also**:
 
@@ -465,16 +484,23 @@ This command writes down the molecular system in a file (if specified) or in the
 	prefix		<target> <string>
 
 * _target_ = _types_ or _atoms_
-* _string_ = 
+* _string_ = _none_ or a character string to be used as prefix for atom types or atoms
 
 **Description**:
 
-This command...
+This command enables or disables a prefix to be added to every atom type identifier or to every atom identifier in subsequent commands.
+
+The parameter _target_ indicates which type of identifier will be modified by the enabled prefix. Use _types_ to apply the prefix to atom type identifiers or _atoms_ to apply the prefix to atom identifiers.
+
+The parameter _string_ must be a single character string with no comment tags (#) and no wildcard characters (* or ?). Such string will be used in subsequent commands as a prefix for atom type identifiers or for atom identifiers, depending on the specified parameter _target_. If _string_ is _none_, then no prefix will be used for the specified _target_ in subsequent commands.
 
 **Examples**:
 
-	prefix		atoms H2O_
+	prefix		atoms H2O-
 	atom		H1 H
+	atom		H2 H
+
+The example above creates two atoms whose identifiers are H2O-H1 and H2O-H2.
 
 **See also**:
 

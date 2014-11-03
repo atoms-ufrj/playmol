@@ -32,8 +32,10 @@ type tPlaymol
   type(StrucList) :: atom_type_list = StrucList( name = "atom type", number = 1 )
   type(StrucList) :: bond_type_list = StrucList( name = "bond type", number = 2 )
   type(StrucList) :: angle_type_list = StrucList( name = "angle type", number = 3 )
-  type(StrucList) :: dihedral_type_list = StrucList( name = "dihedral type", number = 4, two_way = .false. )
-  type(StrucList) :: improper_type_list = StrucList( name = "improper type", number = 4, two_way = .false. )
+  type(StrucList) :: dihedral_type_list = StrucList( name = "dihedral type", number = 4, &
+                                                     two_way = .false. )
+  type(StrucList) :: improper_type_list = StrucList( name = "improper type", number = 4, & 
+                                                     two_way = .false. )
   type(StrucList) :: mass_list = StrucList( name = "mass", number = 1 )
   type(StrucList) :: pair_list = StrucList( name = "pair", number = 2 )
   type(StrucList) :: atom_list = StrucList( name = "atom", number = 1 )
@@ -44,7 +46,7 @@ type tPlaymol
   type(StrucList) :: improper_list = StrucList( name = "improper", number = 4 )
   type(StrucList) :: molecule_list = StrucList( name = "molecule", number = 1 )
   type(StrucList) :: coordinate_list = StrucList( name = "position of atom", number = 1 )
-  type(StrucList) :: packmol_list = StrucList( name = "packmol molecule", number = 1 )
+  type(StrucList) :: packmol_list = StrucList( name = "packmol", number = 1 )
   contains
     procedure :: read => tPlaymol_Read
     procedure :: write => tPlaymol_write
@@ -251,51 +253,80 @@ contains
       end subroutine include_command
       !---------------------------------------------------------------------------------------------
       subroutine packmol_command
-        integer :: seed, iarg, imol, last, nopts, i, n, molcount(me%nmol)
-        real(rb) :: tol, pos(3), mass(me%nmol)
+        integer :: iarg, imol, nopts, i, n
+        real(rb) :: tolerance, pos(3), mass(me%nmol)
         character(sl) :: action
-        if (.not. me % box % exists()) then
-          call error( "packmol run command requires previous box definition" )
-        end if
-        if (narg < 8) call error( "invalid packmol command" )
-        action = arg(narg)
-        if (all(["setup  ","execute","persist"] /= action)) then
-          call error( "invalid packmol command - last argument must be an action" )
-        end if
-        call writeln( "Configuring packmol with tolerance", arg(2), "and seed", arg(3) )
-        tol = str2real(arg(2))
-        seed = str2int(arg(3))
-        if (arg(4) /= "molecule") call error( "invalid packmol command" )
-        iarg = 4
-        last = narg-1
-        molcount = 0
-        do while (arg(iarg) == "molecule")
-          if (iarg+2 > last) call error( "invalid packmol command" )
-          select case (arg(iarg+2))
-            case ("move","fix"); nopts = 3
-            case ("copy","pack"); nopts = 1
-            case default; call error( "invalid packmol command" )
+        action = ""
+        if (narg < 3) call error( "invalid packmol command" )
+        iarg = 2
+        do while (iarg < narg)
+          select case (arg(iarg))
+
+            case ("seed")
+              if (narg < iarg+1) call error( "invalid packmol command" )
+              call writeln( "Setting packmol seed to", arg(iarg+1) )
+              seed = str2int(arg(iarg+1))
+              iarg = iarg + 2
+
+            case ("tolerance")
+              if (narg < iarg+1) call error( "invalid packmol command" )
+              call writeln( "Setting packmol tolerance to", arg(iarg+1) )
+              tolerance = str2real(arg(iarg+1))
+              iarg = iarg + 2
+
+            case ("nloops")
+              if (narg < iarg+1) call error( "invalid packmol command" )
+              call writeln( "Setting packmol nloops parameter to", arg(iarg+1) )
+              nloops = str2int(arg(iarg+1))
+              iarg = iarg + 2
+
+            case ("change")
+              if (narg < iarg+1) call error( "invalid packmol command" )
+              call writeln( "Setting packmol change parameter to", arg(iarg+1) )
+              change = str2real(arg(iarg+1))
+              iarg = iarg + 2
+
+            case ("fix","move","copy","pack")
+              if (narg < iarg+2) call error( "invalid packmol command" )
+              select case (arg(iarg))
+                case ("move","fix"); nopts = 3
+                case ("copy","pack"); nopts = 1
+                case default; call error( "invalid packmol command" )
+              end select
+              call me % packmol_list % add( nopts+2, arg(iarg:iarg+1+nopts), repeatable = .true. )
+              imol = str2int(arg(iarg+1))
+              if ((imol < 1).or.(imol > me%nmol)) call error( "last molecule is", int2str(me%nmol) )
+              select case (arg(iarg+1))
+                case ("move","fix")
+                  pos = [(str2real(arg(iarg+1+i)),i=1,3)]
+                case ("copy","pack")
+                  n = str2int(arg(iarg+2))
+              end select
+              iarg = iarg + 2 + nopts
+
+            case ("action")
+              if ((action /= "").or.(narg < iarg+1)) call error( "invalid packmol command" )
+              action = arg(iarg+1)
+              if (all(["setup  ","execute","persist"] /= action)) then
+                call error( "invalid packmol command: unknown action", action )
+              end if
+              if (.not. me % box % exists()) then
+                call error( "packmol action keyword requires previous box definition" )
+              end if
+              iarg = iarg + 2
+
+            case default
+              call error( "invalid packmol command: unknown keyword", arg(iarg) )
+
           end select
-          call me % packmol_list % add( nopts+2, arg(iarg+1:iarg+2+nopts), repeatable = .true. )
-          imol = str2int(arg(iarg+1))
-          if ((imol < 1).or.(imol > me%nmol)) call error( "last molecule is", int2str(me%nmol) )
-          select case (arg(iarg+2))
-            case ("move","fix")
-              pos = [(str2real(arg(iarg+2+i)),i=1,3)]
-              molcount(imol) = molcount(imol) + 1
-            case ("copy","pack")
-              n = str2int(arg(iarg+3))
-              molcount(imol) = molcount(imol) + n
-          end select
-          iarg = iarg + 3 + nopts
         end do
-        if (iarg /= narg) call error( "invalid packmol command" )
-        call me % count_molecules( mass = mass )
-        call me % box % compute( sum(mass*molcount) )
-        call run_packmol( me % packmol_list, me % molecule_list, me % coordinate_list, &
-                          me % nmol, me % atoms_in_molecules(), me % box % length, &
-                          seed, tol, action )
-        me % nmol = sum(molcount)
+        if (action /= "") then
+          call me % count_molecules( mass = mass )
+          call me % box % compute( packmol_total_mass( me % packmol_list, mass ) )
+          call run_packmol( me % packmol_list, me % molecule_list, me % coordinate_list, &
+                            me % nmol, me % atoms_in_molecules(), me % box % length, &
+                            seed, tolerance, action )
+        end if
       end subroutine packmol_command
       !---------------------------------------------------------------------------------------------
   end subroutine tPlaymol_Read
