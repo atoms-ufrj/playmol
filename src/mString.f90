@@ -158,19 +158,30 @@ contains
     integer,      intent(in)  :: unit
     integer,      intent(out) :: narg
     character(*), intent(out) :: arg(:)
-    integer       :: ioerr
-    character(sl) :: line
-    read(unit,'(A'//csl//')',iostat=ioerr) line
-    call clean( line )
-    do while ((ioerr == 0).and.(line == ""))
-      read(unit,'(A'//csl//')',iostat=ioerr) line
-      call clean( line )
-    end do
-    if (ioerr == 0) then
-      call split( line, narg, arg )
-    else
-      narg = 0
-    end if
+    narg = 0
+    call add_items( narg, arg(1:) )
+    contains
+      recursive subroutine add_items( narg, arg )
+        integer,      intent(inout) :: narg
+        character(*), intent(inout) :: arg(:)
+        integer       :: ioerr, extra
+        character(sl) :: line
+        read(unit,'(A'//csl//')',iostat=ioerr) line
+        call clean( line )
+        do while ((ioerr == 0).and.(line == ""))
+          read(unit,'(A'//csl//')',iostat=ioerr) line
+          call clean( line )
+        end do
+        if (ioerr == 0) then
+          call split( line, extra, arg )
+          if ((arg(extra) == "...").or.(arg(extra) == "&")) then
+            narg = narg + extra - 1
+            call add_items( narg, arg(extra:) )
+          else
+            narg = narg + extra
+          end if
+        end if
+      end subroutine add_items
   end subroutine next_command
 
   !=================================================================================================
@@ -371,4 +382,19 @@ contains
 
   !=================================================================================================
 
+  function now() result( string )
+    character(sl) :: string
+    character(3) :: month(12) = ['Jan','Feb','Mar','Apr','May','Jun', &
+                                 'Jul','Aug','Sep','Oct','Nov','Dec']
+    integer :: value(8)
+    character(2) :: day, hour, min, sec
+    character(4) :: year
+    call date_and_time( values = value )
+    write(day,'(I2)') value(3)
+    write(year,'(I4)') value(1)
+    write(hour,'(I2)') value(5)
+    write(min,'(I2)') value(6)
+    write(sec,'(I2)') value(7)
+    string = trim(adjustl(day))//"-"//month(value(2))//"-"//year//" at "//hour//":"//min//":"//sec
+  end function now
 end module mString

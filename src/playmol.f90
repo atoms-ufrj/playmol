@@ -24,6 +24,7 @@ implicit none
 integer :: i, inp
 character(sl) :: infile
 type(tPlaymol) :: System
+call writeln( "Playmol (04 Nov 2014)" )
 if (iargc() == 0) call error( "Usage: playmol <file-1> <file-2> ..." )
 call init_log( file = "playmol.log" )
 do i = 1, iargc()

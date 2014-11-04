@@ -19,24 +19,19 @@ Playmol is designed to execute scripts containing the commands described below:
 * [write] - writes down system info in different file formats (including LAMMPS data files).
 * [prefix] - defines default prefixes for atom types and atoms.
 * [include] - includes commands from another script.
+* [shell] - executes an external shell command.
 * [quit] - interrupts Playmol execution.
 
 
---------
-Foreword
---------
+------------
+Introduction
+------------
 
-Every command is a sequence of keywords and parameter values. In this section, the syntax of every command is presented. 
+Playmol scripts are text files containing commands whose syntaxes are described in this section. Each command is a sequence of keywords and parameter values separated by spaces and/or tabs.
 
-, followed by a description of the parameters that must be substituted by the corresponding values.
+A script can include comments, identified by the comment mark "#". Thus, when such mark is found, all trailing characters in the same line (including the comment mark itself) are ignored. When the non-comment part of a command line ends with a continuation mark "..." or "&", it means that the command will continue in the next line. Of course, the continuation mark itself is not part of the command.
 
-
- whose values must be specified by the user.
-
-
-
-
-In all examples below which involve physically meaningful values, the employed units are those corresponding to the LAMMPS command "units real".
+In the examples of this section, the units employed for physically meaningful values are those corresponding to [LAMMPS real units].
 
 -------------------------------
 <a name="atom_type"/> atom_type
@@ -414,7 +409,7 @@ The example above specifies a simulation box with density equal to 0.602214 in L
 
 	packmol		<keyword> <arguments> [<keyword> <arguments> ...]
 
-* _keyword_ =  _seed_ or _tolerance_ or _nloops_ or _change_ or _fix_ or _copy_ or _pack_ or _action_
+* _keyword_ =  _seed_ or _tolerance_ or _nloops_ or _retry_ or _fix_ or _copy_ or _pack_ or _action_
 
 **Keywords and arguments**:
 
@@ -424,36 +419,47 @@ The example above specifies a simulation box with density equal to 0.602214 in L
 	* _tol_ = the mininum distance to be observed between atoms from distinct molecules (_default_ = 1.0)
 * nloops <N>
 	* _N_ = the maximum number of iterations of the Packmol algorithm (_default_ = 50)
-* change <factor>
-	* _factor_ = a scaling factor for tolerance in successive packing attemps (_default_ = 0.95)
+* retry <factor>
+	* _factor_ = a scaling factor for tolerance values in successive packing attempts (_default_ = 1.0)
 * fix <molecule> <x> <y> <z>
-	* _molecule_ = the index of an existing molecule
+	* _molecule_ = the index of an existing molecule with predefined coordinates
 	* _x_, _y_, _z_ = a spatial coordinate for placing the molecule's geometric center
 * copy <molecule> <N>
-	* _molecule_ = the index of an existing molecule
+	* _molecule_ = the index of an existing molecule with predefined coordinates
 	* _N_ = the number of randomly positioned copies of the molecule
 * pack <molecule> <N>
-	* _molecule_ = the index of an existing molecule
+	* _molecule_ = the index of an existing molecule with predefined coordinates
 	* _N_ = the number of randomly packed copies of the molecule
-* action <choice>
-	* _choice_ = _setup_ or _execute_ or _persist_
+* action <option>
+	* _option_ = _execute_ or _setup_
 
 **Description**:
 
-This command creates Packmol input files or invokes Packmol to build an mininum-overlap molecular packing inside a previously specified simulation box.
+This command creates Packmol input files or invokes Packmol to build a mininum-overlap molecular packing inside a previously specified simulation box.
+
+The keywords _fix_, _copy_, and _pack_ require the index of an existing molecule for which at least one set of atomic coordinates have been defined using the command [xyz]. The first defined set of coordinates will be used as a rigid-body model for translation or replication.
+
+The keyword _action_ is used to create Packmol input files or to run Packmol directly. The following options are available:
+
+* _execute_: this option executes Packmol so as to build the desired molecular packing. It requires the previous definition of a simulation [box] and the invokation of at least one keyword _fix_, _copy_, or _pack_. This keyword can be invoked in the same packmol command (either before or after _action_) or in a previous packmol command. If the parameter _retry_ is currently equal to 1.0 (its default value), then Packmol will do only one packing attempt with the specified _tolerance_ and produce a warning message in case such attempt fails. If _retry_ is smaller than 1.0, then Packmol will keep trying until a successful attempt is achieved, with _tolerance_ being iteratively multiplied by _retry_ at each new attempt. IMPORTANT: after a successful packing, the current list of atomic coordinates is replaced by the new coordinates generated by Packmol. Therefore, the command [write] can be used afterwards to create a LAMMPS configuration file with the packed system.
+
+* _setup_: this option generates an input file _packmol.inp_ and coordinate files _molecule-x.inp_, where _x_ is the index of a molecule.
 
 
+	packmol 	action setup
+	shell   	packmol < packmol.inp
+	xyz     	packmol_output.xyz reset
 
 **Examples**:
 
-	box			density 0.602214
+	box    		density 0.602214
 	packmol		tolerance 3.0 change 0.9 fix 1 0.0 0.0 0.0 pack 2 1000 action persist
 
 The example above uses Packmol to create a random packing of molecules with density equal to 0.602214 Da/Å³ in which one copy of molecule 1 is centered at the origin and 1000 copies of molecule 2 are packed with random positions and random orientations. The desired mininum intermolecular atomic distance is initially set to 3.0 Å, but Packmol will keep reducing the tolerance in 90% until the packing is successful.
 
 **See also**:
 
-[box], [xyz]
+[box], [xyz], [write]
 
 -----------------------
 <a name="write"/> write
@@ -528,6 +534,31 @@ This command redirects Playmol to read and execute commands from another script.
 
 [atom_type], [atom]
 
+-----------------------
+<a name="shell"/> shell
+-----------------------
+
+**Syntax**:
+
+	shell <command>
+
+* _command_ = an external shell command
+
+**Description**:
+
+This command executes an external shell command.
+
+**Example**:
+
+	shell	mv packmol.inp system.inp
+	shell	packmol < system.inp
+
+The example above uses Linux command _mv_ to rename a file from _packmol.inp_ to _system.inp_ and then executes Packmol using it as input.
+
+**See also**:
+
+[packmol]
+
 ---------------------
 <a name="quit"/> quit
 ---------------------
@@ -547,10 +578,6 @@ This command completely interrupts the execution of Playmol, thus being useful f
 
 The example above writes a summary of the current molecular system and then quits Playmol.
 
-**See also**:
-
-[write]
-
 ---------------------
 
 [atom_type]:		#atom_type
@@ -569,6 +596,7 @@ The example above writes a summary of the current molecular system and then quit
 [write]:		#write
 [prefix]:		#prefix
 [include]:		#include
+[shell]:		#shell
 [quit]:			#quit
 
 [LAMMPS real units]:	http://lammps.sandia.gov/doc/units.html
