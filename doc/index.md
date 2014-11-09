@@ -13,9 +13,8 @@ Its main distinguishing features are:
 
 The sections of this manual are:
 
-* [install](@ref install): provides instructions for installing Playmol
+* [installation](@ref install): provides instructions for installing Playmol
 * [commands](@ref commands): provides descriptions of all playmol commands
-* [packmol](@ref packmol): describes how Playmol can be integrated with Packmol
 
 @copyright GNU Public License.
 

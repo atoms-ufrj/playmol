@@ -37,12 +37,12 @@ type tPlaymol
   type(StrucList) :: improper_type_list = StrucList( name = "improper type", number = 4, & 
                                                      two_way = .false. )
   type(StrucList) :: mass_list = StrucList( name = "mass", number = 1 )
-  type(StrucList) :: pair_list = StrucList( name = "pair", number = 2 )
   type(StrucList) :: atom_list = StrucList( name = "atom", number = 1 )
   type(StrucList) :: charge_list = StrucList( name = "charge", number = 1 )
   type(StrucList) :: bond_list = StrucList( name = "bond", number = 2 )
   type(StrucList) :: angle_list = StrucList( name = "angle", number = 3 )
   type(StrucList) :: dihedral_list = StrucList( name = "dihedral", number = 4 )
+  type(StrucList) :: extra_dihedral_list = StrucList( name = "extra dihedral", number = 4 )
   type(StrucList) :: improper_list = StrucList( name = "improper", number = 4 )
   type(StrucList) :: molecule_list = StrucList( name = "molecule", number = 1 )
   type(StrucList) :: coordinate_list = StrucList( name = "position of atom", number = 1 )
@@ -82,15 +82,16 @@ contains
         case ("dihedral_type"); call dihedral_type_command
         case ("improper_type"); call improper_type_command
         case ("mass"); call mass_command
-!        case ("pair"); call pair_command
         case ("atom"); call atom_command
         case ("charge"); call charge_command
         case ("bond"); call bond_command
+        case ("extra_dihedral"); call extra_dihedral_command
         case ("improper"); call improper_command
         case ("xyz"); call xyz_command
         case ("write"); call write_command
         case ("include"); call include_command
         case ("packmol"); call packmol_command
+        case ("reset"); call reset_command
         case ("shell"); call shell_command
         case ("quit"); stop "interrupted by quit command"
         case default; call error( "unknown command", arg(1) )
@@ -166,10 +167,6 @@ contains
         call me % mass_list % add( narg-1, arg(2:narg) )
       end subroutine mass_command
       !---------------------------------------------------------------------------------------------
-      subroutine pair_command
-        call me % pair_list % add( narg-1, arg(2:narg), me % atom_type_list )
-      end subroutine pair_command
-      !---------------------------------------------------------------------------------------------
       subroutine atom_command
         if (narg >= 3) arg(3) = trim(me % atom_type_list % prefix) // arg(3)
         call me % atom_list % add( narg-1, arg(2:narg) )
@@ -192,6 +189,18 @@ contains
         call me % fuse_molecules( arg(2:3) )
         call me % update_structure()
       end subroutine bond_command
+      !---------------------------------------------------------------------------------------------
+      subroutine extra_dihedral_command
+        integer :: i, imol, jmol
+        call me % extra_dihedral_list % add( narg-1, arg(2:narg), me % atom_list )
+        if (narg /= 5) call error( "invalid extra_dihedral command")
+        call me % check_types( arg(2:5), me % dihedral_type_list )
+        imol = str2int(me % molecule_list % parameters( arg(2:2) ))
+        do i = 3, 5
+          jmol = str2int(me % molecule_list % parameters( arg(i:i) ))
+          if (jmol /= imol) call error( "atoms", join(arg(2:5)), "are not in the same molecule" )
+        end do
+      end subroutine extra_dihedral_command
       !---------------------------------------------------------------------------------------------
       subroutine improper_command
         integer :: i, imol, jmol
@@ -253,9 +262,45 @@ contains
         close(input)
       end subroutine include_command
       !---------------------------------------------------------------------------------------------
+      subroutine reset_lists( lists )
+        integer, intent(in) :: lists(:)
+        if (any(lists ==  1)) call me % atom_type_list % destroy
+        if (any(lists ==  2)) call me % bond_type_list % destroy
+        if (any(lists ==  3)) call me % angle_type_list % destroy
+        if (any(lists ==  4)) call me % dihedral_type_list % destroy
+        if (any(lists ==  5)) call me % improper_type_list % destroy
+        if (any(lists ==  6)) call me % mass_list % destroy
+        if (any(lists ==  7)) call me % atom_list % destroy
+        if (any(lists ==  8)) call me % charge_list % destroy
+        if (any(lists ==  9)) call me % bond_list % destroy
+        if (any(lists == 10)) call me % angle_list % destroy
+        if (any(lists == 11)) call me % dihedral_list % destroy
+        if (any(lists == 12)) call me % improper_list % destroy
+        if (any(lists == 13)) call me % molecule_list % destroy
+        if (any(lists == 14)) call me % coordinate_list % destroy
+        if (any(lists == 15)) call me % packmol_list % destroy
+      end subroutine reset_lists
+      !---------------------------------------------------------------------------------------------
+      subroutine reset_command
+        integer :: i
+        if (narg /= 2) call error( "invalid reset command" )
+        select case (arg(2))
+          case ("all"); call reset_lists( [(i,i=1,15)] )
+          case ("atoms"); call reset_lists( [(i,i=7,15)] )
+          case ("bonds"); call reset_lists( [9,10,11,13,14,15] )
+          case ("bond_types"); call me % bond_type_list % destroy
+          case ("angle_types"); call me % angle_type_list % destroy
+          case ("dihedral_types"); call me % dihedral_type_list % destroy
+          case ("improper_types"); call me % improper_type_list % destroy
+          case ("impropers"); call me % improper_list % destroy
+          case ("xyz"); call me % coordinate_list % destroy
+          case ("packmol"); call me % packmol_list % destroy
+          case default; call error( "invalid reset command" )
+        end select
+      end subroutine reset_command
+      !---------------------------------------------------------------------------------------------
       subroutine shell_command
         integer :: stat
-        character(sl) :: msg
         call writeln( "Executing shell command: ", join(arg(2:)) )
         call execute_command_line( join(arg(2:)), exitstat = stat )
         if (stat /= 0) call error( "unsuccessful shell command" )
@@ -263,7 +308,7 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine packmol_command
         integer :: iarg, imol, nopts, i, n, molcount(me%nmol)
-        real(rb) :: tolerance, pos(3), mass(me%nmol)
+        real(rb) :: pos(3), mass(me%nmol)
         character(sl) :: action
         action = ""
         if (narg < 3) call error( "invalid packmol command" )
@@ -606,7 +651,6 @@ contains
     type(Struc), pointer :: current
     call me % atom_type_list % print( unit )
     call me % mass_list % print( unit )
-    call me % pair_list % print( unit )
     call me % bond_type_list % print( unit )
     call me % angle_type_list % print( unit )
     call me % dihedral_type_list % print( unit )
@@ -615,6 +659,7 @@ contains
     call me % bond_list % print( unit )
     call me % angle_list % print( unit, comment = .true. )
     call me % dihedral_list % print( unit, comment = .true. )
+    call me % extra_dihedral_list % print( unit )
     call me % improper_list % print( unit )
     N = me % coordinate_list % count()
     if (N > 0) then
@@ -648,6 +693,7 @@ contains
     write(unit,'(I5," improper type(s).")') me % improper_type_list % count()
     write(unit,'(I5," atom(s).")') me % atom_list % count()
     write(unit,'(I5," bonds(s).")') me % bond_list % count()
+    write(unit,'(I5," extra dihedral(s).")') me % extra_dihedral_list % count()
     write(unit,'(I5," improper(s).")') me % improper_list % count()
     write(unit,'(/,A)') "Detected:"
     write(unit,'(I5," angle(s).")') me % angle_list % count()
@@ -676,6 +722,11 @@ contains
     write(unit,'(/,"System:")')
     write(unit,'("- Molecules: ",A)') trim(int2str(sum(molcount)))
     write(unit,'("- Total mass: ",A)') trim(real2str(sum(molcount*mass)))
+    if (me % box % exists()) then
+      call me % box % compute( sum(molcount*mass) )
+      write(unit,'("- Box lengths: ",A)') trim(join(real2str(me % box % length)))
+      write(unit,'("- Box density: ",A)') trim(real2str(me % box % density))
+    end if
     write(unit,'("- Residual charge: ",A)') trim(real2str(sum(molcount*charge)))
     write(unit,'(A)') repeat("-",80)
   end subroutine tPlaymol_summarize
@@ -687,6 +738,9 @@ contains
     integer,       intent(in)    :: unit
     integer :: nb, na, nd, ni, natoms(me % nmol)
     natoms = me % atoms_in_molecules()
+    if (associated(me % dihedral_list % first)) then
+      me % dihedral_list % last % next => me % extra_dihedral_list % first
+    end if
     write(unit,'("LAMMPS data file",/,"# Generated by Playmol on ",A,/)') trim(now())
     call write_count( me % atom_type_list % count(), "atom types" )
     call write_count( me % bond_type_list % count(), "bond types" )
@@ -715,6 +769,9 @@ contains
     if (na > 0) call handle_struc( "Angles", me % angle_list, me % angle_type_list )
     if (nd > 0) call handle_struc( "Dihedrals", me % dihedral_list, me % dihedral_type_list )
     if (ni > 0) call handle_struc( "Impropers", me % improper_list, me % improper_type_list )
+    if (associated(me % dihedral_list % first)) then
+      me % dihedral_list % last % next => null()
+    end if
     contains
       !---------------------------------------------------------------------------------------------
       subroutine write_count( n, name )

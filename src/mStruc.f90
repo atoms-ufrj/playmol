@@ -240,6 +240,7 @@ contains
     class(StrucList), intent(inout) :: me
     type(Struc), pointer :: current, aux
     current => me % first
+    if (associated(current)) call writeln( "Deleting ", me%name, "list..." )
     do while (associated(current))
       aux => current
       current => current % next

@@ -60,7 +60,7 @@ contains
       do i = 1, size(molfile)
         molfile(i) = "molecule-"//trim(int2str(i))//".xyz"
       end do
-      mixfile = "packmol_output.xyz"
+      mixfile = "packmol-output.xyz"
     end if
   end subroutine packmol_file_names
 

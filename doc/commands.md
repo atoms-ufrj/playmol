@@ -13,12 +13,14 @@ Playmol is designed to execute scripts containing the commands described below:
 * [charge] - specifies the charge of a given atom.
 * [bond] - creates a bond between two given atoms (angles and dihedrals are automatically detected).
 * [improper] - creates an improper involving four given atoms.
+* [extra_dihedral] - creates an extra dihedral involving four given atoms.
 * [xyz] - defines positions for all atoms of one or more molecules.
 * [box] - defines the properties of a simulation box.
 * [packmol] - executes Packmol to create a packed molecular system.
 * [write] - writes down system info in different file formats (including LAMMPS data files).
 * [prefix] - defines default prefixes for atom types and atoms.
 * [include] - includes commands from another script.
+* [reset] - resets a list of entities together with its dependent lists.
 * [shell] - executes an external shell command.
 * [quit] - interrupts Playmol execution.
 
@@ -27,9 +29,7 @@ Playmol is designed to execute scripts containing the commands described below:
 Introduction
 ------------
 
-Playmol scripts are text files containing commands whose syntaxes are described in this section. Each command is a sequence of keywords and parameter values separated by spaces and/or tabs.
-
-A script can include comments, identified by the comment mark "#". Thus, when such mark is found, all trailing characters in the same line (including the comment mark itself) are ignored. When the non-comment part of a command line ends with a continuation mark "..." or "&", it means that the command will continue in the next line. Of course, the continuation mark itself is not part of the command.
+Playmol scripts are text files containing commands whose syntaxes are described in this section. Each command is a sequence of keywords and parameter values separated by spaces and/or tabs. A script can include comments, identified by the comment mark "#". When such mark is found, all trailing characters in the same line (including the comment mark itself) are ignored. A command can span several lines by means of continuation marks "..." or "&". When the actual part of a command line (comments excluded) ends with a continuation mark, the command will continue in the next line (of course, the continuation mark itself is not part of the command).
 
 In the examples of this section, the units employed for physically meaningful values are those corresponding to [LAMMPS real units].
 
@@ -91,7 +91,7 @@ An [atom] will not be created if a mass value has not been previously defined to
 	mass		CH2 14.0
 	mass		H* 1.008
 
-In the second example above, a mass value of _1.008_ is assigned to all atoms types whose names start with _H_.
+In the example above, a mass value of _14.0_ is assigned to atom type _CH2_ and a mass value of _1.008_ is assigned to all atoms types whose names start with _H_.
 
 **See also**:
 
@@ -296,7 +296,9 @@ At any moment after chemical bonds have been created, one can check the current 
 
 This command creates an improper involving the specified atoms.
 
-The parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be provided, with no use of wildcard characters (* or ?).
+The parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be provided, with no use of wildcard characters (* or ?). A previously defined improper type is required, noting that the order of the involved atom types is relevant.
+
+IMPORTANT: Impropers are not detected automatically because there are several possible improper definitions.
 
 **Examples**:
 
@@ -306,13 +308,39 @@ The parameter _atom-x_ is the identifier of a previously created atom. A unique 
 
 [improper_type], [atom]
 
+-----------------------------------------
+<a name="extra_dihedral"/> extra_dihedral
+-----------------------------------------
+
+**Syntax**:
+
+	extra_dihedral	<atom-1> <atom-2> <atom-3> <atom-4>
+
+* _atom-x_ = name of a previously defined atom
+
+**Description**:
+
+This command creates an extra dihedral involving the specified atoms.
+
+The parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be provided, with no use of wildcard characters (* or ?). A previously defined dihedral type is required.
+
+IMPORTANT: Extra dihedrals are only required by some molecular models that define unconventional dihedrals, for example, involving non-bonded atoms. Most models, however, will involve only automatically detectable dihedrals.
+
+**Examples**:
+
+	extra_dihedral	C1 C2 C3 C4
+
+**See also**:
+
+[dihedral_type], [atom]
+
 -------------------
 <a name="xyz"/> xyz
 -------------------
 
 **Syntax**:
 
-	xyz	[<file>]
+	xyz     	[<file>]
 
 * _file_ (optional) = name of a file containing atom coordinates
 
@@ -330,7 +358,7 @@ The xyz format for Playmol is:
 
 The provided coordinates are meant to define a list of actual structures for the molecules previously assembled using the commands [atom] and [bond]. Multiple molecules can be specified either using separate _xyz_ commands or using a unique _xyz_ command involving all coordinates together. The coordinates of all atoms of a given molecule must be provided in sequence, but not in any specific order. It is possible to specify many copies of the same molecule, but a given atom cannot reappear until all other atoms of the same molecule have been defined.
 
-The list of molecular structures created via _xyz_ will be employed to define a simulation box if the command [write] is involked later on. The origin of the cartesian space will be located in the center of the simulation box.
+The list of molecular structures created via _xyz_ will be employed to define a simulation box if the command [write] is invoked later on. The origin of the cartesian space will be located in the center of the simulation box.
 
 **Examples**:
 
@@ -435,27 +463,43 @@ The example above specifies a simulation box with density equal to 0.602214 in L
 
 **Description**:
 
-This command creates Packmol input files or invokes Packmol to build a mininum-overlap molecular packing inside a previously specified simulation box.
+This command creates Packmol input files or invokes Packmol to build a low-overlap molecular packing inside a previously specified simulation box.
 
-The keywords _fix_, _copy_, and _pack_ require the index of an existing molecule for which at least one set of atomic coordinates have been defined using the command [xyz]. The first defined set of coordinates will be used as a rigid-body model for translation or replication.
+The keywords _seed_, _tolerance_, and _nloops_ change the values of some parameters that affect Packmol's behavior. Different integer values for _seed_ tell Packmol to use different random number sequences for its packing algorithm. The parameter _tolerance_ is the mininum distance that atoms of distinc molecules must keep from each other in the final packing. The parameter _nloops_ is the maximum number of iterations to be carried out with the Packmol algorithm in a packing attempt.
 
-The keyword _action_ is used to create Packmol input files or to run Packmol directly. The following options are available:
+The parameter _retry_ is a reduction factor. If its value is 1.0, Playmol will invoke Packmol only once with the specified tolerance and will produce a warning message if the packing fails. If _retry_ is smaller than 1.0, then Playmol will invoke Packmol as many times as necessary to achieve a successful packing, with tolerance being iteratively multiplied by the value of _retry_ at each new attempt.
 
-* _execute_: this option executes Packmol so as to build the desired molecular packing. It requires the previous definition of a simulation [box] and the invokation of at least one keyword _fix_, _copy_, or _pack_. This keyword can be invoked in the same packmol command (either before or after _action_) or in a previous packmol command. If the parameter _retry_ is currently equal to 1.0 (its default value), then Packmol will do only one packing attempt with the specified _tolerance_ and produce a warning message in case such attempt fails. If _retry_ is smaller than 1.0, then Packmol will keep trying until a successful attempt is achieved, with _tolerance_ being iteratively multiplied by _retry_ at each new attempt. IMPORTANT: after a successful packing, the current list of atomic coordinates is replaced by the new coordinates generated by Packmol. Therefore, the command [write] can be used afterwards to create a LAMMPS configuration file with the packed system.
+The keywords _fix_, _copy_, and _pack_ require the index of an existing molecule for which at least one set of atomic coordinates have been defined using the command [xyz]. The first defined set of coordinates for such molecule will then be used as a rigid-body model for translation or replication. The meaning of each option is:
 
-* _setup_: this option generates an input file _packmol.inp_ and coordinate files _molecule-x.inp_, where _x_ is the index of a molecule.
+* fix <index> <x> <y> <z>: makes a copy of Molecule _index_ with its geometric center located at the provided coordinate (_x_, _y_, _z_), keeping its original orientation.
+
+* copy <index> <N>: makes _N_ copies of Molecule _index_ in random positions, but keeping the original orientation (i.e. all _N_ copies will be aligned in the final packing). This is useful for packing long molecules.
+
+* pack <index> <N>: makes _N_ copies of Molecule _index_ in random positions and with random orientations.
+
+IMPORTANT: the option _summary_ of command [write] can be very useful for checking out the indices of the molecules.
+
+The keyword _action_ is used to create Packmol input files or to invoke Packmol. The following options are available:
+
+* __execute__: this option calls Packmol to build the desired molecular packing. It requires the previous definition of a simulation [box]. Moreover, it requires that at least one keyword _fix_, _copy_, or _pack_ has appeared in a previous packmol command or appears in the same packmol command, either before or after the keyword _action_. If the parameter _retry_ is currently equal to 1.0 (its default value), then Packmol will do only one packing attempt with the specified _tolerance_ and produce a warning message in case such attempt fails. If _retry_ is smaller than 1.0, then Packmol will keep trying until a successful attempt is achieved, with _tolerance_ being iteratively multiplied by the _retry_ value at each new attempt. IMPORTANT: if packing succeeds, then the current list of atomic coordinates is replaced by the new coordinates generated by Packmol. After that, the command [write] can be used to create a LAMMPS configuration file with the attained packing.
+
+* __setup__: this option generates an input file named _packmol.inp_ and coordinate files _molecule-x.inp_, where _x_ is the index of each involved molecule. These files are prepared for running Packmol externally in order to generate a file _packmol-output.xyz_ containing the final packing if the algorithm succeeds with the given tolerance. For illustration, one may notice that a successful use of the packmol command with options _retry 1.0 action execute_ would have exactly the same result as the following sequence of commands:
 
 
 	packmol 	action setup
 	shell   	packmol < packmol.inp
-	xyz     	packmol_output.xyz reset
+	reset		xyz
+	xyz     	packmol_output.xyz
+
+Nevertheless, the real usefulness of the option _setup_ is to permit editing of the file _packmol.inp_ in order to impose some additional constraints, which are not directly handled in the current version of Playmol. Please see [Packmol User's Guide] for additional information.
 
 **Examples**:
 
 	box    		density 0.602214
-	packmol		tolerance 3.0 change 0.9 fix 1 0.0 0.0 0.0 pack 2 1000 action persist
+	packmol		tolerance 3.0 retry 0.9 fix 1 0.0 0.0 0.0 pack 2 1000 action execute
+	write		lammps system.data
 
-The example above uses Packmol to create a random packing of molecules with density equal to 0.602214 Da/Å³ in which one copy of molecule 1 is centered at the origin and 1000 copies of molecule 2 are packed with random positions and random orientations. The desired mininum intermolecular atomic distance is initially set to 3.0 Å, but Packmol will keep reducing the tolerance in 90% until the packing is successful.
+The example above uses Packmol to create a random packing of molecules with density equal to 0.602214 Da/Å³ (1.0 g/cm³) in which one copy of molecule 1 is centered at the origin and 1000 copies of molecule 2 are packed with random positions and random orientations. The desired mininum intermolecular atomic distance is initially set to 3.0 Å, but Packmol will keep reducing the tolerance in 90% until the packing is successful. Finally, a LAMMPS configuration file is generated.
 
 **See also**:
 
@@ -469,12 +513,24 @@ The example above uses Packmol to create a random packing of molecules with dens
 
 	write		 <format> [<file>]
 
-* _style_ = _playmol_ or _lammps_ or _summary_ or _xyz_
+* _format_ = _playmol_ or _lammps_ or _summary_ or _xyz_
 * _file_ (optional) = name of a file to be created
 
 **Description**:
 
-This command writes down the molecular system in a file (if specified) or in the standard output device.
+This command writes down the molecular system in a file or in the standard output device.
+
+The parameter _format_ must be one of the following options:
+
+* __playmol__: the output will contain Playmol commands that could be used in another script to build the same system. For illustration, detected angles and dihedrals appear as commented lines. Type and atom prefixes are explicitly added to the corresponding identifiers.
+
+* __lammps__: the command will produce information in the LAMMPS configuration file format, which can be used as an initial configuration for a Molecular Dynamics simulation using LAMMPS' command [read_data].
+
+* __summary__: this option will print a summary of the system characteristics, including the amount of every defined and detected structure such as angles, dihedrals, and molecules. Properties of each molecular species will also be printed, such as its mass, its atoms, and the number of defined sets of coordinates. This is useful for debbugging purposes.
+
+* __xyz__: writes down the list of atomic coordinates using the [xyz file format], but with element symbols replaced by atom identifiers. This is useful for using with another Playmol script or for visualization purposes.
+
+The optional parameter _file_ is the name of the file which will contain the system info. If it is omitted, the info will be written in the standard output unit (the computer screen, in most cases).
 
 **Examples**:
 
@@ -535,12 +591,42 @@ This command redirects Playmol to read and execute commands from another script.
 [atom_type], [atom]
 
 -----------------------
+<a name="reset"/> reset
+-----------------------
+
+**Syntax**:
+
+	reset		<list>
+
+* _list_ = *bond_types* or *angle_types* or *dihedral_types* or *improper_types* or *atoms* or *charges* or *bonds* or *impropers* or *xyz* or *packmol* or *all*
+
+**Description**:
+
+This command resets one or more lists of predefined entities.
+
+The options *bond_types*, *angle_types*, *dihedral_types*, *improper_types*, *charges*, and *impropers* are self-explanatory. The remaining options are:
+
+* _atoms_: resets the list of atoms and its dependent lists: charges, bonds, angles, dihedrals, impropers, molecules, coordinates, and Packmol definitions.
+
+* _bonds_: resets the list of bonds and all its dependent lists: angles, dihedrals, molecules, coordinates, and Packmol definitions.
+
+* _xyz_: resets the list of coordinates.
+
+* _packmol_: resets the list of Packmol definitions.
+
+* _all_: resets all lists, including atom types and masses.
+
+**See also**:
+
+[packmol]
+
+-----------------------
 <a name="shell"/> shell
 -----------------------
 
 **Syntax**:
 
-	shell <command>
+	shell		<command>
 
 * _command_ = an external shell command
 
@@ -589,6 +675,7 @@ The example above writes a summary of the current molecular system and then quit
 [atom]:			#atom
 [charge]:		#charge
 [bond]:			#bond
+[extra_dihedral]:	#extra_dihedral
 [improper]:		#improper
 [xyz]:			#xyz
 [box]:			#box
@@ -596,9 +683,12 @@ The example above writes a summary of the current molecular system and then quit
 [write]:		#write
 [prefix]:		#prefix
 [include]:		#include
+[reset]:		#reset
 [shell]:		#shell
 [quit]:			#quit
 
 [LAMMPS real units]:	http://lammps.sandia.gov/doc/units.html
+[read_data]:		http://lammps.sandia.gov/doc/read_data.html
 [xyz file format]:	http://openbabel.org/wiki/XYZ_(format)
+[Packmol User's Guide]:	http://www.ime.unicamp.br/~martinez/packmol/quickguide/
 

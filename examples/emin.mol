@@ -42,8 +42,9 @@ dihedral_type	CW NA CT CT	-1.7097    1.4595    0.1897    0.0000
 dihedral_type	NA CT CT HC	 0.0000    0.0000    0.0877    0.0000
 dihedral_type	HC CT CT HC	 0.0000    0.0000    0.3180    0.0000
 
-improper_type	*  *  C? HA	 0.0000    2.1989    0.0000    0.0000
-improper_type	C? C? NA CT	 0.0000    2.0005    0.0000    0.0000
+#dihedral_type	*  *  CR HA	 0.0000    2.1989    0.0000    0.0000
+#dihedral_type	*  *  CW HA	 0.0000    2.1989    0.0000    0.0000
+dihedral_type	C? C? NA CT	 0.0000    2.0005    0.0000    0.0000
 
 atom		NM	NA	 # Nitrogen bonded to the methyl group
 atom		CR	CR	 # Carbon bonded to both nitrogens
@@ -97,11 +98,11 @@ bond		CE1	HE1.1
 bond		CE1	HE1.2
 bond		CE1	HE1.3
 
-improper	CWM	CR	NM	CM
-improper	NM	NE	CR	HR
-improper	CR	CWE	NE	CE2
-improper	NE	CWM	CWE	HWE
-improper	CWE	NM	CWM	HWM
+extra_dihedral	CWM	CR	NM	CM
+extra_dihedral	NM	NE	CR	HR
+extra_dihedral	CR	CWE	NE	CE2
+extra_dihedral	NE	CWM	CWE	HWE
+extra_dihedral	CWE	NM	CWM	HWM
 
 xyz		emin_one.xyz
 

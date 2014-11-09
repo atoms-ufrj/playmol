@@ -19,3 +19,18 @@ To update Playmol, enter the playmol directory and execute the following command
 
     git pull
 
+
+Using Playmol
+-------------
+
+Once Playmol is installed, you can execute a series of input scripts by typing:
+
+    playmol file-1 [file-2 ...]
+
+This will execute the files in sequence as if they were a unique script. To execute the scripts one at a time, just run playmol multiple times.
+
+Another way of runnig a playmol script is by starting it with the following line and then making it executable (e.g. via chmod +x):
+
+    #!/usr/local/bin/playmol
+
+
