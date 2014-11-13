@@ -15,6 +15,7 @@ The sections of this manual are:
 
 * [installation](@ref install): provides instructions for installing Playmol
 * [commands](@ref commands): provides descriptions of all playmol commands
+* [scripts](@ref scripts): provides sample playmol scripts.
 
 @copyright GNU Public License.
 
