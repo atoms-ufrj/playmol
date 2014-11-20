@@ -252,6 +252,33 @@ When an atom is created, a new monoatomic molecule is automatically detected. If
 
 [atom_type], [mass], [bond]
 
+-------------------------
+<a name="charge"/> charge
+-------------------------
+
+**Syntax**:
+
+	charge		<atom> <value>
+
+* _atom_ = the name of an atom
+* _value_ = charge of the specified atom
+
+**Description**:
+
+This command defines the electric charge of an atom. Wildcard characters (* or ?) can be used to assign the same charge value to different atoms. The command applies for atoms defined either beforehand or afterwards.
+
+If a given [atom] has no charge explicitly defined, then it is considered to be neutral.
+
+**Examples**:
+
+	charge		O* -1.0
+
+In the example above, a change  value of _-1.0_ is assigned to all atoms whose identifiers start with O.
+
+**See also**:
+
+[atom]
+
 ---------------------
 <a name="bond"/> bond
 ---------------------

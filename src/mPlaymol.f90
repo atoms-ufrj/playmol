@@ -513,16 +513,25 @@ contains
         end do
       end do
     end if
-    if (present(mass).or.present(charge)) then
+    if (present(mass)) then
+      mass = 0.0_rb
       ptr => me % molecule_list % first
       do while (associated(ptr))
         atom = ptr % id
         imol = str2int( ptr % params )
         call me % get_types( atom, atom_type )
-        if (present(mass)) &
-          mass(imol) = mass(imol) + str2real( me % mass_list % parameters( atom_type ) )
-        if (present(charge)) &
-          charge(imol) = charge(imol) + str2real( me % charge_list % parameters( atom ) )
+        mass(imol) = mass(imol) + str2real( me % mass_list % parameters( atom_type ) )
+        ptr => ptr % next
+      end do
+    end if
+    if (present(charge)) then
+      charge = 0.0_rb
+      ptr => me % molecule_list % first
+      do while (associated(ptr))
+        atom = ptr % id
+        imol = str2int( ptr % params )
+        call me % get_types( atom, atom_type )
+        charge(imol) = charge(imol) + str2real( me % charge_list % parameters( atom ) )
         ptr => ptr % next
       end do
     end if
