@@ -5,6 +5,7 @@ SRCDIR  = ./src
 OBJDIR  = $(SRCDIR)/obj
 BINDIR  = ./bin
 DOCDIR  = ./doc
+GTKDIR  = ./highlight
 
 PACKMOL = ./lib
 
@@ -27,6 +28,7 @@ clean:
 
 install:
 	cp -f $(BINDIR)/$(exec) /usr/local/bin
+	sh $(GTKDIR)/install.sh
 
 $(BINDIR)/$(exec): $(OBJDIR)/playmol.o $(OBJDIR)/mPlaymol.o $(OBJDIR)/mStruc.o  \
                    $(OBJDIR)/mPackmol.o $(OBJDIR)/mBox.o $(OBJDIR)/mString.o \

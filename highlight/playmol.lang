@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+ This file is part of GtkSourceView
+
+ Author: Charlles Abreu <abreu@eq.ufrj.br>
+ Copyright (C) 2014 Charlles Abreu <abreu@eq.ufrj.br>
+
+ GtkSourceView is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+ GtkSourceView is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+-->
+<language id="playmol" _name="Playmol" version="2.0" _section="Sources">
+  <metadata>
+    <property name="globs">*.mol;*.pmol;*playmol</property>
+    <property name="line-comment-start">#</property>
+  </metadata>
+
+  <styles>
+    <style id="comment" _name="Comment" map-to="def:comment"/>
+    <style id="floating-point" _name="Floating Point" map-to="def:floating-point"/>
+    <style id="keyword" _name="Keyword" map-to="def:keyword"/>
+    <style id="decimal" _name="Decimal" map-to="def:decimal"/>
+    <style id="string" _name="String" map-to="def:string"/>
+  </styles>
+
+  <default-regex-options case-sensitive="true"/>
+
+  <definitions>
+
+    <context id="line-comment" style-ref="comment" end-at-line-end="true" class="comment" class-disabled="no-spell-check">
+      <start>#</start>
+      <include>
+        <context ref="def:escape"/>
+        <context ref="def:in-line-comment"/>
+      </include>
+    </context>
+
+    <context id="default-files" style-ref="string">
+      <keyword>[\w_]+\.xyz</keyword>
+      <keyword>[\w_]+\.(p|play)?mol</keyword>
+      <keyword>[\w_]+\.(lmp|lammps)?_?data</keyword>
+      <keyword>[\w_]+\.l(mp|ammps)</keyword>
+    </context>
+
+    <context id="commands" style-ref="keyword">
+      <keyword>atom_type</keyword>
+      <keyword>mass</keyword>
+      <keyword>bond_type</keyword>
+      <keyword>angle_type</keyword>
+      <keyword>dihedral_type</keyword>
+      <keyword>improper_type</keyword>
+      <keyword>atom</keyword>
+      <keyword>charge</keyword>
+      <keyword>bond</keyword>
+      <keyword>extra_dihedral</keyword>
+      <keyword>improper</keyword>
+      <keyword>xyz</keyword>
+      <keyword>box\s*(lengths|density|volume)</keyword>
+      <keyword>packmol</keyword>
+      <keyword>write\s*(playmol|lammps|summary|xyz)</keyword>
+      <keyword>prefix\s*(atoms|types)</keyword>
+      <keyword>prefix</keyword>
+      <keyword>include</keyword>
+      <keyword>reset</keyword>
+      <keyword>shell</keyword>
+      <keyword>quit</keyword>
+      <keyword>tolerance</keyword>
+      <keyword>seed</keyword>
+      <keyword>retry</keyword>
+      <keyword>nloops</keyword>
+      <keyword>fix</keyword>
+      <keyword>copy</keyword>
+      <keyword>pack</keyword>
+      <keyword>action\s*(execute|setup)</keyword>
+      <keyword>aspect</keyword>
+    </context>
+
+    <context id="floating-point-number" style-ref="floating-point">
+      <match extended="true">
+        (?&lt;![\w\.])
+        [+-]?
+        ((\.[0-9]+ | [0-9]+\.[0-9]*) ([ed][+-]?[0-9]*)? |
+         ([0-9]+[ed][+-]?[0-9]*))
+         ([_]([0-9]+|[a-z][\w_]*))?
+        (?![\w\.])
+      </match>
+    </context>
+
+    <context id="decimal" style-ref="decimal">
+      <match extended="true">
+        (?&lt;![\w\.])
+        [+-]? ([1-9][0-9]*|0)
+        ([_]([0-9]+|[a-z][\w_]*))?
+        (?![\w\.])
+      </match>
+    </context>
+
+    <context id="playmol" class="no-spell-check">
+      <include>
+        <context ref="floating-point-number"/>
+        <context ref="decimal"/>
+        <context ref="def:string"/>
+        <context ref="def:single-quoted-string"/>
+        <context ref="line-comment"/>
+        <context ref="commands"/>
+        <context ref="default-files"/>
+      </include>
+    </context>
+
+  </definitions>
+</language>
