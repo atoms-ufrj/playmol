@@ -179,7 +179,7 @@ contains
       end subroutine atom_command
       !---------------------------------------------------------------------------------------------
       subroutine charge_command
-        call me % charge_list % add( narg-1, arg(2:narg), me % atom_list )
+        call me % charge_list % add( narg-1, arg(2:narg) )
       end subroutine charge_command
       !---------------------------------------------------------------------------------------------
       subroutine bond_command

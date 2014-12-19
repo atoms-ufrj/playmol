@@ -1,0 +1,101 @@
+# Modeling Ionic Liquids Using a Systematic All-Atom Force Field
+# J. N. Canongia Lopes, J. Deschamps, and A. A. H. Padua
+# J. Phys. Chem. B, 2004, 108 (6), pp 2038–2047
+# DOI: 10.1021/jp0362133
+
+mass		N*		14.007
+mass		C*		12.011
+mass		H*		 1.008
+
+# Dialkylimidazolium cation:
+
+atom_type	NA		 0.1700  3.2500  # Nitrogen
+atom_type	CR		 0.0700  3.5500  # Primary cyclic carbon
+atom_type	CW		 0.0700  3.5500  # Secondary cyclic carbon
+atom_type	CT		 0.0660  3.5000  # Extracyclic carbon
+atom_type	HA		 0.0300  2.4200  # Hydrogen bonded to a cyclic carbon
+atom_type	HC		 0.0300  2.5000  # Hydrogen bonded to an extracyclic carbon
+
+bond_type	CR NA		  477.1   1.315
+bond_type	CW NA		  427.1   1.378
+bond_type	CW CW		  520.1   1.341
+bond_type	NA CT		  337.0	  1.466
+bond_type	C? HA		  340.0   1.080
+bond_type	CT HC		  340.0   1.090
+bond_type	CT CT		  267.9   1.529
+
+angle_type	CT CT CT	  58.35	  112.7
+angle_type	CT CT HC	  37.50	  110.7
+angle_type	HC CT HC	  32.99	  107.8
+angle_type	CW NA CR	  70.00	  108.0
+angle_type	CW NA CT	  70.00	  125.6
+angle_type	CR NA CT	  70.00	  126.4
+angle_type	NA CR HA	  35.00	  125.1
+angle_type	NA CR NA	  70.00	  109.8
+angle_type	NA CW CW	  70.00	  107.1
+angle_type	NA CW HA	  35.00	  122.0
+angle_type	CW CW HA	  35.00	  130.9
+angle_type	NA CT HC	  37.50	  110.7
+angle_type	NA CT CT	  58.35	  112.7
+angle_type	CT CR NA	  70.00	  125.8
+angle_type	CR CT HC	  37.50	  110.7
+
+dihedral_type	HC CT CT HC	 0.0000	 0.0000	 0.3180	 0.0000
+dihedral_type	CT CT CT HC	 0.0000	 0.0000	 0.3660	 0.0000
+dihedral_type	CT CT CT CT	 1.7400	-0.1570	 0.2790	 0.0000
+dihedral_type	C? NA CR *	 0.0000	 4.6511	 0.0000	 0.0000
+dihedral_type	C? NA CW *	 0.0000	 2.9995	 0.0000	 0.0000
+dihedral_type	?A CW CW ?A	 0.0000	10.7505	 0.0000	 0.0000
+dihedral_type	CW NA CT HC	 0.0000	 0.0000	 0.1240	 0.0000
+dihedral_type	CW NA CT CT	-1.7097	 1.4595	 0.1897	 0.0000
+dihedral_type	CR NA CT CT	-1.2593	 0.0000	 0.0000	 0.0000
+dihedral_type	NA CT CT CT	-1.7877	 0.7563	-0.2874	 0.0000
+dihedral_type	NA CT CT HC	 0.0000	 0.0000	 0.0877	 0.0000
+
+improper_type	C? C? NA CT	 0.0000	 2.0005	 0.0000	 0.0000
+improper_type	*  *  C? *	 0.0000	 2.1989	 0.0000	 0.0000
+
+charge		C1*		-0.17
+charge		C2*		 0.01
+charge		CE*		-0.05
+charge		CS*		-0.12
+charge		CT*		-0.18
+charge		CR*		-0.11
+charge		CW*		-0.13
+charge		HA*		 0.21
+charge		HC*		 0.06
+charge		H1*		 0.13
+charge		NA*		 0.15
+
+# bis(trifluoromethylsulfonyl)imide ion (NTf2-):
+
+atom_type	CF		0.0660    3.5000
+atom_type	FB		0.0530    2.9500
+atom_type	SB		0.2500    3.5500
+atom_type	NB		0.1700    3.2500
+atom_type	OB		0.2100    2.9600
+
+bond_type	FB CF		 441.9     1.323
+bond_type	CF SB		 233.0     1.818
+bond_type	NB SB		 374.9     1.570
+bond_type	SB OB		 637.1     1.437
+
+angle_type	FB CF FB	 93.33    107.10
+angle_type	FB CF SB	 82.93    111.70
+angle_type	NB SB CF	 91.30    103.50
+angle_type	CF SB OB	103.97    102.60
+angle_type	NB SB OB	 94.29    113.60
+angle_type	OB SB OB	115.80    118.50
+angle_type	SB NB SB	 80.19 	  125.60
+
+dihedral_type	NB SB CF FB	0.0000    0.0000    0.3160    0.0000
+dihedral_type	OB SB CF FB	0.0000    0.0000    0.3468    0.0000
+dihedral_type	SB NB SB CF	7.8329   -2.4904   -0.7636    0.0000
+dihedral_type	OB SB NB SB	0.0000    0.0000   -0.0036    0.0000
+
+charge		FB*		 -0.16
+charge		CF*		  0.35
+charge		SB*		  1.02
+charge		OB*		 -0.53
+charge		NB*		 -0.66
+

@@ -1,0 +1,82 @@
+# bis(trifluoromethylsulfonyl)imide ion (NTf2-):
+
+atom_type	CF		0.0660    3.5000
+atom_type	FB		0.0530    2.9500
+atom_type	SB		0.2500    3.5500
+atom_type	NB		0.1700    3.2500
+atom_type	OB		0.2100    2.9600
+
+bond_type	FB CF		 441.9     1.323
+bond_type	CF SB		 233.0     1.818
+bond_type	NB SB		 374.9     1.570
+bond_type	SB OB		 637.1     1.437
+
+angle_type	FB CF FB	 93.33    107.10
+angle_type	FB CF SB	 82.93    111.70
+angle_type	NB SB CF	 91.30    103.50
+angle_type	CF SB OB	103.97    102.60
+angle_type	NB SB OB	 94.29    113.60
+angle_type	OB SB OB	115.80    118.50
+angle_type	SB NB SB	 80.19 	  125.60
+
+dihedral_type	NB SB CF FB	0.0000    0.0000    0.3160    0.0000
+dihedral_type	OB SB CF FB	0.0000    0.0000    0.3468    0.0000
+dihedral_type	SB NB SB CF	7.8329   -2.4904   -0.7636    0.0000
+dihedral_type	OB SB NB SB	0.0000    0.0000   -0.0036    0.0000
+
+charge		FB*		 -0.16
+charge		CF*		  0.35
+charge		SB*		  1.02
+charge		OB*		 -0.53
+charge		NB*		 -0.66
+
+atom		CF1	CF
+atom		FB1.1	FB
+atom		FB1.2	FB
+atom		FB1.3	FB
+atom		SB1	SB
+atom		OB1.1	OB
+atom		OB1.2	OB
+atom		CF2	CF
+atom		FB2.1	FB
+atom		FB2.2	FB
+atom		FB2.3	FB
+atom		SB2	SB
+atom		OB2.1	OB
+atom		OB2.2	OB
+atom		NB	NB
+
+bond		CF2	FB2.1
+bond		CF2	FB2.2
+bond		CF2	FB2.3
+bond		SB1	OB1.1
+bond		SB1	OB1.2
+bond		CF1	SB1
+bond		CF1	FB1.1
+bond		CF1	FB1.2
+bond		CF1	FB1.3
+bond		SB2	OB2.1
+bond		SB2	OB2.2
+bond		CF2	SB2
+bond		NB	SB1
+bond		NB	SB2
+
+xyz
+15
+# bis(trifluoromethylsulfonyl)imide:
+CF1         0.000000        0.000000        0.000000
+FB1.1       1.332000        0.000000        0.000000
+FB1.2      -0.391662       -1.273116        0.000000
+FB1.3      -0.391662        0.636558        1.102551
+SB1        -0.675147        0.843994       -1.461840
+NB         -2.352790        0.672003       -1.247519
+OB1.1      -0.167006        2.186338       -1.312994
+OB1.2      -0.109963        0.086044       -2.551944
+SB2        -3.226042        1.853717       -0.392545
+OB2.1      -2.247081        2.353584        0.542345
+OB2.2      -4.303151        1.089726        0.189179
+CF2        -3.713536        3.013510       -1.704929
+FB2.1      -4.451047        2.329444       -2.578060
+FB2.2      -2.592272        3.472026       -2.258782
+FB2.3      -4.412361        3.988641       -1.126149
+

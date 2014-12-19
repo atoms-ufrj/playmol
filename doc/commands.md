@@ -520,6 +520,19 @@ The keyword _action_ is used to create Packmol input files or to invoke Packmol.
 
 Nevertheless, the real usefulness of the option _setup_ is to permit editing of the file _packmol.inp_ in order to impose some additional constraints, which are not directly handled in the current version of Playmol. Please see [Packmol User's Guide] for additional information.
 
+The Packmol algorithm is described in the following paper:
+
+	@article{packmol_paper,
+		author = {Martinez, L. and Andrade, R. and Birgin, E. G. and Martinez, J. M.},
+		title = {PACKMOL: A package for building initial configurations for molecular dynamics simulations},
+		journal = {J. Comput. Chem.},
+		volume = {30},
+		number = {13},
+		pages = {2157--2164},
+		year = {2009}
+		doi = {10.1002/jcc.21224},
+	}
+
 **Examples**:
 
 	box    		density 0.602214

@@ -38,13 +38,29 @@ contains
 
   !=================================================================================================
 
+  elemental function replace_macro( a ) result( b )
+   character(*), intent(in) :: a
+   character(len(a))   :: b
+   integer :: i
+   b = ""
+   do i = 1, len_trim(a)
+     if (a(i:i) == "?") then
+       b = trim(b)//"x"
+     else if (a(i:i) /= "*") then
+       b = trim(b)//a(i:i)
+     end if
+   end do
+  end function replace_macro
+
+  !=================================================================================================
+
   elemental function match_str( a, b ) result( match )
     character(*), intent(in) :: a, b
     logical                  :: match
     logical :: has_macros_a
     has_macros_a = has_macros(a)
     if (has_macros_a.and.has_macros(b)) then
-      match = trim(a) == trim(b)
+      match = match_wild( a, replace_macro( b ) ).or.match_wild( b, replace_macro( a ) )
     else if (has_macros_a) then
       match = match_wild( a, b )
     else
@@ -397,4 +413,7 @@ contains
     write(sec,'(I2)') value(7)
     string = trim(adjustl(day))//"-"//month(value(2))//"-"//year//" at "//hour//":"//min//":"//sec
   end function now
+
+  !=================================================================================================
+
 end module mString
