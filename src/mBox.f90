@@ -57,9 +57,9 @@ contains
       case ("volume")
         if (scalar <= 0.0_rb) call error( "invalid value" )
         box % def_type = 2
-        box % density = scalar
+        box % volume = scalar
         box % aspect = vector
-      case ("size")
+      case ("lengths")
         box % def_type = 3
         box % length = vector
     end select

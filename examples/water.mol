@@ -26,6 +26,7 @@ O	0.9572	0.0 	0.0
 H2	1.19719	0.92663	0.0
 
 box		density 0.602214
-packmol		tolerance 3.0 retry 0.95 pack 1 500 action execute
+packmol		tolerance 2.5 retry 0.95 pack 1 500 action execute
 write		lammps water.lmp
+write		simple water.conf
 write		summary

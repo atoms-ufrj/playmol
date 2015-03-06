@@ -74,6 +74,7 @@
       <keyword>prefix</keyword>
       <keyword>include</keyword>
       <keyword>reset</keyword>
+      <keyword>clean_types</keyword>
       <keyword>shell</keyword>
       <keyword>quit</keyword>
       <keyword>tolerance</keyword>

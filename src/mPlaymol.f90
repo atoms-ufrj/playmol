@@ -17,6 +17,10 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
+
+! $%$%$%$%$%$%$$%%$
+! **************************** TO DO: review the order of dihedral atoms
+
 module mPlaymol
 
 use mGlobal
@@ -33,7 +37,7 @@ type tPlaymol
   type(StrucList) :: bond_type_list = StrucList( name = "bond type", number = 2 )
   type(StrucList) :: angle_type_list = StrucList( name = "angle type", number = 3 )
   type(StrucList) :: dihedral_type_list = StrucList( name = "dihedral type", number = 4, &
-                                                     two_way = .false. )
+                                                     two_way = .true. )
   type(StrucList) :: improper_type_list = StrucList( name = "improper type", number = 4, & 
                                                      two_way = .false. )
   type(StrucList) :: mass_list = StrucList( name = "mass", number = 1 )
@@ -60,6 +64,7 @@ type tPlaymol
     procedure :: get_types => tPlaymol_get_types
     procedure :: check_types => tPlaymol_check_types
     procedure :: atoms_in_molecules => tPlaymol_atoms_in_molecules
+    procedure :: clean_type_list => tPlaymol_clean_type_list
 end type tPlaymol
 
 contains
@@ -92,6 +97,7 @@ contains
         case ("include"); call include_command
         case ("packmol"); call packmol_command
         case ("reset"); call reset_command
+        case ("clean_types"); call clean_types_command
         case ("shell"); call shell_command
         case ("quit"); stop "interrupted by quit command"
         case default; call error( "unknown command", arg(1) )
@@ -280,6 +286,14 @@ contains
         if (any(lists == 14)) call me % coordinate_list % destroy
         if (any(lists == 15)) call me % packmol_list % destroy
       end subroutine reset_lists
+      !---------------------------------------------------------------------------------------------
+      subroutine clean_types_command
+        call me % clean_type_list( me % atom_type_list, me % atom_list )
+        call me % clean_type_list( me % bond_type_list, me % bond_list )
+        call me % clean_type_list( me % angle_type_list, me % angle_list )
+        call me % clean_type_list( me % dihedral_type_list, me % dihedral_list )
+        call me % clean_type_list( me % improper_type_list, me % improper_list )
+      end subroutine clean_types_command
       !---------------------------------------------------------------------------------------------
       subroutine reset_command
         integer :: i
@@ -526,14 +540,16 @@ contains
     end if
     if (present(charge)) then
       charge = 0.0_rb
-      ptr => me % molecule_list % first
-      do while (associated(ptr))
-        atom = ptr % id
-        imol = str2int( ptr % params )
-        call me % get_types( atom, atom_type )
-        charge(imol) = charge(imol) + str2real( me % charge_list % parameters( atom ) )
-        ptr => ptr % next
-      end do
+      if (associated(me % charge_list % first)) then
+        ptr => me % molecule_list % first
+        do while (associated(ptr))
+          atom = ptr % id
+          imol = str2int( ptr % params )
+          call me % get_types( atom, atom_type )
+          charge(imol) = charge(imol) + str2real( me % charge_list % parameters( atom ) )
+          ptr => ptr % next
+        end do
+      end if
     end if
   end subroutine tPlaymol_count_molecules
 
@@ -909,6 +925,44 @@ contains
       end subroutine handle_struc
       !---------------------------------------------------------------------------------------------
   end subroutine tPlaymol_write_lammps
+
+  !=================================================================================================
+
+  subroutine tPlaymol_clean_type_list( me, type_list, list )
+    class(tPlaymol), intent(inout) :: me
+    type(StrucList), intent(inout) :: type_list
+    type(StrucList), intent(in)    :: list
+    type(Struc), pointer :: struct, struc_type, previous
+    logical :: found
+    character(sl) :: types(list%number)
+    call writeln( "Cleaning", type_list%name, "list..." )
+    struc_type => type_list % first
+    previous => null()
+    do while (associated(struc_type))
+      struct => list % first
+      found = .false.
+      do while (associated(struct).and.(.not.found))
+        call me % get_types( struct%id, types )
+        found = struc_type % match_id(types,two_way=.true.)
+        struct => struct % next
+      end do
+      if (found) then
+        previous => struc_type
+        struc_type => struc_type % next
+      else
+        call writeln( "Deleting unused", type_list%name, join(struc_type % id) )
+        if (associated(previous)) then
+          previous % next => struc_type % next
+          deallocate( struc_type )
+          struc_type => previous % next
+        else
+          type_list % first => struc_type % next
+          deallocate( struc_type )
+          struc_type => type_list % first
+        end if
+      end if
+    end do
+  end subroutine tPlaymol_clean_type_list
 
   !=================================================================================================
 
