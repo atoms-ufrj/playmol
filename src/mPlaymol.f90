@@ -80,6 +80,7 @@ contains
     do while (narg > 0)
       select case (trim(arg(1)))
         case ("prefix"); call prefix_command
+        case ("suffix"); call suffix_command
         case ("box"); call box_command
         case ("atom_type"); call atom_type_command
         case ("bond_type"); call bond_type_command
@@ -108,6 +109,7 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine prefix_command
         if (narg < 3) call error( "invalid prefix command" )
+        call writeln( "Defining new prefix for ", arg(2), ":", arg(3) )
         if (arg(3) == "none") arg(3) = ""
         select case (arg(2))
           case ("types"); me % atom_type_list % prefix = arg(3)
@@ -116,6 +118,18 @@ contains
         end select
         if (has_macros(arg(3))) call error( "invalid prefix", arg(3) )
       end subroutine prefix_command
+      !---------------------------------------------------------------------------------------------
+      subroutine suffix_command
+        if (narg < 3) call error( "invalid suffix command" )
+        call writeln( "Defining new suffix for ", arg(2), ":", arg(3) )
+        if (arg(3) == "none") arg(3) = ""
+        select case (arg(2))
+          case ("types"); me % atom_type_list % suffix = arg(3)
+          case ("atoms"); me % atom_list % suffix = arg(3)
+          case default; call error( "suffix keyword must be 'types' or 'atoms'" )
+        end select
+        if (has_macros(arg(3))) call error( "invalid suffix", arg(3) )
+      end subroutine suffix_command
       !---------------------------------------------------------------------------------------------
       subroutine box_command
         integer :: i
@@ -174,7 +188,8 @@ contains
       end subroutine mass_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_command
-        if (narg >= 3) arg(3) = trim(me % atom_type_list % prefix) // arg(3)
+        if (narg >= 3) arg(3) = trim(me % atom_type_list % prefix) // trim(arg(3)) // &
+                                trim(me % atom_type_list % suffix)
         call me % atom_list % add( narg-1, arg(2:narg) )
         if (has_macros(arg(2))) call error( "invalid atom name" )
         call me % check_types( arg(2:2), me % atom_type_list )
@@ -427,7 +442,7 @@ contains
         read(unit,'(A'//csl//')') line
         call split( line, narg, arg )
         if (narg /= 4) call error( "invalid xyz file format" )
-        catom = trim(me % atom_list % prefix)//arg(1)
+        catom = trim(me % atom_list % prefix)//trim(arg(1))//trim(me % atom_list % suffix)
         call me % molecule_list % search( [catom], atom )
         if (associated(atom)) then
           if (new_molecule) then

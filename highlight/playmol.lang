@@ -72,6 +72,8 @@
       <keyword>write\s*(playmol|lammps|summary|xyz)</keyword>
       <keyword>prefix\s*(atoms|types)</keyword>
       <keyword>prefix</keyword>
+      <keyword>suffix\s*(atoms|types)</keyword>
+      <keyword>suffix</keyword>
       <keyword>include</keyword>
       <keyword>reset</keyword>
       <keyword>clean_types</keyword>

@@ -19,6 +19,7 @@ Playmol is designed to execute scripts containing the commands described below:
 * [packmol] - executes Packmol to create a packed molecular system.
 * [write] - writes down system info in different file formats (including LAMMPS data files).
 * [prefix] - defines default prefixes for atom types and atoms.
+* [suffix] - defines default suffixes for atom types and atoms.
 * [include] - includes commands from another script.
 * [reset] - resets a list of entities together with its dependent lists.
 * [clean_types] - deletes unused atom types, bond types, angle types, dihedral types, and improper types.
@@ -597,6 +598,8 @@ The parameter _target_ indicates which type of identifier will be modified by th
 
 The parameter _string_ must be a single character string with no comment tags (#) and no wildcard characters (* or ?). Such string will be used in subsequent commands as a prefix for atom type identifiers or for atom identifiers, depending on the specified parameter _target_. If _string_ is _none_, then no prefix will be used for the specified _target_ in subsequent commands.
 
+Both prefix and [suffix] can be defined simultaneously.
+
 **Examples**:
 
 	prefix		atoms H2O-
@@ -607,7 +610,40 @@ The example above creates two atoms whose identifiers are H2O-H1 and H2O-H2.
 
 **See also**:
 
-[atom_type], [atom]
+[atom_type], [atom], [suffix]
+
+-------------------------
+<a name="suffix"/> suffix
+-------------------------
+
+**Syntax**:
+
+	suffix		<target> <string>
+
+* _target_ = _types_ or _atoms_
+* _string_ = _none_ or a character string to be used as suffix for atom types or atoms
+
+**Description**:
+
+This command enables or disables a suffix to be added to every atom type identifier or to every atom identifier in subsequent commands.
+
+The parameter _target_ indicates which type of identifier will be modified by the enabled suffix. Use _types_ to apply the suffix to atom type identifiers or _atoms_ to apply the suffix to atom identifiers.
+
+The parameter _string_ must be a single character string with no comment tags (#) and no wildcard characters (* or ?). Such string will be used in subsequent commands as a suffix for atom type identifiers or for atom identifiers, depending on the specified parameter _target_. If _string_ is _none_, then no suffix will be used for the specified _target_ in subsequent commands.
+
+Both [prefix] and suffix can be defined simultaneously.
+
+**Examples**:
+
+	suffix		atoms -H2O
+	atom		H1 H
+	atom		H2 H
+
+The example above creates two atoms whose identifiers are H1-H2O and H2-H2O.
+
+**See also**:
+
+[atom_type], [atom], [prefix]
 
 ---------------------------
 <a name="include"/> include
@@ -673,6 +709,13 @@ The options *bond_types*, *angle_types*, *dihedral_types*, *improper_types*, *ch
 
 This command cleans the lists of defined types by deleting the types which were not used. Unused atom types, bond types, angle types, dihedral types, and improper types are irreversibly deleted.
 
+**Example**:
+
+	clean_types
+	write lammps config.data
+
+The example above cleans all unused types before creating a lammps data file.
+
 -----------------------
 <a name="shell"/> shell
 -----------------------
@@ -735,6 +778,7 @@ The example above writes a summary of the current molecular system and then quit
 [packmol]:		#packmol
 [write]:		#write
 [prefix]:		#prefix
+[suffix]:		#suffix
 [include]:		#include
 [reset]:		#reset
 [clean_types]:		#clean_types

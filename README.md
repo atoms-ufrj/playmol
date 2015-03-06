@@ -60,22 +60,27 @@ List of Playmol Commands
 
 Here is a complete list of Playmol commands:
 
-* **prefix**: defines default prefixes for atom types and atoms.
-* **include**: includes all commands of another script.
 * **atom_type**: creates an atom type with given name and parameters.
 * **mass**: specifies the mass of atoms of a given type.
-* **bond_type**: defines parameters of bonds between atoms of two given types.
-* **angle_type**: defines parameters of angles involving atoms of three given types.
-* **dihedral_type**: defines parameters of dihedrals involving atoms of four given types.
-* **improper_type**: defines parameters of impropers involving atoms of four given types.
-* **atom**: creates an atoms with given name and type.
+* **bond_type**: defines parameters for bonds between atoms of two given types.
+* **angle_type**: defines parameters for angles involving atoms of three given types.
+* **dihedral_type**: defines parameters for dihedrals involving atoms of four given types.
+* **improper_type**: defines parameters for impropers involving atoms of four given types.
+* **atom**: creates an atom with given name and type.
 * **charge**: specifies the charge of a given atom.
 * **bond**: creates a bond between two given atoms (angles and dihedrals are automatically detected).
-* **improper**: creates an improper involving a given atom quadruplet.
+* **improper**: creates an improper involving four given atoms.
+* **extra_dihedral**: creates an extra dihedral involving four given atoms.
 * **xyz**: defines positions for all atoms of one or more molecules.
 * **box**: defines the properties of a simulation box.
-* **write**: writes down system info in different file formats (including _LAMMPS_ data files).
-* **packmol**: generates Packmol input files or execute Packmol to create a packed molecular system.
+* **packmol**: executes Packmol to create a packed molecular system.
+* **write**: writes down system info in different file formats (including LAMMPS data files).
+* **prefix**: defines default prefixes for atom types and atoms.
+* **suffix**: defines default suffixes for atom types and atoms.
+* **include**: includes commands from another script.
+* **reset**: resets a list of entities together with its dependent lists.
+* **clean_types**: deletes unused atom types, bond types, angle types, dihedral types, and improper types.
+* **shell**: executes an external shell command.
 * **quit**: interrupts Playmol execution.
 
 The syntax and behavior of each command is described in the Playmol documentation.
