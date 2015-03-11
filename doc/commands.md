@@ -22,7 +22,6 @@ Playmol is designed to execute scripts containing the commands described below:
 * [suffix] - defines default suffixes for atom types and atoms.
 * [include] - includes commands from another script.
 * [reset] - resets a list of entities together with its dependent lists.
-* [clean_types] - deletes unused atom types, bond types, angle types, dihedral types, and improper types.
 * [shell] - executes an external shell command.
 * [quit] - interrupts Playmol execution.
 
@@ -697,25 +696,6 @@ The options *bond_types*, *angle_types*, *dihedral_types*, *improper_types*, *ch
 
 [packmol]
 
------------------------------------
-<a name="clean_types"/> clean_types
------------------------------------
-
-**Syntax**:
-
-	clean_types
-
-**Description**:
-
-This command cleans the lists of defined types by deleting the types which were not used. Unused atom types, bond types, angle types, dihedral types, and improper types are irreversibly deleted.
-
-**Example**:
-
-	clean_types
-	write lammps config.data
-
-The example above cleans all unused types before creating a lammps data file.
-
 -----------------------
 <a name="shell"/> shell
 -----------------------
@@ -781,7 +761,6 @@ The example above writes a summary of the current molecular system and then quit
 [suffix]:		#suffix
 [include]:		#include
 [reset]:		#reset
-[clean_types]:		#clean_types
 [shell]:		#shell
 [quit]:			#quit
 

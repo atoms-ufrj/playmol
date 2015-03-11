@@ -79,7 +79,6 @@ Here is a complete list of Playmol commands:
 * **suffix**: defines default suffixes for atom types and atoms.
 * **include**: includes commands from another script.
 * **reset**: resets a list of entities together with its dependent lists.
-* **clean_types**: deletes unused atom types, bond types, angle types, dihedral types, and improper types.
 * **shell**: executes an external shell command.
 * **quit**: interrupts Playmol execution.
 

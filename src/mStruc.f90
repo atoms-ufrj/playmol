@@ -28,6 +28,7 @@ type Struc
   character(sl), allocatable :: id(:)
   character(sl)              :: params
   type(Struc), pointer       :: next => null()
+  logical                    :: valid = .true.
   contains
     procedure :: init => Struc_init
     procedure :: match_id => Struc_match_id
@@ -49,8 +50,10 @@ type StrucList
     procedure :: index => StrucList_index
     procedure :: find => StrucList_find
     procedure :: count => StrucList_count
+    procedure :: count_valid => StrucList_count_valid
     procedure :: print => StrucList_print
     procedure :: destroy => StrucList_destroy
+    procedure :: validate_all => StrucList_validate_all
 end type StrucList
 
 contains
@@ -218,6 +221,20 @@ contains
 
   !=================================================================================================
 
+  function StrucList_count_valid( me ) result( N )
+    class(StrucList), intent(in) :: me
+    integer                      :: N
+    type(Struc), pointer :: current
+    current => me % first
+    N = 0
+    do while (associated(current))
+      if (current % valid) N = N + 1
+      current => current % next
+    end do
+  end function StrucList_count_valid
+
+  !=================================================================================================
+
   subroutine StrucList_print( me, unit, comment )
     class(StrucList), intent(in)           :: me
     integer,          intent(in)           :: unit
@@ -251,6 +268,18 @@ contains
     me % first => null()
     me % last => null()
   end subroutine StrucList_destroy
+
+  !=================================================================================================
+
+  subroutine StrucList_validate_all( me )
+    class(StrucList), intent(inout) :: me
+    type(Struc), pointer :: current
+    current => me % first
+    do while (associated(current))
+      current % valid = .true.
+      current => current % next
+    end do
+  end subroutine StrucList_validate_all
 
   !=================================================================================================
 
