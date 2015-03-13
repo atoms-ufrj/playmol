@@ -207,16 +207,21 @@ contains
 
   !=================================================================================================
 
-  function StrucList_count( me ) result( N )
-    class(StrucList), intent(in) :: me
-    integer                      :: N
+  function StrucList_count( me, valids_only ) result( N )
+    class(StrucList), intent(in)  :: me
+    integer                       :: N
+    logical, intent(in), optional :: valids_only
     type(Struc), pointer :: current
+    integer :: Nv
     current => me % first
     N = 0
+    Nv = 0
     do while (associated(current))
       N = N + 1
+      if (current % valid) Nv = Nv + 1
       current => current % next
     end do
+    if (present(valids_only)) N = Nv
   end function StrucList_count
 
   !=================================================================================================

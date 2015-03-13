@@ -50,6 +50,7 @@ type tPlaymol
     procedure :: read => tPlaymol_Read
     procedure :: write => tPlaymol_write
     procedure :: write_lammps => tPlaymol_write_lammps
+    procedure :: write_lammpstrj => tPlaymol_write_lammpstrj
     procedure :: read_xyz => tPlaymol_read_xyz
     procedure :: write_xyz => tPlaymol_write_xyz
     procedure :: summarize => tPlaymol_summarize
@@ -67,9 +68,10 @@ contains
 
   !=================================================================================================
 
-  recursive subroutine tPlaymol_Read( me, unit )
+  recursive subroutine tPlaymol_Read( me, unit, filename )
     class(tPlaymol), intent(inout) :: me
-    integer,      intent(in)    :: unit
+    integer,         intent(in)    :: unit
+    character(*),    intent(in)    :: filename
     integer       :: narg
     character(sl) :: arg(50)
     call next_command( unit, narg, arg )
@@ -96,7 +98,16 @@ contains
         case ("reset"); call reset_command
         case ("clean_types"); call clean_types_command
         case ("shell"); call shell_command
-        case ("quit"); stop "interrupted by quit command"
+        case ("quit")
+          if ((narg == 2).and.(arg(2) == "all")) then
+            call writeln( "Script", filename, "interrupted by 'quit all' command" )
+            stop
+          else if (narg == 1) then
+            call writeln( "Script", filename, "interrupted by 'quit' command" )
+            return
+          else
+            call error( "invalid quit command" )
+          end if
         case default; call error( "unknown command", arg(1) )
       end select
       call next_command( unit, narg, arg )
@@ -257,7 +268,7 @@ contains
       subroutine write_command
         integer :: unit
         if ((narg < 2).or.(narg > 4)) call error( "invalid write command" )
-        if (.not.any(arg(2) == [character(7)::"playmol","lammps","summary","xyz"]) ) then
+        if (.not.any(arg(2) == [character(9)::"playmol","lammps","summary","xyz","lammpstrj"]) ) then
           call error( "invalid write command" )
         end if
         if (narg == 3) then
@@ -271,6 +282,7 @@ contains
           case ("lammps");  call me % write_lammps( unit )
           case ("summary"); call me % summarize( unit )
           case ("xyz"); call me % write_xyz( unit )
+          case ("lammpstrj"); call me % write_lammpstrj( unit )
         end select
         if (unit /= stdout) close(unit)
       end subroutine write_command
@@ -282,7 +294,7 @@ contains
         inquire( file = arg(2), exist = file_exists )
         if (.not.file_exists) call error( "file", arg(2), "does not exist" )
         open( newunit = input, file = arg(2), status = "old" )
-        call me % Read( input )
+        call me % Read( input, trim(arg(2)) )
         close(input)
       end subroutine include_command
       !---------------------------------------------------------------------------------------------
@@ -662,7 +674,8 @@ contains
         end if
         call list % add( list%number, atoms )
         if (.not.associated(ptr)) then
-          call warning( "undefined", list%name, "type for atoms", join(atoms) )
+          call me % get_types( atoms(1:n), types )
+          call warning( "undefined", list%name, "type for atoms", join(atoms), "(types", join(types), ")" )
         end if
       end subroutine add
       !---------------------------------------------------------------------------------------------
@@ -729,19 +742,35 @@ contains
     write(unit,'(A)') "SUMMARY"
     write(unit,'(A)') repeat("-",80)
     write(unit,'(A)') "Specified:"
-    write(unit,'(I5," atom type(s).")') me % atom_type_list % count()
-    write(unit,'(I5," bond type(s).")') me % bond_type_list % count()
-    write(unit,'(I5," angle type(s).")') me % angle_type_list % count()
-    write(unit,'(I5," dihedral type(s).")') me % dihedral_type_list % count()
-    write(unit,'(I5," improper type(s).")') me % improper_type_list % count()
-    write(unit,'(I5," atom(s).")') me % atom_list % count()
-    write(unit,'(I5," bonds(s).")') me % bond_list % count()
-    write(unit,'(I5," extra dihedral(s).")') me % extra_dihedral_list % count()
-    write(unit,'(I5," improper(s).")') me % improper_list % count()
+    call flush( "atom type", me % atom_type_list % count() )
+    call flush( "bond type", me % bond_type_list % count() )
+    call flush( "angle type", me % angle_type_list % count() )
+    call flush( "dihedral type", me % dihedral_type_list % count() )
+    call flush( "improper type", me % improper_type_list % count() )
+    call flush( "atom", me % atom_list % count() )
+    call flush( "bond", me % bond_list % count() )
+    call flush( "extra dihedral", me % extra_dihedral_list % count() )
+    call flush( "improper", me % improper_list % count() )
     write(unit,'(/,A)') "Detected:"
-    write(unit,'(I5," angle(s).")') me % angle_list % count()
-    write(unit,'(I5," dihedral(s).")') me % dihedral_list % count()
-    write(unit,'(I5," molecule(s).")') me % nmol
+    call flush( "angle", me % angle_list % count() )
+    call flush( "dihedral", me % dihedral_list % count() )
+    call flush( "molecule", me % nmol )
+    write(unit,'(/,A)') "Effectively used:"
+    call me % mark_unused_types( me % atom_type_list, me % atom_list )
+    call me % mark_unused_types( me % bond_type_list, me % bond_list )
+    call me % mark_unused_types( me % angle_type_list, me % angle_list )
+    call me % mark_unused_types( me % dihedral_type_list, me % dihedral_list )
+    call me % mark_unused_types( me % improper_type_list, me % improper_list )
+    call flush( "atom type", me % atom_type_list % count(valids_only = .true.) )
+    call flush( "bond type", me % bond_type_list % count(valids_only = .true.) )
+    call flush( "angle type", me % angle_type_list % count(valids_only = .true.) )
+    call flush( "dihedral type", me % dihedral_type_list % count(valids_only = .true.) )
+    call flush( "improper type", me % improper_type_list % count(valids_only = .true.) )
+    call me % atom_type_list % validate_all()
+    call me % bond_type_list % validate_all()
+    call me % angle_type_list % validate_all()
+    call me % dihedral_type_list % validate_all()
+    call me % improper_type_list % validate_all()
     call me % count_molecules( molcount, mass, charge )
     do imol = 1, me % nmol
       write(unit,'(/,"Molecule[",A,"]:")') trim(int2str(imol))
@@ -772,6 +801,16 @@ contains
     end if
     write(unit,'("- Residual charge: ",A)') trim(real2str(sum(molcount*charge)))
     write(unit,'(A)') repeat("-",80)
+    contains
+      subroutine flush( title, amount )
+        character(*), intent(in) :: title
+        integer,      intent(in) :: amount
+        if (amount == 1) then
+          write(unit,'(I5,X,A,".")') amount, title
+        else if (amount > 1) then
+          write(unit,'(I5,X,A,"s.")') amount, title
+        end if
+      end subroutine flush
   end subroutine tPlaymol_summarize
 
   !=================================================================================================
@@ -852,8 +891,8 @@ contains
         class(StrucList), intent(in) :: list
         type(Struc), pointer :: current
         integer :: i
+        if (list % count(valids_only = .true.) > 0) then
         current => list % first
-        if (associated(current)) then
           write(unit,'(/,A,/)') name
           i = 0
           do while (associated(current))
@@ -888,9 +927,10 @@ contains
       end subroutine write_masses
       !---------------------------------------------------------------------------------------------
       subroutine write_atoms
-        type(Struc), pointer :: current
+        type(Struc), pointer :: current, atom_type
         integer :: iatom, itype, i, imol, jmol, narg
         character(sl) :: arg(1), charge
+        logical :: found
         write(unit,'(/,"Atoms",/)')
         current => me % coordinate_list % first
         iatom = 0
@@ -901,7 +941,16 @@ contains
           do i = 1, natoms(imol)
             iatom = iatom + 1
             call split( me % atom_list % parameters( current % id ), narg, arg )
-            itype = me % atom_type_list % index( arg )
+            atom_type => me % atom_type_list % first
+            itype = 0
+            found = .false.
+            do while (associated(atom_type).and.(.not.found))
+              if (atom_type % valid) then
+                itype = itype + 1
+                found = atom_type % match_id( arg, two_way = .false. )
+              end if
+              atom_type => atom_type % next
+            end do
             charge = me % charge_list % parameters( current % id )
             if (charge == "") charge = "0.0"
             write(unit,'(3(A,X),"# ",A)') trim(join(int2str([iatom,jmol,itype]))), trim(charge), &
@@ -959,6 +1008,54 @@ contains
       end subroutine handle_struc
       !---------------------------------------------------------------------------------------------
   end subroutine tPlaymol_write_lammps
+
+  !=================================================================================================
+
+  subroutine tPlaymol_write_lammpstrj( me, unit )
+    class(tPlaymol), intent(inout) :: me
+    integer,         intent(in)    :: unit
+    integer :: molcount(me % nmol), iatom, itype, i, imol, jmol, narg, natoms(me % nmol)
+    real(rb) :: mass(me % nmol)
+    character(sl) :: limits, arg(1)
+    type(Struc), pointer :: current, atom_type
+    logical :: found
+    if (.not.me % box % exists()) call error( "simulation box has not been defined" )
+    write(unit,'("ITEM: TIMESTEP",/,"0")')
+    write(unit,'("ITEM: NUMBER OF ATOMS")')
+    write(unit,'(A)') trim(int2str(me % coordinate_list % count()))
+    write(unit,'("ITEM: BOX BOUNDS pp pp pp")')
+    call me % count_molecules( molcount, mass )
+    call me % box % compute( sum(molcount*mass) )
+    do i = 1, 3
+      limits = join(real2str( me%box%length(i)*[-0.5_rb,+0.5_rb] ))
+      write(unit,'(A)') trim(limits)
+    end do
+    write(unit,'("ITEM: ATOMS id mol type x y z ix iy iz ")')
+    natoms = me % atoms_in_molecules()
+    current => me % coordinate_list % first
+    iatom = 0
+    jmol = 0
+    do while (associated(current))
+      jmol = jmol + 1
+      imol = str2int(me % molecule_list % parameters( current % id ) )
+      do i = 1, natoms(imol)
+        iatom = iatom + 1
+        call split( me % atom_list % parameters( current % id ), narg, arg )
+        atom_type => me % atom_type_list % first
+        itype = 0
+        found = .false.
+        do while (associated(atom_type).and.(.not.found))
+          if (atom_type % valid) then
+            itype = itype + 1
+            found = atom_type % match_id( arg, two_way = .false. )
+          end if
+          atom_type => atom_type % next
+        end do
+        write(unit,'(3(A,X),"0 0 0")') trim(join(int2str([iatom,jmol,itype]))), trim(current%params)
+        current => current % next
+      end do
+    end do
+  end subroutine tPlaymol_write_lammpstrj
 
   !=================================================================================================
 

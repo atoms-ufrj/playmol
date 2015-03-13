@@ -23,7 +23,7 @@ Playmol is designed to execute scripts containing the commands described below:
 * [include] - includes commands from another script.
 * [reset] - resets a list of entities together with its dependent lists.
 * [shell] - executes an external shell command.
-* [quit] - interrupts Playmol execution.
+* [quit] - interrupts the execution of a Playmol script.
 
 
 ------------
@@ -83,7 +83,7 @@ In the example above, united-atom types _TraPPE-CH3_ and _TraPPE-CH2_ are define
 
 **Description**:
 
-This command defines the mass of atoms of a given type. Wildcard characters (* or ?) can be used to assign the same mass value to different atom types. The command applies for atom types defined either beforehand or afterwards.
+This command defines the mass of atoms of a given type. Wildcard characters (* or ?) can be used to assign the same mass value to different atom types. The command applies for all atom types, defined either beforehand or afterwards.
 
 An [atom] will not be created if a mass value has not been previously defined to its corresponding atom type.
 
@@ -386,7 +386,7 @@ The xyz format for Playmol is:
 
 The provided coordinates are meant to define a list of actual structures for the molecules previously assembled using the commands [atom] and [bond]. Multiple molecules can be specified either using separate _xyz_ commands or using a unique _xyz_ command involving all coordinates together. The coordinates of all atoms of a given molecule must be provided in sequence, but not in any specific order. It is possible to specify many copies of the same molecule, but a given atom cannot reappear until all other atoms of the same molecule have been defined.
 
-The list of molecular structures created via _xyz_ will be employed to define a simulation box if the command [write] is invoked later on. The origin of the cartesian space will be located in the center of the simulation box.
+The list of molecular structures created via _xyz_ will be employed to define a simulation box if the command [write] is invoked later on. The origin of the Cartesian space will be located in the center of the simulation box.
 
 **Examples**:
 
@@ -435,9 +435,9 @@ The parameter _value_ is either the volume or the density of the simulation box,
 
 The optional keyword _aspect_ with parameters _ax_, _ay_, and _az_ can be used to determine the relative box sizes in the three spatial directions (the absolute values of these three parameters are meaningless). If the keyword _aspect_ is omitted, Playmol will consider a cubic box.
 
-IMPORTANT: when the box density is specified, Playmol will automatically calculate the box side lengths when necessary. For this, it will sweep the whole list of molecular structures defined via [xyz] commands in order to determine the total mass of the system. Since Playmol will not perform unit convertion, the specified density value must be consistent with the mass and length units used in other commands. For instance, if [LAMMPS real units] are considered (mass in g/mol and lengths in Å), then the density must be provided in Da/Å³ (therefore, values originally in g/cm³ must be multiplied by 0.60221413).
+IMPORTANT: when the box density is specified, Playmol will automatically calculate the box side lengths when necessary. For this, it will sweep the whole list of molecular structures defined via [xyz] commands in order to determine the total mass of the system. Since Playmol will not perform unit conversion, the specified density value must be consistent with the mass and length units used in other commands. For instance, if [LAMMPS real units] are considered (mass in g/mol and lengths in Å), then the density must be provided in Da/Å³ (therefore, values originally in g/cm³ must be multiplied by 0.60221413).
 
-When building a simulation box, Playmol places its geometric center in the origin of the cartesian space. To allow periodic boundary conditions, Playmol does not check whether the previously specified atomic coordinates fit inside the central box.
+When building a simulation box, Playmol places its geometric center in the origin of the Cartesian space. To allow periodic boundary conditions, Playmol does not check whether the previously specified atomic coordinates fit inside the central box.
 
 **Examples**:
 
@@ -472,7 +472,7 @@ The example above specifies a simulation box with density equal to 0.602214 in L
 * seed <iseed>
 	* _iseed_ = an integer number for seeding Packmol's random number generator (_default_ = 1234)
 * tolerance <tol>
-	* _tol_ = the mininum distance to be observed between atoms from distinct molecules (_default_ = 1.0)
+	* _tol_ = the minimum distance to be observed between atoms from distinct molecules (_default_ = 1.0)
 * nloops <N>
 	* _N_ = the maximum number of iterations of the Packmol algorithm (_default_ = 50)
 * retry <factor>
@@ -493,7 +493,7 @@ The example above specifies a simulation box with density equal to 0.602214 in L
 
 This command creates Packmol input files or invokes Packmol to build a low-overlap molecular packing inside a previously specified simulation box.
 
-The keywords _seed_, _tolerance_, and _nloops_ change the values of some parameters that affect Packmol's behavior. Different integer values for _seed_ tell Packmol to use different random number sequences for its packing algorithm. The parameter _tolerance_ is the mininum distance that atoms of distinc molecules must keep from each other in the final packing. The parameter _nloops_ is the maximum number of iterations to be carried out with the Packmol algorithm in a packing attempt.
+The keywords _seed_, _tolerance_, and _nloops_ change the values of some parameters that affect Packmol's behavior. Different integer values for _seed_ tell Packmol to use different random number sequences for its packing algorithm. The parameter _tolerance_ is the minimum distance that atoms of distinct molecules must keep from each other in the final packing. The parameter _nloops_ is the maximum number of iterations to be carried out with the Packmol algorithm in a packing attempt.
 
 The parameter _retry_ is a reduction factor. If its value is 1.0, Playmol will invoke Packmol only once with the specified tolerance and will produce a warning message if the packing fails. If _retry_ is smaller than 1.0, then Playmol will invoke Packmol as many times as necessary to achieve a successful packing, with tolerance being iteratively multiplied by the value of _retry_ at each new attempt.
 
@@ -554,7 +554,7 @@ The example above uses Packmol to create a random packing of molecules with dens
 
 	write		 <format> [<file>]
 
-* _format_ = _playmol_ or _lammps_ or _summary_ or _xyz_
+* _format_ = _playmol_ or _lammps_ or _summary_ or _xyz_ or _lammpstrj_
 * _file_ (optional) = name of a file to be created
 
 **Description**:
@@ -567,9 +567,11 @@ The parameter _format_ must be one of the following options:
 
 * __lammps__: the command will produce information in the LAMMPS configuration file format, which can be used as an initial configuration for a Molecular Dynamics simulation using LAMMPS' command [read_data].
 
-* __summary__: this option will print a summary of the system characteristics, including the amount of every defined and detected structure such as angles, dihedrals, and molecules. Properties of each molecular species will also be printed, such as its mass, its atoms, and the number of defined sets of coordinates. This is useful for debbugging purposes.
+* __summary__: this option will print a summary of the system characteristics, including the amount of every defined and detected structure such as angles, dihedrals, and molecules. Properties of each molecular species will also be printed, such as its mass, its atoms, and the number of defined sets of coordinates. This is useful for debugging purposes.
 
 * __xyz__: writes down the list of atomic coordinates using the [xyz file format], but with element symbols replaced by atom identifiers. This is useful for using with another Playmol script or for visualization purposes.
+
+* __lammpstrj__: writes down the list of atomic coordinates using the LAMMPS trajectory format. This is useful for visualization with [VMD].
 
 The optional parameter _file_ is the name of the file which will contain the system info. If it is omitted, the info will be written in the standard output unit (the computer screen, in most cases).
 
@@ -727,11 +729,13 @@ The example above uses Linux command _mv_ to rename a file from _packmol.inp_ to
 
 **Syntax**:
 
-	quit
+	quit [all]
 
 **Description**:
 
-This command completely interrupts the execution of Playmol, thus being useful for debbugging purposes.
+This command interrupts the execution of a Playmol script, thus being useful for debugging purposes.
+
+The optional keyword _all_ forces Playmol to stop completely. In the absence of the keyword, the command _quit_ has the same behavior of a normal end of file. For instance, if the script has been invoked by another script via the [include] command, execution of the invoking script continues.
 
 **Example**:
 
@@ -739,6 +743,10 @@ This command completely interrupts the execution of Playmol, thus being useful f
 	quit
 
 The example above writes a summary of the current molecular system and then quits Playmol.
+
+**See also**:
+
+[include]
 
 ---------------------
 
@@ -768,4 +776,5 @@ The example above writes a summary of the current molecular system and then quit
 [read_data]:		http://lammps.sandia.gov/doc/read_data.html
 [xyz file format]:	http://openbabel.org/wiki/XYZ_(format)
 [Packmol User's Guide]:	http://www.ime.unicamp.br/~martinez/packmol/quickguide/
+[VMD]:			http://www.ks.uiuc.edu/Research/vmd/
 

@@ -80,7 +80,7 @@ Here is a complete list of Playmol commands:
 * **include**: includes commands from another script.
 * **reset**: resets a list of entities together with its dependent lists.
 * **shell**: executes an external shell command.
-* **quit**: interrupts Playmol execution.
+* **quit**: interrupts the execution of a Playmol script.
 
 The syntax and behavior of each command is described in the Playmol documentation.
 

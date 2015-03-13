@@ -409,8 +409,8 @@ contains
     write(day,'(I2)') value(3)
     write(year,'(I4)') value(1)
     write(hour,'(I2)') value(5)
-    write(min,'(I2)') value(6)
-    write(sec,'(I2)') value(7)
+    write(min,'(I2)') value(6); if (min(1:1) == " ") min(1:1) = "0"
+    write(sec,'(I2)') value(7); if (sec(1:1) == " ") sec(1:1) = "0"
     string = trim(adjustl(day))//"-"//month(value(2))//"-"//year//" at "//hour//":"//min//":"//sec
   end function now
 

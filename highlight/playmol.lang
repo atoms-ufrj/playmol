@@ -51,7 +51,7 @@
       <keyword>[\w_]+\.xyz</keyword>
       <keyword>[\w_]+\.(p|play)?mol</keyword>
       <keyword>[\w_]+\.(lmp|lammps)?_?data</keyword>
-      <keyword>[\w_]+\.l(mp|ammps)</keyword>
+      <keyword>[\w_]+\.l(mp|ammps|ammpstrj)</keyword>
     </context>
 
     <context id="commands" style-ref="keyword">
@@ -69,7 +69,7 @@
       <keyword>xyz</keyword>
       <keyword>box\s*(lengths|density|volume)</keyword>
       <keyword>packmol</keyword>
-      <keyword>write\s*(playmol|lammps|summary|xyz)</keyword>
+      <keyword>write\s*(playmol|lammps|summary|xyz|lammpstrj)</keyword>
       <keyword>prefix\s*(atoms|types)</keyword>
       <keyword>prefix</keyword>
       <keyword>suffix\s*(atoms|types)</keyword>
@@ -78,6 +78,7 @@
       <keyword>reset</keyword>
       <keyword>clean_types</keyword>
       <keyword>shell</keyword>
+      <keyword>quit all</keyword>
       <keyword>quit</keyword>
       <keyword>tolerance</keyword>
       <keyword>seed</keyword>

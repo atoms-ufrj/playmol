@@ -24,14 +24,14 @@ implicit none
 integer :: i, inp
 character(sl) :: infile
 type(tPlaymol) :: System
-call writeln( "Playmol (11 Mar 2015)" )
+call writeln( "Playmol (13 Mar 2015)" )
 if (iargc() == 0) call error( "Usage: playmol <file-1> <file-2> ..." )
 call init_log( file = "playmol.log" )
 do i = 1, iargc()
   call getarg( i, infile )
   open( newunit = inp, file = infile, status = "old" )
   write(*,'("Reading file ",A,"...")') trim(infile)
-  call System % Read( inp )
+  call System % Read( inp, trim(infile) )
   close(inp)
 end do
 call stop_log
