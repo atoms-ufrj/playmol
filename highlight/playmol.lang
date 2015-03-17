@@ -65,6 +65,7 @@
       <keyword>charge</keyword>
       <keyword>bond</keyword>
       <keyword>extra_dihedral</keyword>
+      <keyword>improper\s*search</keyword>
       <keyword>improper</keyword>
       <keyword>xyz</keyword>
       <keyword>box\s*(lengths|density|volume)</keyword>

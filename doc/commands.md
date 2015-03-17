@@ -12,7 +12,7 @@ Playmol is designed to execute scripts containing the commands described below:
 * [atom] - creates an atom with given name and type.
 * [charge] - specifies the charge of a given atom.
 * [bond] - creates a bond between two given atoms (angles and dihedrals are automatically detected).
-* [improper] - creates an improper involving four given atoms.
+* [improper] - creates an improper involving four given atoms or search for impropers.
 * [extra_dihedral] - creates an extra dihedral involving four given atoms.
 * [xyz] - defines positions for all atoms of one or more molecules.
 * [box] - defines the properties of a simulation box.
@@ -228,10 +228,11 @@ Impropers are created manually using the command [improper], which requires a pr
 
 **Syntax**:
 
-	atom		<id> <type>
+	atom		<id> <type> [<charge>]
 
 * _id_ = a name to be assigned to the atom being created
 * _type_ = the name of a previously defined atom type
+* _charge_ (optional) = charge of the specified atom
 
 **Description**:
 
@@ -240,6 +241,8 @@ This command creates an atom of a given type.
 The parameter _id_ must be a single string with no comment tags (#) and no wildcard characters (* or ?). If an atom [prefix] has been previously activated, then the actual atom identifier will contain such prefix, followed by the text specified as _id_. Two atoms cannot have the same identifier.
 
 The parameter _type_ is the identifier of a previously defined atom type. A unique identifier must be provided, with no use of wildcard characters (* or ?). If a type [prefix] has been previously activated, then the actual identifier will contain such prefix, followed by the string in _type_. The specified atom type must have a [mass] associated with it.
+
+The optional parameter _charge_ is the partial charge of the specified atom. If present, its effect is equivalent to calling the command [charge] with _id_ and _charge_ as parameters.
 
 When an atom is created, a new monoatomic molecule is automatically detected. If there are, for instance, _n_ already existing molecules, the new monoatomic molecule will receive an index _n+1_. If a [bond] is created afterwards connecting this atom to another one, the two involved molecules will be fused together.
 
@@ -251,7 +254,7 @@ When an atom is created, a new monoatomic molecule is automatically detected. If
 
 **See also**:
 
-[atom_type], [mass], [bond]
+[atom_type], [mass], [bond], [charge]
 
 -------------------------
 <a name="charge"/> charge
@@ -274,7 +277,7 @@ If a given [atom] has no charge explicitly defined, then it is considered to be 
 
 	charge		O* -1.0
 
-In the example above, a change  value of _-1.0_ is assigned to all atoms whose identifiers start with O.
+In the example above, a change value of _-1.0_ is assigned to all atoms whose identifiers start with O.
 
 **See also**:
 
@@ -286,7 +289,7 @@ In the example above, a change  value of _-1.0_ is assigned to all atoms whose i
 
 **Syntax**:
 
-	bond		<atom-1> <atom-2>
+	bond		<atom-1> <atom-2> [<atom-3> <atom-4> ...]
 
 * _atom-x_ = the name of a previously defined atom
 
@@ -296,15 +299,19 @@ This command creates a chemical bond between two atoms.
 
 The parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be provided, with no use of wildcard characters (* or ?).
 
-If a bond is created between atoms that belong to the same molecule, then a cyclic structure is formed and the number of molecules remains the same. However, if the two atoms belong to distinc molecules, then these molecules are fused together and the number of molecules is decreased. Supposing that the fused molecules have indices _i_ and _j_, the index of the new molecule will be _min(i,j)_. In order to keep a consistent sequence, all existing molecules with indices greater than _max(i,j)_ will have their indices decreased in one unit.
+Parameters _atom-1_ and _atom-2_ are mandatory. Additional parameters _atom-x_ (for _x_ > 2) are optional. In any case, _atom-1_ is the central atom to which all other atoms will be connected by chemical bonds.
+
+If a bond is created between atoms that belong to the same molecule, then a cyclic structure is formed and the number of molecules remains the same. However, if the two atoms belong to distinct molecules, then these molecules are fused together and the number of molecules is decreased. Supposing that the fused molecules have indices _i_ and _j_, the index of the new molecule will be _min(i,j)_. In order to keep a consistent sequence, all existing molecules with indices greater than _max(i,j)_ will have their indices decreased in one unit.
 
 New angles and new dihedrals are detected automatically when a bond is created. If a detected angle/dihedral fits to a previously defined type, then Playmol will add it to a list of angles/dihedrals to be used later on, for instance, in the creation of a LAMMPS configuration file. If the corresponding type does not exist at the moment a new angle/dihedral is detected, then Playmol will ignore it and produce a warning message.
 
-At any moment after chemical bonds have been created, one can check the current list of molecules by invoking the command [write] with the _summary_ format.
+At any moment after chemical bonds have been created, one can visualize the current list of molecules by invoking the command [write] with the _summary_ format.
 
 **Examples**:
 
-	bond	C1 C2
+	bond	C1 C2 C3
+
+In the example above, two chemical bonds are created: C1-C2 and C1-C3.
 
 **See also**:
 
@@ -317,16 +324,19 @@ At any moment after chemical bonds have been created, one can check the current 
 **Syntax**:
 
 	improper	<atom-1> <atom-2> <atom-3> <atom-4>
+	improper	search
 
 * _atom-x_ = name of a previously defined atom
 
 **Description**:
 
-This command creates an improper involving the specified atoms.
+This command creates an improper involving the specified atoms or search for impropers.
 
-The parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be provided, with no use of wildcard characters (* or ?). A previously defined improper type is required, noting that the order of the involved atom types is relevant.
+IMPORTANT: Impropers are not detected automatically because there are various possible improper definitions.
 
-IMPORTANT: Impropers are not detected automatically because there are several possible improper definitions.
+Using parameters _atom-1_, _atom-2_, _atom-3_, and _atom-4_: the parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be provided, with no use of wildcard characters (* or ?). A previously defined improper type is required, noting that the order of the involved atom types is relevant.
+
+Using keyword _search_: Playmol searches for impropers composed of any four atoms I, J, K, and L in which atom K simultaneously forms chemical bonds with I, J, and L. Only an improper with previously defined [improper_type] will be effectively created.
 
 **Examples**:
 

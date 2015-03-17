@@ -28,7 +28,7 @@ type Struc
   character(sl), allocatable :: id(:)
   character(sl)              :: params
   type(Struc), pointer       :: next => null()
-  logical                    :: valid = .true.
+  logical                    :: used = .false.
   contains
     procedure :: init => Struc_init
     procedure :: match_id => Struc_match_id
@@ -53,7 +53,6 @@ type StrucList
     procedure :: count_valid => StrucList_count_valid
     procedure :: print => StrucList_print
     procedure :: destroy => StrucList_destroy
-    procedure :: validate_all => StrucList_validate_all
 end type StrucList
 
 contains
@@ -218,7 +217,7 @@ contains
     Nv = 0
     do while (associated(current))
       N = N + 1
-      if (current % valid) Nv = Nv + 1
+      if (current % used) Nv = Nv + 1
       current => current % next
     end do
     if (present(valids_only)) N = Nv
@@ -233,7 +232,7 @@ contains
     current => me % first
     N = 0
     do while (associated(current))
-      if (current % valid) N = N + 1
+      if (current % used) N = N + 1
       current => current % next
     end do
   end function StrucList_count_valid
@@ -273,18 +272,6 @@ contains
     me % first => null()
     me % last => null()
   end subroutine StrucList_destroy
-
-  !=================================================================================================
-
-  subroutine StrucList_validate_all( me )
-    class(StrucList), intent(inout) :: me
-    type(Struc), pointer :: current
-    current => me % first
-    do while (associated(current))
-      current % valid = .true.
-      current => current % next
-    end do
-  end subroutine StrucList_validate_all
 
   !=================================================================================================
 

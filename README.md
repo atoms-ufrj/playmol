@@ -69,7 +69,7 @@ Here is a complete list of Playmol commands:
 * **atom**: creates an atom with given name and type.
 * **charge**: specifies the charge of a given atom.
 * **bond**: creates a bond between two given atoms (angles and dihedrals are automatically detected).
-* **improper**: creates an improper involving four given atoms.
+* **improper**: creates an improper involving four given atoms or search for improper.
 * **extra_dihedral**: creates an extra dihedral involving four given atoms.
 * **xyz**: defines positions for all atoms of one or more molecules.
 * **box**: defines the properties of a simulation box.
