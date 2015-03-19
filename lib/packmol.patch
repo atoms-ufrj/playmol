@@ -19,6 +19,15 @@ diff -rupN original/io.f packmol/io.f
       +        in, lixo, irest, itype, itest, isem, imark, ntype, nrest, 
       +        nmols(maxtype), natoms(maxtype), idfirst(maxtype),
       +        ityperest(maxrest), irestline(maxrest), 
+@@ -47,7 +47,7 @@ c
+       character*200 inputfile(maxlines), keyword(maxlines,maxkeywords), 
+      +              record, blank, xyzout, name(maxtype)
+       character*80 pdbfile(maxtype)
+-      character*3 ele(maxatom)
++      character*30 ele(maxatom)
+ 
+       logical tinker,pdb,xyz,moldy, error, ignore, randini, check, 
+      +        chkgrad, writebad, add_amber_ter, add_box_sides
 @@ -75,7 +75,7 @@ c Getting input lines from the input fil
        write(*,*) ' Reading input file... (Control-C aborts)'
        nlines = 0
@@ -27,6 +36,34 @@ diff -rupN original/io.f packmol/io.f
 +        read(inp,1000,err=10,end=10) record
  
  c Checking if the line is empty or if it is a commentary
+ 
+@@ -855,7 +855,7 @@ c
+       character chain
+       character*200 record
+       character*64 title
+-      character*3 ele(maxatom)
++      character*30 ele(maxatom)
+       character*200 name(maxtype)
+       character*80 pdbfile(maxtype)
+       character*200 xyzout
+@@ -903,7 +903,7 @@ c Write the output (xyz file)
+      +                        coor(idatom,3),
+      +                        v1,v2,v3) 
+                 write(30, 910) ele(idatom), (xcart(icart, k), k = 1, 3)
+-910             format(tr2,a3,tr2,3(tr2,f14.6))
++910             format(tr2,a,tr2,3(tr2,f14.6))
+               end do 
+               ilugan = ilugan + 3 
+               ilubar = ilubar + 3 
+@@ -1529,7 +1529,7 @@ c
+       integer nloop, isem
+       integer input_itype(maxtype)
+ 
+-      character*3 ele(maxatom)
++      character*30 ele(maxatom)
+       character*80 pdbfile(maxtype) 
+       character*200 xyzout
+       character*200 name(maxtype)
  
 diff -rupN original/main.f packmol/main.f
 --- packmol/main.f	1969-12-31 21:00:00.000000000 -0300
@@ -203,6 +240,15 @@ diff -rupN original/packmolnew.f packmol/packmolnew.f
        integer irestline(maxrest)
        integer linestrut(maxtype,2)
        integer itype, nrest, irest, idatom, iatom
+@@ -83,7 +92,7 @@ c      integer iargc, narg, charl, write
+       character*200 record
+       character*200 name(maxtype)
+       character*80 pdbfile(maxtype), xyzfile
+-      character*3 ele(maxatom)
++      character*30 ele(maxatom)
+       character*200 xyzout        
+ 
+       logical fix,fixed(maxtype),fixtmp,randini,check,chkgrad
 @@ -126,7 +135,7 @@ c Printing title
  
  c Reading input file

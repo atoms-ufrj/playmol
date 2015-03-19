@@ -44,13 +44,13 @@ type StrucList
   type(Struc), pointer :: last  => null()
   contains
     procedure :: add => StrucList_add
+    procedure :: handle => StrucList_handle
     procedure :: search => StrucList_search
-    procedure :: member => StrucList_member
     procedure :: parameters => StrucList_parameters
     procedure :: index => StrucList_index
     procedure :: find => StrucList_find
     procedure :: count => StrucList_count
-    procedure :: count_valid => StrucList_count_valid
+    procedure :: count_used => StrucList_count_used
     procedure :: print => StrucList_print
     procedure :: destroy => StrucList_destroy
 end type StrucList
@@ -135,6 +135,47 @@ contains
 
   !=================================================================================================
 
+  subroutine StrucList_handle( me, id, id_list, type_list, option )
+    class(StrucList),           intent(inout) :: me
+    character(*),               intent(inout) :: id(:)
+    class(StrucList), optional, intent(in)    :: id_list, type_list
+    integer,                    intent(in)    :: option
+    ! Search for types, mark found types as used, and:
+    ! option = 1: add, WARN if no types were found
+    ! option = 2: STOP if no types were found
+    ! option = 3: add only if types were found
+    integer :: i, n
+    type(Struc), pointer :: current
+    character(sl) :: type(me%number)
+    logical :: found
+    do i = 1, me%number
+      call id_list % search( id(i:i), current )
+      if (.not.associated(current)) call error( "unknown", id_list % name, id(i) )
+      call split( current % params, n, type(i:i) )
+    end do
+    current => type_list % first
+    found = .false.
+    do while (associated(current))
+      if (current % match_id( type, me%two_way )) then
+        found = .true.
+        current % used = .true.
+      end if
+      current => current % next
+    end do
+    select case (option)
+    case (1)
+      call me % add( me%number, id )
+      if (.not.found) call warning( "undefined", type_list%name, "for "//trim(id_list%name)//"s", &
+                                    join(id), "( types", join(type), ")" )
+    case (2)
+      if (.not.found) call error( type_list%name, join(type), "required, but not found" )
+    case (3)
+      if (found) call me % add( me%number, id )
+    end select
+  end subroutine StrucList_handle
+
+  !=================================================================================================
+
   subroutine StrucList_search( me, id, ptr, index )
     class(StrucList),     intent(in)            :: me
     character(*),         intent(in)            :: id(:)
@@ -159,15 +200,6 @@ contains
       if (present(ptr)) ptr => null()
     end if
   end subroutine StrucList_search
-
-  !=================================================================================================
-
-  function StrucList_member( me, id ) result( member )
-    class(StrucList), intent(in) :: me
-    character(*),     intent(in) :: id(:)
-    type(Struc), pointer         :: member
-    call me % search( id, member )
-  end function StrucList_member
 
   !=================================================================================================
 
@@ -225,7 +257,7 @@ contains
 
   !=================================================================================================
 
-  function StrucList_count_valid( me ) result( N )
+  function StrucList_count_used( me ) result( N )
     class(StrucList), intent(in) :: me
     integer                      :: N
     type(Struc), pointer :: current
@@ -235,7 +267,7 @@ contains
       if (current % used) N = N + 1
       current => current % next
     end do
-  end function StrucList_count_valid
+  end function StrucList_count_used
 
   !=================================================================================================
 

@@ -17,16 +17,6 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
-
-! >>>>>>>>>>>>>>>>>>>>>>
-! TO DO:
-! - Change write_lammps to write each individual bond, angle, dihedral in the same
-!   order of the found type (i.e., the same dihedral can be written in different orders):
-!     --> DONE, BUT NEEDS DOUBLE CHECKING --> What about impropers?
-! - Organize the way of adding atoms, bonds, angles, dihedrals, and impropers and
-!   marking the corresponding used types
-! - 
-
 module mPlaymol
 
 use mGlobal
@@ -69,7 +59,6 @@ type tPlaymol
     procedure :: update_structure => tPlaymol_update_structure
     procedure :: search_impropers => tPlaymol_search_impropers
     procedure :: get_types => tPlaymol_get_types
-    procedure :: check_types => tPlaymol_check_types
     procedure :: atoms_in_molecules => tPlaymol_atoms_in_molecules
 end type tPlaymol
 
@@ -203,11 +192,18 @@ contains
       end subroutine mass_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_command
+        type(Struc), pointer :: type_ptr
         if ((narg < 3).or.(narg > 4)) call error( "invalid atom command" )
         arg(3) = trim(me % atom_type_list % prefix) // trim(arg(3)) // me % atom_type_list % suffix
         call me % atom_list % add( 2, arg(2:3) )
         if (has_macros(arg(2))) call error( "invalid atom name" )
-        call me % check_types( arg(2:2), me % atom_type_list )
+        if (has_macros(arg(3))) call error( "invalid atom type name" )
+        call me % atom_type_list % search( arg(3:3), type_ptr )
+        if (associated(type_ptr)) then
+          type_ptr % used = .true.
+        else
+          call error( "atom type", arg(3), "required, but not found")
+        end if
         if (.not.me % mass_list % find(arg(3:3))) call error( "atom type",arg(3), "has no mass" )
         me%nmol = me%nmol + 1
         arg(3) = int2str( me%nmol )
@@ -225,8 +221,8 @@ contains
       subroutine add_bond( atom )
         character(sl), intent(inout) :: atom(2)
         call me % bond_list % add( 2, atom, me % atom_list )
+        call me % bond_list % handle( atom, me % atom_list, me % bond_type_list, 2 )
         if (atom(1) == atom(2)) call error( "atom", atom(1), "cannot bind to itself" )
-        call me % check_types( atom, me % bond_type_list )
         call me % fuse_molecules( atom )
         call me % update_structure()
       end subroutine add_bond
@@ -247,7 +243,7 @@ contains
         integer :: i, imol, jmol
         call me % extra_dihedral_list % add( narg-1, arg(2:narg), me % atom_list )
         if (narg /= 5) call error( "invalid extra_dihedral command")
-        call me % check_types( arg(2:5), me % dihedral_type_list )
+        call me % extra_dihedral_list % handle( arg(2:5), me%atom_list, me%dihedral_type_list, 2 )
         imol = str2int(me % molecule_list % parameters( arg(2:2) ))
         do i = 3, 5
           jmol = str2int(me % molecule_list % parameters( arg(i:i) ))
@@ -263,7 +259,7 @@ contains
         else if (narg == 5) then
           call me % improper_list % add( narg-1, arg(2:narg), me % atom_list )
           if (narg /= 5) call error( "invalid improper command")
-          call me % check_types( arg(2:5), me % improper_type_list )
+          call me % improper_list % handle( arg(2:5), me%atom_list, me%improper_type_list, 2 )
           imol = str2int(me % molecule_list % parameters( arg(2:2) ))
           do i = 3, 5
             jmol = str2int(me % molecule_list % parameters( arg(i:i) ))
@@ -617,28 +613,6 @@ contains
 
   !=================================================================================================
 
-  subroutine tPlaymol_check_types( me, atom, list )
-    class(tPlaymol),    intent(in) :: me
-    character(sl),   intent(in) :: atom(:)
-    type(StrucList), intent(in) :: list
-    type(Struc), pointer :: current
-    character(sl) :: atom_type(list % number)
-    logical :: found
-    call me % get_types( atom, atom_type )
-    found = .false.
-    current => list % first
-    do while (associated(current))
-      if (current % match_id( atom_type, list % two_way )) then
-        found = .true.
-        current % used = .true.
-      end if
-      current => current % next
-    end do
-    if (.not.found) call error( list%name, join(atom_type), "required, but not found" )
-  end subroutine tPlaymol_check_types
-
-  !=================================================================================================
-
   subroutine tPlaymol_update_structure( me )
     class(tPlaymol), intent(inout) :: me
     type(Struc), pointer :: b1, b2, bnew
@@ -665,15 +639,15 @@ contains
         angle(2) = bnew%id(j)
         angle(3) = bnew%id(3-j)
         atom(1:3) = angle
-        call add( me % angle_list, me % angle_type_list )
+        call me % angle_list % handle( atom(1:3), me % atom_list, me % angle_type_list, 1 )
         b2 => me % bond_list % first
         do while (.not.associated(b2,b1))
           if (b2%id(1) == angle(1)) then
             atom = [b2%id(2),angle]
-            call add( me % dihedral_list, me % dihedral_type_list )
+            call me % dihedral_list % handle( atom, me % atom_list, me % dihedral_type_list, 1 )
           else if (b2%id(2) == angle(1)) then
             atom = [b2%id(1),angle]
-            call add( me % dihedral_list, me % dihedral_type_list )
+            call me % dihedral_list % handle( atom, me % atom_list, me % dihedral_type_list, 1 )
           end if
           b2 => b2 % next
         end do
@@ -681,48 +655,23 @@ contains
         do while (associated(b2 % next))
           if (b2%id(1) == angle(3)) then
             atom = [angle,b2%id(2)]
-            call add( me % dihedral_list, me % dihedral_type_list )
+            call me % dihedral_list % handle( atom, me % atom_list, me % dihedral_type_list, 1 )
           else if (b2%id(2) == angle(3)) then
             atom = [angle,b2%id(1)]
-            call add( me % dihedral_list, me % dihedral_type_list )
+            call me % dihedral_list % handle( atom, me % atom_list, me % dihedral_type_list, 1 )
           end if
           if (b2%id(1) == angle(1)) then
             atom = [b2%id(2),angle]
-            call add( me % dihedral_list, me % dihedral_type_list )
+            call me % dihedral_list % handle( atom, me % atom_list, me % dihedral_type_list, 1 )
           else if (b2%id(2) == angle(1)) then
             atom = [b2%id(1),angle]
-            call add( me % dihedral_list, me % dihedral_type_list )
+            call me % dihedral_list % handle( atom, me % atom_list, me % dihedral_type_list, 1 )
           end if
           b2 => b2 % next
         end do
       end if
       b1 => b1 % next
     end do
-    contains
-      !---------------------------------------------------------------------------------------------
-      subroutine add( list, type_list )
-        type(StrucList), intent(inout) :: list
-        type(StrucList), intent(in)    :: type_list
-        character(sl) :: types(type_list%number)
-        type(Struc), pointer :: current
-        logical :: found
-        call list % add( list%number, atom(1:list%number) )
-        call me % get_types( atom(1:list%number), types )
-        current => type_list % first
-        found = .false.
-        do while (associated(current))
-          if (current % match_id( types, two_way = .true. )) then
-            found = .true.
-            current % used = .true.
-          end if
-          current => current % next
-        end do
-        if (.not.found) then
-          call warning( "undefined", list%name, "type for atoms", &
-                        join(atom(1:list%number)), "(types", join(types), ")" )
-        end if
-      end subroutine add
-      !---------------------------------------------------------------------------------------------
   end subroutine tPlaymol_update_structure
 
   !=================================================================================================
@@ -753,12 +702,12 @@ contains
             atom(3,:) = b3%id
             if (any(atom(3,:) == central)) then
               if (atom(3,2) == central) call str_swap( atom(3,1), atom(3,2) )
-              call check_improper( [atom(1,2), atom(2,2), central, atom(3,2)] )
-              call check_improper( [atom(1,2), atom(3,2), central, atom(2,2)] )
-              call check_improper( [atom(2,2), atom(1,2), central, atom(3,2)] )
-              call check_improper( [atom(2,2), atom(3,2), central, atom(1,2)] )
-              call check_improper( [atom(3,2), atom(1,2), central, atom(2,2)] )
-              call check_improper( [atom(3,2), atom(2,2), central, atom(1,2)] )
+              call check_improper( atom(1,2), atom(2,2), central, atom(3,2) )
+              call check_improper( atom(1,2), atom(3,2), central, atom(2,2) )
+              call check_improper( atom(2,2), atom(1,2), central, atom(3,2) )
+              call check_improper( atom(2,2), atom(3,2), central, atom(1,2) )
+              call check_improper( atom(3,2), atom(1,2), central, atom(2,2) )
+              call check_improper( atom(3,2), atom(2,2), central, atom(1,2) )
             end if
             b3 => b3 % next
           end do
@@ -769,25 +718,11 @@ contains
     end do
     contains
       !---------------------------------------------------------------------------------------------
-      subroutine check_improper( atom )
-        character(sl), intent(in) :: atom(4)
-        character(sl) :: atom_type(4)
-        type(Struc), pointer :: current
-        logical :: found
-        call me % get_types( atom, atom_type )
-        current => me % improper_type_list % first
-        found = .false.
-        do while (associated(current))
-          if (current % match_id( atom_type, two_way = .false. )) then
-            found = .true.
-            current % used = .true.
-          end if
-          current => current % next
-        end do
-        if (found) then
-          atom_type = atom
-          call me % improper_list % add( 4, atom_type, repeatable = .false. )
-        end if
+      subroutine check_improper( a1, a2, a3, a4 )
+        character(sl), intent(in) :: a1, a2, a3, a4
+        character(sl) :: id(4)
+        id = [a1, a2, a3, a4]
+        call me % improper_list % handle( id, me % atom_list, me % improper_type_list, 3 )
       end subroutine check_improper
       !---------------------------------------------------------------------------------------------
   end subroutine tPlaymol_search_impropers
@@ -845,10 +780,11 @@ contains
   subroutine tPlaymol_summarize( me, unit )
     class(tPlaymol), intent(inout) :: me
     integer,      intent(in)    :: unit
-    integer :: imol, molcount(me % nmol)
+    integer :: imol, molcount(me % nmol), natoms(me % nmol)
     real(rb) :: mass(me % nmol), charge(me % nmol)
     type(Struc), pointer :: ptr
     character(sl) :: atoms
+    natoms = me % atoms_in_molecules()
     write(unit,'(A)') repeat("-",80)
     write(unit,'(A)') "SUMMARY"
     write(unit,'(A)') repeat("-",80)
@@ -867,17 +803,18 @@ contains
     call flush( "dihedral", me % dihedral_list % count() )
     call flush( "molecule", me % nmol )
     write(unit,'(/,A)') "Effectively used:"
-    call flush( "atom type", me % atom_type_list % count(valids_only = .true.) )
-    call flush( "bond type", me % bond_type_list % count(valids_only = .true.) )
-    call flush( "angle type", me % angle_type_list % count(valids_only = .true.) )
-    call flush( "dihedral type", me % dihedral_type_list % count(valids_only = .true.) )
-    call flush( "improper type", me % improper_type_list % count(valids_only = .true.) )
+    call flush( "atom type", me % atom_type_list % count_used() )
+    call flush( "bond type", me % bond_type_list % count_used() )
+    call flush( "angle type", me % angle_type_list % count_used() )
+    call flush( "dihedral type", me % dihedral_type_list % count_used() )
+    call flush( "improper type", me % improper_type_list % count_used() )
     call me % count_molecules( molcount, mass, charge )
     do imol = 1, me % nmol
       write(unit,'(/,"Molecule[",A,"]:")') trim(int2str(imol))
       write(unit,'("- Amount: ",A)') trim(int2str(molcount(imol)))
       write(unit,'("- Mass: ",A)') trim(real2str(mass(imol)))
       write(unit,'("- Charge: ",A)') trim(real2str(charge(imol)))
+      write(unit,'("- Number of atoms: ",A)') trim(int2str(natoms(imol)))
       atoms = "- Atoms:"
       ptr => me % molecule_list % first
       do while (associated(ptr))
@@ -925,11 +862,11 @@ contains
       me % dihedral_list % last % next => me % extra_dihedral_list % first
     end if
     write(unit,'("LAMMPS data file",/,"# Generated by Playmol on ",A,/)') trim(now())
-    call write_count( me % atom_type_list % count_valid(), "atom types" )
-    call write_count( me % bond_type_list % count_valid(), "bond types" )
-    call write_count( me % angle_type_list % count_valid(), "angle types" )
-    call write_count( me % dihedral_type_list % count_valid(), "dihedral types" )
-    call write_count( me % improper_type_list % count_valid(), "improper types" )
+    call write_count( me % atom_type_list % count_used(), "atom types" )
+    call write_count( me % bond_type_list % count_used(), "bond types" )
+    call write_count( me % angle_type_list % count_used(), "angle types" )
+    call write_count( me % dihedral_type_list % count_used(), "dihedral types" )
+    call write_count( me % improper_type_list % count_used(), "improper types" )
     write(unit,'()')
     call write_count( me % coordinate_list % count(), "atoms" )
     call handle_struc( "bonds", me % bond_list, me % bond_type_list, nb )
@@ -982,7 +919,7 @@ contains
         class(StrucList), intent(in) :: list
         type(Struc), pointer :: current
         integer :: i
-        if (list % count(valids_only = .true.) > 0) then
+        if (list % count_used() > 0) then
         current => list % first
           write(unit,'(/,A,/)') name
           i = 0
@@ -1057,7 +994,7 @@ contains
         integer,         intent(out), optional :: count
         integer :: i, imol, jmol, istruc, itype, last_atom
         type(Struc), pointer :: coord, struct, struc_type
-        character(sl) :: line, types(list%number)
+        character(sl) :: line, types(list%number), atoms(list%number)
         character(sl), allocatable :: atom_id(:)
         istruc = 0
         coord => me % coordinate_list % first
@@ -1079,14 +1016,20 @@ contains
               struc_type => type_list % first
               do while (associated(struc_type))
                 if (struc_type % used) then
-                  if (struc_type % match_id( types, two_way = .true.)) then
-                    if (.not.struc_type % match_id( types, two_way = .false.)) then
-                      types = types(list%number:1:-1)
-                    end if
+                  if (struc_type % match_id( types, type_list % two_way)) then
                     istruc = istruc + 1
-                    line = join(int2str([istruc, itype, last_atom + str_find(struct%id, atom_id)]))
                     if (.not.present(count)) then
-                      write(unit,'(A," # ",A)') trim(line), trim(join(struct%id))
+                      if (type_list % two_way) then
+                        if (struc_type % match_id( types, .false.)) then
+                          atoms = struct%id
+                        else
+                          atoms = struct%id(list%number:1:-1)
+                        end if
+                      else
+                        atoms = struct%id
+                      end if
+                      line = join(int2str([istruc, itype, last_atom + str_find(atoms, atom_id)]))
+                      write(unit,'(A," # ",A)') trim(line), trim(join(atoms))
                     end if
                   end if
                   itype = itype + 1

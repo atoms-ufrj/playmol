@@ -14,7 +14,7 @@ src  = ./src
 
 all: $(BINDIR)/$(exec)
 
-.PHONY: install doc clean
+.PHONY: install clean
 
 doc:
 	doxygen $(DOCDIR)/Doxyfile
