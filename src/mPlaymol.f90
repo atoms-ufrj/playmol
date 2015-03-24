@@ -1033,7 +1033,10 @@ contains
         character(sl), allocatable :: atom_id(:)
         istruc = 0
         coord => me % coordinate_list % first
-        if (.not.present(count)) write(unit,'(/,A,/)') name
+        if (.not.present(count)) then
+          call writeln( "Writing down structures:", name )
+          write(unit,'(/,A,/)') name
+        end if
         allocate(atom_id(maxval(natoms)))
         last_atom = 0
         do while (associated(coord))

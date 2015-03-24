@@ -240,7 +240,7 @@ contains
             call retrieve_coordinates( mixfile )
             call delete_files( [inputfile, mixfile, molfile, logfile] )
           else
-            call delete_files( [inputfile, mixfile, trim(mixfile)//"_FORCED", molfile, logfile] )
+            call delete_files( [inputfile, mixfile, trim(mixfile)//"_FORCED", molfile] )
             call error( "Packmol did not converge! See file packmol.log for additional info.")
           end if
 
@@ -253,7 +253,8 @@ contains
             if (stat /= 0) trytol = change * trytol
           end do
           call retrieve_coordinates( mixfile )
-          call delete_files( [inputfile, mixfile, trim(mixfile)//"_FORCED", molfile, logfile] )
+!          call delete_files( [inputfile, mixfile, trim(mixfile)//"_FORCED", molfile, logfile] )
+!          call delete_files( [inputfile, mixfile, trim(mixfile)//"_FORCED", molfile] )
           call writeln( "Packmol converged with tolerance =", real2str(trytol) )
 
         end if

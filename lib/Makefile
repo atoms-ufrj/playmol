@@ -1,4 +1,4 @@
-VERSION = 14.225
+VERSION = 14.072
 
 all:
 	tar -zxvf packmol-$(VERSION).tar.gz
