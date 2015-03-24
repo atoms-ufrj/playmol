@@ -207,7 +207,7 @@ contains
     integer                  :: i
     integer :: ioerr
     read(str,*,iostat=ioerr) i
-    if (ioerr /= 0) call error( "bad integer" )
+    if (ioerr /= 0) call error( str, "is not a valid integer number" )
   end function str2int
 
   !=================================================================================================
@@ -217,7 +217,7 @@ contains
     real(rb)                 :: r
     integer :: ioerr
     read(str,*,iostat=ioerr) r
-    if (ioerr /= 0) call error( "bad real number" )
+    if (ioerr /= 0) call error( str, "is not a valid real number" )
   end function str2real
 
   !=================================================================================================

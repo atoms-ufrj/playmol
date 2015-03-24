@@ -68,6 +68,7 @@
       <keyword>improper\s*search</keyword>
       <keyword>improper</keyword>
       <keyword>xyz</keyword>
+      <keyword>align</keyword>
       <keyword>box\s*(lengths|density|volume)</keyword>
       <keyword>packmol</keyword>
       <keyword>write\s*(playmol|lammps|summary|xyz|lammpstrj)</keyword>

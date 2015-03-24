@@ -74,6 +74,7 @@ Here is a complete list of Playmol commands:
 * **xyz**: defines positions for all atoms of one or more molecules.
 * **box**: defines the properties of a simulation box.
 * **packmol**: executes Packmol to create a packed molecular system.
+* **align**: aligns the principal axes of a molecule to the Cartesian axes.
 * **write**: writes down system info in different file formats (including LAMMPS data files).
 * **prefix**: defines default prefixes for atom types and atoms.
 * **suffix**: defines default suffixes for atom types and atoms.

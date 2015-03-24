@@ -17,6 +17,7 @@ Playmol is designed to execute scripts containing the commands described below:
 * [xyz] - defines positions for all atoms of one or more molecules.
 * [box] - defines the properties of a simulation box.
 * [packmol] - executes Packmol to create a packed molecular system.
+* [align] - aligns the principal axes of a molecule to the Cartesian axes.
 * [write] - writes down system info in different file formats (including LAMMPS data files).
 * [prefix] - defines default prefixes for atom types and atoms.
 * [suffix] - defines default suffixes for atom types and atoms.
@@ -30,9 +31,9 @@ Playmol is designed to execute scripts containing the commands described below:
 Introduction
 ------------
 
-Playmol scripts are text files containing commands whose syntaxes are described in this section. Each command is a sequence of keywords and parameter values separated by spaces and/or tabs. A script can include comments, identified by the comment mark "#". When such mark is found, all trailing characters in the same line (including the comment mark itself) are ignored. A command can span several lines by means of continuation marks "..." or "&". When the actual part of a command line (comments excluded) ends with a continuation mark, the command will continue in the next line (of course, the continuation mark itself is not part of the command).
+Playmol scripts are text files containing commands described in this section. Each command is a sequence of keywords and parameter values separated by spaces and/or tabs. A script can include comments, identified by the comment mark "#". When such mark is found, all trailing characters in the same line (including the comment mark itself) are ignored. A single command can span several lines by means of continuation marks "..." or "&". When the actual part of a command line (i.e., excluding comments) ends with a continuation mark, the command will continue in the next line.
 
-In the examples of this section, the units employed for physically meaningful values are those corresponding to [LAMMPS real units].
+In all examples described in this section, the units employed for physically meaningful values are those corresponding to [LAMMPS real units].
 
 -------------------------------
 <a name="atom_type"/> atom_type
@@ -507,15 +508,17 @@ The keywords _seed_, _tolerance_, and _nloops_ change the values of some paramet
 
 The parameter _retry_ is a reduction factor. If its value is 1.0, Playmol will invoke Packmol only once with the specified tolerance and will produce a warning message if the packing fails. If _retry_ is smaller than 1.0, then Playmol will invoke Packmol as many times as necessary to achieve a successful packing, with tolerance being iteratively multiplied by the value of _retry_ at each new attempt.
 
-The keywords _fix_, _copy_, and _pack_ require the index of an existing molecule for which at least one set of atomic coordinates have been defined using the command [xyz]. The first defined set of coordinates for such molecule will then be used as a rigid-body model for translation or replication. The meaning of each option is:
+The keywords _fix_, _copy_, and _pack_ require the index of an existing molecule for which at least one set of atomic coordinates have been defined using the command [xyz]. The first of these sets of coordinates will be used as a rigid-body model for translation or replication. Only a few exceptions can work without previously defined coordinates. Monoatomic molecules do not require them whatsoever. In the case of diatomic and triatomic molecules, if no coordinates were previously defined, Playmol will try to guess them by supposing that the involved [bond_type]'s and [angle_type] describe harmonic potentials, with their second parameters being the equilibrium bond distances and angle value (in degrees).
+
+**IMPORTANT**: the command [write] with its option _summary_ can be very useful for checking out the indexes of the molecules, which are required to use the keywords mentioned above.
+
+The usage of each keyword _fix_, _copy_, or _pack_ is:
 
 * fix <index> <x> <y> <z>: makes a copy of Molecule _index_ with its geometric center located at the provided coordinate (_x_, _y_, _z_), keeping its original orientation.
 
 * copy <index> <N>: makes _N_ copies of Molecule _index_ in random positions, but keeping the original orientation (i.e. all _N_ copies will be aligned in the final packing). This is useful for packing long molecules.
 
 * pack <index> <N>: makes _N_ copies of Molecule _index_ in random positions and with random orientations.
-
-IMPORTANT: the option _summary_ of command [write] can be very useful for checking out the indices of the molecules.
 
 The keyword _action_ is used to create Packmol input files or to invoke Packmol. The following options are available:
 
@@ -554,7 +557,41 @@ The example above uses Packmol to create a random packing of molecules with dens
 
 **See also**:
 
-[box], [xyz], [write]
+[box], [xyz], [write], [bond_type], [angle_type]
+
+-----------------------
+<a name="align"/> align
+-----------------------
+
+**Syntax**:
+
+	align		 <molecule> <axis-1> <axis-2>
+
+* _molecule_ = the index of an existing molecule with predefined coordinates
+* _axis-1_ = the Cartesian axis (_x_, _y_, or _z_) with which the most elongated molecular axis will be aligned
+* _axis-2_ = the Cartesian axis (_x_, _y_, or _z_) with which the second most elongated molecular axis will be aligned
+
+**Description**:
+
+This command aligns the principal axes of a given molecule with the system's Cartesian axes. The principal axes are defined geometrically, as if the masses of all atoms were the same.
+
+The parameter _molecule_ species the index of the molecule to be aligned with the Cartesian axes. Such molecule must have predefined atomic coordinates. Exceptions are monoatomic, diatomic, and triatomic molecules, whose atomic coordinates can be automatically generated in some cases, as explained in the description of [packmol] command.
+
+**IMPORTANT**: the command [write] with its option _summary_ can be very useful for checking out the indexes of the molecules, which are required to use the align command.
+
+The parameter _axis-1_ must be equal to _x_, _y_, or _z_, and species the Cartesian axis with which the molecule will be aligned considering its most elongated principal axis.
+
+The parameter _axis-2_ must also be equal to _x_, _y_, or _z_, but different from _axis-1_. It species the Cartesian axis with which the molecule will be aligned considering its second most elongated principal axis. Of course, the shortest principal axis will be aligned to the Cartesian axis not explicitly specified in the command _align_.
+
+**Examples**:
+
+	align		1 x z
+
+The example above aligns the most elongated principal axis of molecule 1 to the Cartesian axis _x_, and its second most elongated principal axis to axis _z_.
+
+**See also**:
+
+[write], [packmol]
 
 -----------------------
 <a name="write"/> write
@@ -774,6 +811,7 @@ The example above writes a summary of the current molecular system and then quit
 [xyz]:			#xyz
 [box]:			#box
 [packmol]:		#packmol
+[align]:		#align
 [write]:		#write
 [prefix]:		#prefix
 [suffix]:		#suffix

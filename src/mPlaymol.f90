@@ -60,6 +60,8 @@ type tPlaymol
     procedure :: search_impropers => tPlaymol_search_impropers
     procedure :: get_types => tPlaymol_get_types
     procedure :: atoms_in_molecules => tPlaymol_atoms_in_molecules
+    procedure :: check_coordinates => tPlaymol_check_coordinates
+    procedure :: molecule_coordinates => tPlaymol_molecule_coordinates
 end type tPlaymol
 
 contains
@@ -90,6 +92,7 @@ contains
         case ("extra_dihedral"); call extra_dihedral_command
         case ("improper"); call improper_command
         case ("xyz"); call xyz_command
+        case ("align"); call align_command
         case ("write"); call write_command
         case ("include"); call include_command
         case ("packmol"); call packmol_command
@@ -286,6 +289,38 @@ contains
         end if
       end subroutine xyz_command
       !---------------------------------------------------------------------------------------------
+      subroutine align_command
+        use mAlign
+        integer :: i, imol, natoms(me%nmol), N
+        real(rb), allocatable :: Mass(:), Coord(:,:)
+        integer :: axis(3)
+        if (narg /= 4) call error( "invalid align command" )
+        imol = str2int(arg(2))
+        do i = 3, 4
+          if (len_trim(arg(i)) /= 1) call error( "invalid align command" )
+          select case (trim(arg(i)))
+            case ("x"); axis(i-2) = 1
+            case ("y"); axis(i-2) = 2
+            case ("z"); axis(i-2) = 3
+            case default; call error( "invalid align command" )
+          end select
+        end do
+        if (axis(1) == axis(2)) call error( "invalid align command" )
+        axis(3) = 6 - axis(1) - axis(2)
+        if (imol < 1) call error( "wrong molecule index" )
+        if (imol > me%nmol) call error( "last molecule is", int2str(me%nmol) )
+        call me % check_coordinates( imol )
+        call writeln( "Aligning molecule", arg(2), "with axes", arg(3), "and", arg(4) )
+        natoms = me % atoms_in_molecules()
+        N = natoms(imol)
+        allocate( Mass(N), Coord(3,N) )
+        Mass = 1.0_rb
+        call me % molecule_coordinates( imol, N, Coord, 1 )
+        call align_molecule( N, Mass, Coord, axis )
+        call me % molecule_coordinates( imol, N, Coord, 2 )
+        deallocate( Mass, Coord )
+      end subroutine align_command
+      !---------------------------------------------------------------------------------------------
       subroutine write_command
         integer :: unit
         if ((narg < 2).or.(narg > 4)) call error( "invalid write command" )
@@ -364,7 +399,7 @@ contains
       end subroutine shell_command
       !---------------------------------------------------------------------------------------------
       subroutine packmol_command
-        integer :: iarg, imol, nopts, i, n, molcount(me%nmol)
+        integer :: iarg, imol, nopts, i, n
         real(rb) :: pos(3), mass(me%nmol)
         character(sl) :: action
         action = ""
@@ -409,8 +444,7 @@ contains
               call me % packmol_list % add( nopts+2, arg(iarg:iarg+1+nopts), repeatable = .true. )
               imol = str2int(arg(iarg+1))
               if ((imol < 1).or.(imol > me%nmol)) call error( "last molecule is", int2str(me%nmol) )
-              call me % count_molecules( molcount )
-              if (molcount(imol) == 0) call error( "no predefined coordinates" )
+              call me % check_coordinates( imol )
               select case (arg(iarg+1))
                 case ("move","fix")
                   pos = [(str2real(arg(iarg+1+i)),i=1,3)]
@@ -439,6 +473,7 @@ contains
         if (action /= "") then
           call me % count_molecules( mass = mass )
           call me % box % compute( packmol_total_mass( me % packmol_list, mass ) )
+          call writeln( "Box lengths are ", join(real2str(me % box % length)))
           call run_packmol( me % packmol_list, me % molecule_list, me % coordinate_list, &
                             me % nmol, me % atoms_in_molecules(), me % box % length, &
                             seed, tolerance, action )
@@ -1095,5 +1130,137 @@ contains
   end subroutine tPlaymol_write_lammpstrj
 
   !=================================================================================================
-
+  subroutine tPlaymol_check_coordinates( me, imol )
+    class(tPlaymol), intent(inout) :: me
+    integer,         intent(in)    :: imol
+    type(Struc), pointer :: coord, atom, first, current
+    logical :: found
+    integer :: natoms
+    coord => me % coordinate_list % first
+    found = .false.
+    do while (associated(coord).and.(.not.found))
+      found = str2int(me % molecule_list % parameters( coord%id ) ) == imol
+      coord => coord % next
+    end do
+    if (.not.found) then
+      call warning( "No predefined coordinates for molecule", int2str(imol) )
+      atom => me % molecule_list % first
+      natoms = 0
+      do while (associated(atom))
+        if (str2int(atom%params) == imol) then
+          if (natoms == 0) then
+            allocate( first )
+            current => first
+          else
+            allocate( current % next )
+            current => current % next
+          end if
+          natoms = natoms + 1
+          current % params = atom % id(1)
+        end if
+        atom => atom % next
+      end do
+      select case (natoms)
+        case (1); call build_monoatomic_molecule
+        case (2); call build_diatomic_molecule
+        case (3); call build_triatomic_molecule
+        case default; call error( "cannot guess coordinates" )
+      end select
+    end if
+    contains
+      !-------------------------------------------------------------------------
+      subroutine build_monoatomic_molecule
+        character(sl) :: arg(4)
+        call writeln( "Molecule", int2str(imol), "is monoatomic:" )
+        arg = [first%params, "0.0", "0.0", "0.0"]
+        call me % coordinate_list % add( 4, arg )
+      end subroutine build_monoatomic_molecule
+      !-------------------------------------------------------------------------
+      subroutine build_diatomic_molecule
+        integer :: narg
+        character(sl) :: atoms(2), types(2), arg(10), R0
+        call writeln( "Molecule", int2str(imol), "is diatomic:" )
+        atoms = [first % params, first % next % params]
+        call me % get_types( atoms, types )
+        call split( me % bond_type_list % parameters( types ), narg, arg )
+        if (narg /= 2) call error( "cannot guess coordinates" )
+        R0 = arg(2)
+        if (.not.is_real(R0)) call error( "cannot guess coordinates" )
+        call writeln( "Considering harmonic potential with R0 = ", R0 )
+        call warning( "if this is wrong, please provide coordinates manually via xyz" )
+        arg(1:4) = [atoms(1), "0.0", "0.0", "0.0"]
+        call me % coordinate_list % add( 4, arg )
+        arg(1:4) = [atoms(2), R0, "0.0", "0.0"]
+        call me % coordinate_list % add( 4, arg )
+      end subroutine build_diatomic_molecule
+      !-------------------------------------------------------------------------
+      subroutine build_triatomic_molecule
+        integer :: narg
+        character(sl) :: atoms(3), types(3), arg(10), R0A, R0B, Theta0
+        real(rb) :: X3, Y3
+        call writeln( "Molecule", int2str(imol), "is triatomic:" )
+        atoms = [first % params, first % next % params, first % next % next % params ]
+        call me % bond_list % search( atoms(1:2), current )
+        if (associated(current)) then
+          call me % bond_list % search( atoms(2:3), current )
+          if (.not.associated(current)) atoms = atoms([2,1,3])
+        else
+          atoms = atoms([1,3,2])
+        end if
+        call me % get_types( atoms, types )
+        call split( me % bond_type_list % parameters( types(1:2) ), narg, arg )
+        if (narg /= 2) call error( "cannot guess coordinates" )
+        R0A = arg(2)
+        call split( me % bond_type_list % parameters( types(2:3) ), narg, arg )
+        if (narg /= 2) call error( "cannot guess coordinates" )
+        R0B = arg(2)
+        call split( me % angle_type_list % parameters( types ), narg, arg )
+        if (narg /= 2) call error( "cannot guess coordinates" )
+        Theta0 = arg(2)
+        if (is_real(R0A).and.is_real(R0B).and.is_real(Theta0)) then
+          call writeln( "Considering harmonic potentials:" )
+          call writeln( "R0(",atoms(1),"-",atoms(2),") = ", R0A )
+          call writeln( "R0(",atoms(2),"-",atoms(3),") = ", R0B )
+          call writeln( "Theta0(",atoms(1),"-",atoms(2),"-",atoms(3),") = ", Theta0, "degrees" )
+          call warning( "if this is wrong, please provide coordinates manually via xyz" )
+        else
+          call error( "cannot guess coordinates" )
+        end if
+        arg(1:4) = [atoms(1), "0.0", "0.0", "0.0"]
+        call me % coordinate_list % add( 4, arg )
+        arg(1:4) = [atoms(2), R0A, "0.0", "0.0"]
+        call me % coordinate_list % add( 4, arg )
+        X3 = str2real(R0A) - str2real(R0B)*cos(0.0174532925_rb*str2real(Theta0))
+        Y3 = str2real(R0B)*sin(0.0174532925_rb*str2real(Theta0))
+        arg(1:4) = [atoms(3), real2str(X3), real2str(Y3), "0.0"]
+        call me % coordinate_list % add( 4, arg )
+      end subroutine build_triatomic_molecule
+      !-------------------------------------------------------------------------
+  end subroutine tPlaymol_check_coordinates
+  !=================================================================================================
+  subroutine tPlaymol_molecule_coordinates( me, imol, N, Coord, option )
+    class(tPlaymol), intent(inout) :: me
+    integer,         intent(in)    :: imol, N, option
+    real(rb),        intent(inout) :: Coord(3,N)
+    type(Struc), pointer :: current
+    logical :: found
+    integer :: i, narg
+    character(sl) :: arg(3)
+    current => me % coordinate_list % first
+    found = .false.
+    do while (associated(current).and.(.not.found))
+      found = str2int(me % molecule_list % parameters( current%id )) == imol
+      if (.not.found) current => current % next
+    end do
+    do i = 1, N
+      if (option == 1) then ! Retrieve coordinates and masses:
+        call split( current % params, narg, arg )
+        Coord(:,i) = [str2real(arg(1)), str2real(arg(2)), str2real(arg(3))]
+      else ! Set coordinates:
+        current % params = join(real2str(Coord(:,i)))
+      end if
+      current => current % next
+    end do
+  end subroutine tPlaymol_molecule_coordinates
+  !=================================================================================================
 end module mPlaymol

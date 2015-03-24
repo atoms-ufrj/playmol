@@ -14,7 +14,7 @@ src  = ./src
 
 all: $(BINDIR)/$(exec)
 
-.PHONY: install clean
+.PHONY: install clean doc
 
 doc:
 	doxygen $(DOCDIR)/Doxyfile
@@ -32,7 +32,7 @@ install:
 
 $(BINDIR)/$(exec): $(OBJDIR)/playmol.o $(OBJDIR)/mPlaymol.o $(OBJDIR)/mStruc.o  \
                    $(OBJDIR)/mPackmol.o $(OBJDIR)/mBox.o $(OBJDIR)/mString.o \
-                   $(OBJDIR)/mGlobal.o $(PACKMOL)/libpackmol.a
+                   $(OBJDIR)/mAlign.o $(OBJDIR)/mGlobal.o $(PACKMOL)/libpackmol.a
 	mkdir -p $(BINDIR)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -o $@ $^ -L$(PACKMOL) -lpackmol
 
@@ -42,7 +42,7 @@ $(PACKMOL)/libpackmol.a:
 $(OBJDIR)/playmol.o: $(SRCDIR)/playmol.f90 $(OBJDIR)/mPlaymol.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/mPlaymol.o: $(SRCDIR)/mPlaymol.f90 $(OBJDIR)/mPackmol.o $(OBJDIR)/mBox.o
+$(OBJDIR)/mPlaymol.o: $(SRCDIR)/mPlaymol.f90 $(OBJDIR)/mPackmol.o $(OBJDIR)/mBox.o $(OBJDIR)/mAlign.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mPackmol.o: $(SRCDIR)/mPackmol.f90 $(OBJDIR)/mStruc.o $(OBJDIR)/mBox.o
@@ -52,6 +52,9 @@ $(OBJDIR)/mStruc.o: $(SRCDIR)/mStruc.f90 $(OBJDIR)/mString.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mBox.o: $(SRCDIR)/mBox.f90 $(OBJDIR)/mGlobal.o
+	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
+
+$(OBJDIR)/mAlign.o: $(SRCDIR)/mAlign.f90 $(OBJDIR)/mGlobal.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mString.o: $(SRCDIR)/mString.f90 $(OBJDIR)/mGlobal.o

@@ -26,6 +26,7 @@ use mBox
 implicit none
 
 character(sl), parameter :: stdout_name = "/dev/stdout"
+character(sl), parameter :: logfile = "packmol.log"
 
 integer  :: seed = 1234
 integer  :: nloops = 50
@@ -237,9 +238,9 @@ contains
           call execute_packmol( tol, stat )
           if (stat == 0) then
             call retrieve_coordinates( mixfile )
-            call delete_files( [inputfile, mixfile, molfile] )
+            call delete_files( [inputfile, mixfile, molfile, logfile] )
           else
-            call delete_files( [inputfile, mixfile, trim(mixfile)//"_FORCED", molfile] )
+            call delete_files( [inputfile, mixfile, trim(mixfile)//"_FORCED", molfile, logfile] )
             call error( "Packmol did not converge! See file packmol.log for additional info.")
           end if
 
@@ -252,7 +253,7 @@ contains
             if (stat /= 0) trytol = change * trytol
           end do
           call retrieve_coordinates( mixfile )
-          call delete_files( [inputfile, mixfile, trim(mixfile)//"_FORCED", molfile] )
+          call delete_files( [inputfile, mixfile, trim(mixfile)//"_FORCED", molfile, logfile] )
           call writeln( "Packmol converged with tolerance =", real2str(trytol) )
 
         end if
