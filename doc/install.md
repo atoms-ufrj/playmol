@@ -11,16 +11,32 @@ To compile the source code and install Playmol in your system, you can do:
     make
     sudo make install
 
-Local documentation can be generated (if [Doxygen](http://www.doxygen.org) is available) by:
-
-    make doc
-
-To update Playmol, enter the playmol directory and execute the following commands:
+To update Playmol, enter the playmol directory and execute the following commands (including recompilation and reinstallation):
 
     git pull
     make
     sudo make install
 
+--------------------------------------------------------------------------------
+
+User's Manual
+-------------
+
+The Playmol User's Manual is available online [here](http://atoms.peq.coppe.ufrj.br/playmol). You can also generate a local version if you have [Doxygen](http://www.doxygen.org) (version 1.8 or later) installed in your system. If you do not have Doxygen, you can download and install it by:
+
+    git clone https://github.com/doxygen/doxygen.git
+    cd doxygen
+    ./configure
+    make
+    sudo make install
+
+In order to generate the local User's Manual, please go to the playmol directory and execute:
+
+    make doc
+
+The manual will be available as a file _playmol/doc/html/index.html_, which you can open using your favorite web browser.
+
+--------------------------------------------------------------------------------
 
 Using Playmol
 -------------

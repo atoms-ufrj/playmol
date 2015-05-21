@@ -48,10 +48,10 @@
     </context>
 
     <context id="default-files" style-ref="string">
-      <keyword>[\w_]+\.xyz</keyword>
-      <keyword>[\w_]+\.(p|play)?mol</keyword>
-      <keyword>[\w_]+\.(lmp|lammps)?_?data</keyword>
-      <keyword>[\w_]+\.l(mp|ammps|ammpstrj)</keyword>
+      <keyword>[\w_/.]+\.xyz</keyword>
+      <keyword>[\w_/.]+\.(p|play)?mol</keyword>
+      <keyword>[\w_/.]+\.(lmp|lammps)?_?data</keyword>
+      <keyword>[\w_/.]+\.l(mp|ammps|ammpstrj)</keyword>
     </context>
 
     <context id="commands" style-ref="keyword">
@@ -64,6 +64,7 @@
       <keyword>atom</keyword>
       <keyword>charge</keyword>
       <keyword>bond</keyword>
+      <keyword>ionic_bond</keyword>
       <keyword>extra_dihedral</keyword>
       <keyword>improper\s*search</keyword>
       <keyword>improper</keyword>

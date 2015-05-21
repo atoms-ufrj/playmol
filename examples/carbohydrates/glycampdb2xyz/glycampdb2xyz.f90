@@ -78,9 +78,9 @@ contains
 
     type(Item), pointer :: current, previous
     integer       :: i, j, residue, ncopies
-    real(rb)      :: theta, L, R1(3), R2(3), R3(3), R4(3), D(3), x(3), y(3), z(3)
+    real(rb)      :: theta, L, R1(3), R2(3), R3(3), R4(3), Ri(3), D(3), x(3), y(3), z(3), ion_dist
     character(10) :: coord(3)
-    character(3)  :: atom(4)
+    character(3)  :: atom(5)
     character(3), allocatable :: erase(:)
     real(rb),     allocatable :: phi(:)
 
@@ -88,21 +88,23 @@ contains
       case ("deacetylation")
         allocate( erase(7) )
         erase = [ "H2N", "C2N", "O2N", "CME", "H3M", "H2M", "H1M" ]
-        atom = [ "C1", "C2", "N2", "HN" ]
+        atom = [ "C1 ", "C2 ", "N2 ", "H2N", "Cl " ]
         ncopies = 3
         allocate( phi(ncopies) )
         phi = real([60,180,300],rb)
         theta = 109.2
         L = 1.01
+        ion_dist = 3.8638
       case ("oxidation")
         allocate( erase(4) )
         erase = [ "H61", "H62", "O6 ", "H6O" ]
-        atom = [ "O5", "C5", "C6", "O6" ]
+        atom = [ "O5", "C5", "C6", "O6", "Na" ]
         ncopies = 2
         allocate( phi(ncopies) )
         phi = real([0,180],rb)
         theta = 115.0
         L = 1.25
+        ion_dist = 5.0 ! REQUIRES MODIFICATION
       case default
         call error( "unknown reation - ", option )
     end select
@@ -136,13 +138,14 @@ contains
               D = (R1 - R2) - scalar(R1 - R2,x)*x
               y = D/norm(D)
               z = cross(x,y)
+              ! Add new atoms:
               do i = 1, ncopies
                 R4 = R3 + L*(cosine(180-theta)*x + sine(180-theta)*(cosine(phi(i))*y + sine(phi(i))*z))
                 current => current % next
                 allocate( previous % next )
                 previous % next % next => current
                 current => previous % next
-                current % atom = trim(atom(4))//achar(64+i)
+                current % atom = trim(atom(4))//int2str(i)
                 current % index = residue
                 do j = 1, 3
                   write(coord(j),'(F10.4)') R4(j)
@@ -151,7 +154,22 @@ contains
                 current % xyz = join(coord)
                 nitems = nitems + 1
                 previous => current
-              end do 
+              end do
+              ! Add counter-ion:
+              Ri = R3 + ion_dist * x
+              current => current % next
+              allocate( previous % next )
+              previous % next % next => current
+              current => previous % next
+              current % atom = atom(5)
+              current % index = residue
+              do j = 1, 3
+                write(coord(j),'(F10.4)') Ri(j)
+                coord(j) = adjustl(coord(j))
+              end do
+              current % xyz = join(coord)
+              nitems = nitems + 1
+              previous => current
             end if
           end if
         else

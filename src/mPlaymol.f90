@@ -17,6 +17,8 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
+! TO DO: describe the command 'ionic_bond' in the manual.
+
 module mPlaymol
 
 use mGlobal
@@ -39,6 +41,7 @@ type tPlaymol
   type(StrucList) :: atom_list = StrucList( name = "atom", number = 1 )
   type(StrucList) :: charge_list = StrucList( name = "charge", number = 1 )
   type(StrucList) :: bond_list = StrucList( name = "bond", number = 2 )
+  type(StrucList) :: ionic_bond_list = StrucList( name = "ionic bond", number = 2 )
   type(StrucList) :: angle_list = StrucList( name = "angle", number = 3 )
   type(StrucList) :: dihedral_list = StrucList( name = "dihedral", number = 4 )
   type(StrucList) :: extra_dihedral_list = StrucList( name = "extra dihedral", number = 4 )
@@ -89,6 +92,7 @@ contains
         case ("atom"); call atom_command
         case ("charge"); call charge_command
         case ("bond"); call bond_command
+        case ("ionic_bond"); call ionic_bond_command
         case ("extra_dihedral"); call extra_dihedral_command
         case ("improper"); call improper_command
         case ("xyz"); call xyz_command
@@ -242,6 +246,25 @@ contains
         end do
       end subroutine bond_command
       !---------------------------------------------------------------------------------------------
+      subroutine add_ionic_bond( atom )
+        character(sl), intent(inout) :: atom(2)
+        call me % ionic_bond_list % add( 2, atom, me % atom_list )
+        if (atom(1) == atom(2)) call error( "atom", atom(1), "cannot bind to itself" )
+        call me % fuse_molecules( atom )
+      end subroutine add_ionic_bond
+      !---------------------------------------------------------------------------------------------
+      subroutine ionic_bond_command
+        integer :: i
+        character(sl) :: central
+        if (narg < 3) call error( "invalid ionic_bond command" )
+        central = arg(2)
+        do i = 3, narg
+          arg(2) = central
+          arg(3) = arg(i)
+          call add_ionic_bond( arg(2:3) )
+        end do
+      end subroutine ionic_bond_command
+      !---------------------------------------------------------------------------------------------
       subroutine extra_dihedral_command
         integer :: i, imol, jmol
         call me % extra_dihedral_list % add( narg-1, arg(2:narg), me % atom_list )
@@ -294,6 +317,8 @@ contains
         integer :: i, imol, natoms(me%nmol), N
         real(rb), allocatable :: Mass(:), Coord(:,:)
         integer :: axis(3)
+        character :: dir(3) = ["x","y","z"]
+        real(rb) :: lb(3), ub(3)
         if (narg /= 4) call error( "invalid align command" )
         imol = str2int(arg(2))
         do i = 3, 4
@@ -318,6 +343,14 @@ contains
         call me % molecule_coordinates( imol, N, Coord, 1 )
         call align_molecule( N, Mass, Coord, axis )
         call me % molecule_coordinates( imol, N, Coord, 2 )
+        lb = minval(Coord,dim=2)
+        ub = maxval(Coord,dim=2)
+        do i = 1, 3
+          call writeln( "New bounds in direction", dir(i)//":", join(real2str([lb(i),ub(i)])) )
+        end do
+        do i = 1, 3
+          call writeln( "New length in direction", dir(i)//":", real2str(ub(i)-lb(i)) )
+        end do
         deallocate( Mass, Coord )
       end subroutine align_command
       !---------------------------------------------------------------------------------------------
@@ -831,6 +864,7 @@ contains
     call flush( "improper type", me % improper_type_list % count() )
     call flush( "atom", me % atom_list % count() )
     call flush( "bond", me % bond_list % count() )
+    call flush( "ionic bond", me % ionic_bond_list % count() )
     call flush( "extra dihedral", me % extra_dihedral_list % count() )
     call flush( "improper", me % improper_list % count() )
     write(unit,'(/,A)') "Detected:"
@@ -905,12 +939,12 @@ contains
     write(unit,'()')
     call write_count( me % coordinate_list % count(), "atoms" )
     call handle_struc( "bonds", me % bond_list, me % bond_type_list, nb )
-    call handle_struc( "angles", me % angle_list, me % angle_type_list, na )
-    call handle_struc( "dihedrals", me % dihedral_list, me % dihedral_type_list, nd )
-    call handle_struc( "impropers", me % improper_list, me % improper_type_list, ni )
     call write_count( nb, "bonds" )
+    call handle_struc( "angles", me % angle_list, me % angle_type_list, na )
     call write_count( na, "angles" )
+    call handle_struc( "dihedrals", me % dihedral_list, me % dihedral_type_list, nd )
     call write_count( nd, "dihedrals" )
+    call handle_struc( "impropers", me % improper_list, me % improper_type_list, ni )
     call write_count( ni, "impropers" )
     if (me % box % exists()) call write_box_limits
     call write_masses
@@ -932,7 +966,10 @@ contains
       subroutine write_count( n, name )
         integer,      intent(in) :: n
         character(*), intent(in) :: name
-        if (n > 0) write(unit,'(A,X,A)') trim(int2str(n)), name
+        if (n > 0) then
+          write(unit,'(A,X,A)') trim(int2str(n)), name
+          call writeln( int2str(n), name )
+        end if
       end subroutine write_count
       !---------------------------------------------------------------------------------------------
       subroutine write_box_limits

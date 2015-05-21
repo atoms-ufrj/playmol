@@ -24,19 +24,10 @@ The following script builds a simulation box with 1 g/cm³ density and 500 water
 	charge		H?	 0.415
 	charge		O	-0.830
 
-	bond		H1	O
-	bond		O 	H2
-
-	xyz
-	3
-	# Water molecule coordinates:
-	H1	0.0    	0.0    	0.0
-	O 	0.9572 	0.0    	0.0
-	H2	1.19719	0.92663	0.0
+	bond		O 	H1	H2
 
 	box    		density 0.602214 # Daltons per cubic angstrom
 	packmol		tolerance 3.0 retry 0.95 pack 1 500 action execute
 	write		lammps water.lmp
 	write		summary
-
 
