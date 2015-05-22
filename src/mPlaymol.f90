@@ -426,8 +426,8 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine shell_command
         integer :: stat
-        call writeln( "Executing shell command: ", join(arg(2:)) )
-        call execute_command_line( join(arg(2:)), exitstat = stat )
+        call writeln( "Executing shell command: ", join(arg(2:narg)) )
+        call execute_command_line( join(arg(2:narg)), exitstat = stat )
         if (stat /= 0) call error( "unsuccessful shell command" )
       end subroutine shell_command
       !---------------------------------------------------------------------------------------------
