@@ -28,10 +28,12 @@ type tBox
                               ! 1 - density and aspect
                               ! 2 - volume and aspect
                               ! 3 - lengths
+                              ! 4 - triclinic
   real(rb) :: volume
   real(rb) :: density
   real(rb) :: length(3)
   real(rb) :: aspect(3) = 1.0_rb
+  real(rb) :: angle(3) = [90.0_rb,90.0_rb,90.0_rb]
   contains
     procedure :: define => tBox_define
     procedure :: exists => tBox_exists
@@ -62,6 +64,10 @@ contains
       case ("lengths")
         box % def_type = 3
         box % length = vector
+      case ("angles")
+        if (box % def_type /= 3) call error( "cannot define angles without predefined lengths" )
+        box % def_type = 4
+        box % angle = vector
     end select
   end subroutine tBox_define
 
@@ -78,7 +84,8 @@ contains
   subroutine tBox_compute( box, mass )
     class(tBox), intent(inout) :: box
     real(rb),    intent(in)    :: mass
-    real(rb) :: L
+    real(rb), parameter :: Deg2Rad = 0.01745329251994329577_rb
+    real(rb) :: L, cosines(3)
     if (.not.box % exists()) call error( "box has not been specified" )
     select case (box % def_type)
       case (1)
@@ -91,6 +98,11 @@ contains
         box % length = L * box % aspect
       case (3)
         box % volume = product(box % length)
+        box % density = mass / box % volume
+        box % aspect = box % length / box % length(1)
+      case (4)
+        cosines = cos(Deg2Rad*box%angle)
+        box % volume = product(box % length)*sqrt(1.0_rb - sum(cosines**2) + 2.0_rb*product(cosines))
         box % density = mass / box % volume
         box % aspect = box % length / box % length(1)
     end select

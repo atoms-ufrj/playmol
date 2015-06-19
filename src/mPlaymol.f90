@@ -167,6 +167,16 @@ contains
             else
               call error( "invalid box command" )
             end if
+          case ("angles")
+            if (narg == 3) then
+              call writeln( "Defining box angles as", arg(3) )
+              vector = str2real(arg(3))
+            else if (narg == 5) then
+              call writeln( "Defining box angles as", join(arg(3:5)) )
+              vector = [(str2real(arg(2+i)),i=1,3)]
+            else
+              call error( "invalid box command" )
+            end if
           case default
              call error( "invalid box command" )
         end select
@@ -207,6 +217,8 @@ contains
         if (has_macros(arg(3))) call error( "invalid atom type name" )
         call me % atom_type_list % search( arg(3:3), type_ptr )
         if (associated(type_ptr)) then
+          type_ptr % used = .true.
+          call me % mass_list % search( arg(3:3), type_ptr )
           type_ptr % used = .true.
         else
           call error( "atom type", arg(3), "required, but not found")
@@ -819,13 +831,14 @@ contains
     integer :: N
     character(sl) :: CN
     type(Struc), pointer :: current
-    call me % atom_type_list % print( unit )
-    call me % mass_list % print( unit )
-    call me % bond_type_list % print( unit )
-    call me % angle_type_list % print( unit )
-    call me % dihedral_type_list % print( unit )
-    call me % atom_list % print( unit )
-    call me % charge_list % print( unit )
+    call me % atom_type_list % print( unit, used_only = .true. )
+    call me % mass_list % print( unit, used_only = .true. )
+    call me % bond_type_list % print( unit, used_only = .true. )
+    call me % angle_type_list % print( unit, used_only = .true. )
+    call me % dihedral_type_list % print( unit, used_only = .true. )
+    call me % improper_type_list % print( unit, used_only = .true. )
+    call me % atom_list % print( unit, used_only = .true. )
+    call me % charge_list % print( unit, used_only = .true. )
     call me % bond_list % print( unit )
     call me % angle_list % print( unit, comment = .true. )
     call me % dihedral_list % print( unit, comment = .true. )
@@ -975,15 +988,40 @@ contains
       subroutine write_box_limits
         integer :: i, molcount(me % nmol)
         real(rb) :: mass(me % nmol)
+        real(rb), parameter :: Deg2Rad = 0.01745329251994329577_rb
         character :: dir(3) = ["x","y","z"]
         character(sl) :: limits
+        real(rb) :: a, b, c, alpha, beta, gamma, lx, ly, lz, xy, xz, yz, L(3)
         call me % count_molecules( molcount, mass )
         call me % box % compute( sum(molcount*mass) )
         write(unit,'()')
-        do i = 1, 3
-          limits = join(real2str( me%box%length(i)*[-0.5_rb,+0.5_rb] ))
-          write(unit,'(A," ",A,"lo ",A,"hi")') trim(limits), dir(i), dir(i)
-        end do
+        if (me % box % def_type /= 4) then
+          do i = 1, 3
+            limits = join(real2str( me%box%length(i)*[-0.5_rb,+0.5_rb] ))
+            write(unit,'(A," ",A,"lo ",A,"hi")') trim(limits), dir(i), dir(i)
+          end do
+        else ! Triclinic box
+          a = me%box%length(1)
+          b = me%box%length(2)
+          c = me%box%length(3)
+          alpha = Deg2Rad*me%box%angle(1)
+          beta = Deg2Rad*me%box%angle(2)
+          gamma = Deg2Rad*me%box%angle(3)
+          lx = a
+          xy = b*cos(gamma)
+          xz = c*cos(beta)
+          ly = sqrt(b**2 - xy**2)
+          yz = (b*c*cos(alpha) - xy*xz)/ly
+          lz = sqrt(c**2 - xz**2 - yz**2)
+          L = [lz,ly,lx]
+          do i = 1, 3
+            limits = join(real2str( L(i)*[-0.5_rb,+0.5_rb] ))
+            write(unit,'(A," ",A,"lo ",A,"hi")') trim(limits), dir(i), dir(i)
+          end do
+          L = [xy,xz,yz]
+          where (abs(L) < 1.e-10_rb) L = 0.0_rb
+          write(unit,'(A," xy xz yz")') trim(join([real2str(L)]))
+        end if
       end subroutine write_box_limits
       !---------------------------------------------------------------------------------------------
       subroutine write_type( name, list )

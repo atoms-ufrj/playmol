@@ -271,19 +271,24 @@ contains
 
   !=================================================================================================
 
-  subroutine StrucList_print( me, unit, comment )
+  subroutine StrucList_print( me, unit, comment, used_only )
     class(StrucList), intent(in)           :: me
     integer,          intent(in)           :: unit
-    logical,          intent(in), optional :: comment
+    logical,          intent(in), optional :: comment, used_only
     type(Struc), pointer :: current
     character(sl) :: name
+    logical :: test_used
     name = me % name
     if (present(comment)) then
       if (comment) name = "# "//trim(me % name)
     end if
+    test_used = present(used_only)
+    if (test_used) test_used = used_only
     current => me % first
     do while (associated(current))
-      write(unit,'(A,X,A,X,A)') trim(name), trim(join(current%id)), trim(current%params)
+      if ((.not.test_used).or.(test_used.and.current%used)) then
+        write(unit,'(A,X,A,X,A)') trim(name), trim(join(current%id)), trim(current%params)
+      end if
       current => current % next
     end do
   end subroutine StrucList_print
