@@ -3,6 +3,7 @@ Commands      {#commands}
 
 Playmol is designed to execute scripts containing the commands described below:
 
+* [define] - defines a string variable for further substitution.
 * [atom_type] - creates an atom type with given name and parameters.
 * [mass] - specifies the mass of atoms of a given type.
 * [bond_type] - defines parameters for bonds between atoms of two given types.
@@ -35,6 +36,40 @@ Playmol scripts are text files containing commands described in this section. Ea
 
 In all examples described in this section, the units employed for physically meaningful values are those corresponding to [LAMMPS real units].
 
+-------------------------
+<a name="define"/> define
+-------------------------
+
+**Syntax**:
+
+	define 	<variable> as <string>
+
+* _variable_ = a name to be assigned to the defined variable
+* _string_ = a single character string
+
+**Description**:
+
+This command defines a variable that contains a character string to be substituted in forthcoming commands.
+
+The parameter _variable_ must be a single string with no comment tags (#) and no wildcard characters (* or ?).
+
+The parameter _value_ must be a single string with no comment tags (#). It can contain wildcard characters (* or ?).
+
+Substitution is done in forthcoming commands by enclosing the defined variable name between symbols "${" and "}", with no spacing. Every time the sequence "${" is found in a command, Playmol will admit that a variable is being referred to. An error message will be produced if a closing bracket "}" is not found afterward. The actual command will only be issued after the variable has been replaced by its value. There can be multiple references to variables in a single command.
+
+**Example**:
+
+	define		name as A
+	atom_type	${name}	0.0914 3.95
+	atom		${name}1 ${name}
+	atom		${name}2 ${name}
+
+In the example above, an atom type named _A_ is defined with parameters 0.0914 and 3.95. Then, two atoms named _A1_ and _A2_ are created, both of type _A_.
+
+**See also**:
+
+[prefix], [suffix]
+
 -------------------------------
 <a name="atom_type"/> atom_type
 -------------------------------
@@ -50,7 +85,7 @@ In all examples described in this section, the units employed for physically mea
 
 This command defines an atom type and its related attributes. At least one atom type must necessarily be defined before any [atom] is created and before any [bond_type], [angle_type], [dihedral_type], or [improper_type] is defined.
 
-The parameter _id_ must be a single string with no comment tags (#) and no wildcard characters (* or ?). If a type [prefix] has been previously activated, then the actual atom type identifier will contain such prefix, followed by the string in _id_. Two atom types cannot have the same identifier.
+The parameter _id_ must be a single string with no comment tags (#) and no wildcard characters (* or ?). If a type [prefix] and/or [suffix] has been previously activated, then the actual atom type identifier will contain such prefix, followed by the string in _id_, followed by the suffix. Two atom types cannot have the same identifier.
 
 The parameter _attribute-list_ can be a sequence of strings containing any characters, except comment tags (#). When a LAMMPS data file is generated using the command [write], then _attribute-list_ is assumed to contain the parameters of the LAMMPS pair style associated with the atom type in question.
 
@@ -69,7 +104,7 @@ In the example above, united-atom types _TraPPE-CH3_ and _TraPPE-CH2_ are define
 
 **See also**:
 
-[atom], [bond_type], [angle_type], [dihedral_type], [improper_type], [prefix]
+[atom], [bond_type], [angle_type], [dihedral_type], [improper_type], [prefix], [suffix]
 
 ---------------------
 <a name="mass"/> mass
@@ -114,7 +149,7 @@ In the example above, a mass value of _14.0_ is assigned to atom type _CH2_ and 
 
 This command defines a bond type and its related attributes. At least one bond type must necessarily be defined before any chemical [bond] is created. A bond type is identified by the types of the two atoms involved.
 
-The parameters _type-1_ and _type-2_ are identifiers of previously defined atom types. Either _type-1_ _type-2_ or _type-2_ _type-1_ will result in the same bond type. Wildcard characters (? and *) can be used to refer to multiple atom types. If a type [prefix] has been previously activated, then the actual identifiers will contain such prefix, followed by the strings in _type-1_ and _type-2_.
+The parameters _type-1_ and _type-2_ are identifiers of previously defined atom types. Either _type-1_ _type-2_ or _type-2_ _type-1_ will result in the same bond type. Wildcard characters (? and *) can be used to refer to multiple atom types. If a type [prefix] and/or [suffix] has been previously activated, then the actual identifiers will contain such prefix, followed by the string in _type-1_ or _type-2_, followed by the suffix.
 
 The parameter _attribute-list_ can be a sequence of strings containing any characters, except comment tags (#). When a LAMMPS data file is generated using the command [write], then _attribute-list_ is assumed to contain the parameters of the LAMMPS bond style associated with the bond type in question.
 
@@ -128,7 +163,7 @@ In the example above, the given attributes will be associated with every bond in
 
 **See also**:
 
-[atom_type], [bond], [write], [prefix]
+[atom_type], [bond], [write], [prefix], [suffix]
 
 ---------------------------------
 <a name="angle_type"/> angle_type
@@ -145,7 +180,7 @@ In the example above, the given attributes will be associated with every bond in
 
 This command defines an angle type and its related attributes. An angle type is identified by the types of the three atoms involved.
 
-The parameters _type-1_, _type-2_, and _type-3_ are identifiers of previously defined atom types. Either _type-1_ _type-2_ _type-3_ or _type-3_ _type-2_ _type-1_ will result in the same angle type. Wildcard characters (? and *) can be used to refer to multiple atom types. If a type [prefix] has been previously activated, then the actual identifiers will contain such prefix, followed by the strings in _type-1_, _type-2_, and _type-3_.
+The parameters _type-1_, _type-2_, and _type-3_ are identifiers of previously defined atom types. Either _type-1_ _type-2_ _type-3_ or _type-3_ _type-2_ _type-1_ will result in the same angle type. Wildcard characters (? and *) can be used to refer to multiple atom types. If a type [prefix] and/or [suffix] has been previously activated, then the actual identifiers will contain such prefix, followed by the string in _type-1_ or _type-2_ or _type-3_, followed by the suffix.
 
 The parameter _attribute-list_ can be a sequence of strings containing any characters, except comment tags (#). When a LAMMPS data file is generated using the command [write], then _attribute-list_ is assumed to contain the parameters of the LAMMPS angle style associated with the angle type in question.
 
@@ -159,7 +194,7 @@ Playmol detects angles automatically as chemical bonds are created. If a detecte
 
 **See also**:
 
-[atom_type], [write], [prefix]
+[atom_type], [write], [prefix], [suffix]
 
 ---------------------------------------
 <a name="dihedral_type"/> dihedral_type
@@ -176,7 +211,7 @@ Playmol detects angles automatically as chemical bonds are created. If a detecte
 
 This command defines a dihedral type and its related attributes. A dihedral type is identified by the types of the four atoms involved.
 
-The parameters _type-1_, _type-2_, _type_3, and _type-4_ are identifiers of previously defined atom types. The order of such identifiers is relevant in the case of dihedral types. Wildcard characters (? and *) can be used to refer to multiple atom types. If a type [prefix] has been previously activated, then the actual identifiers will contain such prefix, followed by the strings in _type-1_, _type-2_, and _type-3_.
+The parameters _type-1_, _type-2_, _type_3, and _type-4_ are identifiers of previously defined atom types. The order of such identifiers is relevant in the case of dihedral types. Wildcard characters (? and *) can be used to refer to multiple atom types. If a type [prefix] and/or [suffix] has been previously activated, then the actual identifiers will contain such prefix, followed by the string in _type-1_ or _type-2_ or _type-3_, followed by the suffix.
 
 The parameter _attribute-list_ can be a sequence of strings containing any characters, except comment tags (#). When a LAMMPS data file is generated using the command [write], then _attribute-list_ is assumed to contain the parameters of the LAMMPS dihedral style associated with the dihedral type in question.
 
@@ -190,7 +225,7 @@ Playmol detects dihedrals automatically as chemical bonds are created. If a dete
 
 **See also**:
 
-[atom_type], [write], [prefix]
+[atom_type], [write], [prefix], [suffix]
 
 ---------------------------------------
 <a name="improper_type"/> improper_type
@@ -207,7 +242,7 @@ Playmol detects dihedrals automatically as chemical bonds are created. If a dete
 
 This command defines an improper type and its related attributes. An improper type is identified by the types of the four atoms involved.
 
-The parameters _type-1_, _type-2_, _type_3, and _type-4_ are identifiers of previously defined atom types. The order of such identifiers is relevant in the case of improper types. Wildcard characters (? and *) can be used to refer to multiple atom types. If a type [prefix] has been previously activated, then the actual identifiers will contain such prefix, followed by the strings in _type-1_, _type-2_, and _type-3_.
+The parameters _type-1_, _type-2_, _type_3, and _type-4_ are identifiers of previously defined atom types. The order of such identifiers is relevant in the case of improper types. Wildcard characters (? and *) can be used to refer to multiple atom types. If a type [prefix] and/or [suffix] has been previously activated, then the actual identifiers will contain such prefix, followed by the string in _type-1_ or _type-2_ or _type-3_, followed by the suffix.
 
 The parameter _attribute-list_ can be a sequence of strings containing any characters, except comment tags (#). When a LAMMPS data file is generated using the command [write], then _attribute-list_ is assumed to contain the parameters of the LAMMPS improper style associated with the improper type in question.
 
@@ -221,7 +256,7 @@ Impropers are created manually using the command [improper], which requires a pr
 
 **See also**:
 
-[atom_type], [improper], [write], [prefix]
+[atom_type], [improper], [write], [prefix], [suffix]
 
 ---------------------
 <a name="atom"/> atom
@@ -239,9 +274,9 @@ Impropers are created manually using the command [improper], which requires a pr
 
 This command creates an atom of a given type.
 
-The parameter _id_ must be a single string with no comment tags (#) and no wildcard characters (* or ?). If an atom [prefix] has been previously activated, then the actual atom identifier will contain such prefix, followed by the text specified as _id_. Two atoms cannot have the same identifier.
+The parameter _id_ must be a single string with no comment tags (#) and no wildcard characters (* or ?). If an atom [prefix] and/or [suffix] has been previously activated, then the actual atom identifier will contain such prefix, followed by the text specified as _id_, followed by the suffix. Two atoms cannot have the same identifier.
 
-The parameter _type_ is the identifier of a previously defined atom type. A unique identifier must be provided, with no use of wildcard characters (* or ?). If a type [prefix] has been previously activated, then the actual identifier will contain such prefix, followed by the string in _type_. The specified atom type must have a [mass] associated with it.
+The parameter _type_ is the identifier of a previously defined atom type. A unique identifier must be provided, with no use of wildcard characters (* or ?). If a type [prefix] and/or [suffix] has been previously activated, then the actual identifier will contain such prefix, followed by the string in _type_, followed by the suffix. The specified atom type must have a [mass] associated with it.
 
 The optional parameter _charge_ is the partial charge of the specified atom. If present, its effect is equivalent to calling the command [charge] with _id_ and _charge_ as parameters.
 
@@ -429,18 +464,22 @@ In the example above, the atomic coordinates of two water molecules are provided
 **Syntax**:
 
 	box		lengths <lx> <ly> <lz>
+	box		angles <alpha> <beta> <gamma>
 	box		volume <value> [aspect <ax> <ay> <az>]
 	box		density <value> [aspect <ax> <ay> <az>]
 
-* _lx_, _ly_, _lz_ = box dimensions in directions x, y, and z
+* _lx_, _ly_, _lz_ = lengths of the box edges in directions x, y, and z
+* _alpha_, _beta_, _gamma_ = angles between the box edges
 * _value_ = density of the simulation box
 * _ax_, _ay_, _az_ (optional) = Scaling factors in directions x, y, and z
 
 **Description**:
 
-This command specifies the side lengths, the volume, or the density of a simulation box.
+This command specifies the side lengths (and angles), the volume, or the density of a simulation box.
 
-The parameters _lx_, _ly_, and _lz_ are the dimensions of the simulation box in the three spatial directions.
+The parameters _lx_, _ly_, and _lz_ are the lengths of the simulation box edges in the three spatial directions.
+
+The parameters _alpha_, _beta_, and _gamma_ are the angles between the edge vectors of a non-orthogonal box (_alpha_ between _ly_ and _lz_, _beta_ between _lx_ and _lz_, and _gamma_ between _lx_ and _ly_). The command _box angles_ requires that a command _box lengths_ has been previously executed.
 
 The parameter _value_ is either the volume or the density of the simulation box, depending on the kind of specification being done.
 
@@ -448,7 +487,7 @@ The optional keyword _aspect_ with parameters _ax_, _ay_, and _az_ can be used t
 
 IMPORTANT: when the box density is specified, Playmol will automatically calculate the box side lengths when necessary. For this, it will sweep the whole list of molecular structures defined via [xyz] commands in order to determine the total mass of the system. Since Playmol will not perform unit conversion, the specified density value must be consistent with the mass and length units used in other commands. For instance, if [LAMMPS real units] are considered (mass in g/mol and lengths in Å), then the density must be provided in Da/Å³ (therefore, values originally in g/cm³ must be multiplied by 0.60221413).
 
-When building a simulation box, Playmol places its geometric center in the origin of the Cartesian space. To allow periodic boundary conditions, Playmol does not check whether the previously specified atomic coordinates fit inside the central box.
+When building a simulation box, Playmol considers that its geometric center is in the origin of the Cartesian space. To allow periodic boundary conditions, Playmol does not check whether the previously specified atomic coordinates fit inside the central box.
 
 **Examples**:
 
@@ -463,6 +502,11 @@ The example above is completely equivalent to the preceding one, since the defau
 	box	density 0.602214 aspect 1 1 2
 
 The example above specifies a simulation box with density equal to 0.602214 in LAMMPS "real" units (equivalent to 1.0 g/cm³). The box is elongated twice in the z direction with respect to the other two directions.
+
+	box	size 28.224 28.224 34.443
+	box	angle 90 90 120
+
+The example above specifies a non-orthogonal simulation box which can be used to simulate a hexagonal lattice system (_lx_ = _ly_ ≠ _lz_ and _alpha_ = _beta_ ≠ _gamma_).
 
 **See also**:
 
@@ -691,7 +735,7 @@ The example above creates two atoms whose identifiers are H1-H2O and H2-H2O.
 
 **See also**:
 
-[atom_type], [atom], [prefix]
+[atom_type], [atom], [prefix], [suffix]
 
 ---------------------------
 <a name="include"/> include
@@ -797,6 +841,7 @@ The example above writes a summary of the current molecular system and then quit
 
 ---------------------
 
+[define]:		#define
 [atom_type]:		#atom_type
 [mass]:			#mass
 [bond_type]:		#bond_type

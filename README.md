@@ -77,6 +77,7 @@ List of Playmol Commands
 
 Here is a complete list of Playmol commands:
 
+* **define** - defines a string variable for further substitution.
 * **atom_type**: creates an atom type with given name and parameters.
 * **mass**: specifies the mass of atoms of a given type.
 * **bond_type**: defines parameters for bonds between atoms of two given types.

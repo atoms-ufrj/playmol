@@ -49,9 +49,11 @@ type tPlaymol
   type(StrucList) :: molecule_list = StrucList( name = "molecule", number = 1 )
   type(StrucList) :: coordinate_list = StrucList( name = "position of atom", number = 1 )
   type(StrucList) :: packmol_list = StrucList( name = "packmol", number = 1 )
+  type(StrucList) :: variable_list = StrucList( name = "variable", number = 1 )
   contains
     procedure :: read => tPlaymol_Read
     procedure :: write => tPlaymol_write
+    procedure :: replace_variables => tPlaymol_replace_variables
     procedure :: write_lammps => tPlaymol_write_lammps
     procedure :: write_lammpstrj => tPlaymol_write_lammpstrj
     procedure :: read_xyz => tPlaymol_read_xyz
@@ -78,8 +80,10 @@ contains
     integer       :: narg
     character(sl) :: arg(50)
     call next_command( unit, narg, arg )
+    call me % replace_variables( narg, arg )
     do while (narg > 0)
       select case (trim(arg(1)))
+        case ("define"); call define_command
         case ("prefix"); call prefix_command
         case ("suffix"); call suffix_command
         case ("box"); call box_command
@@ -115,8 +119,23 @@ contains
         case default; call error( "unknown command", arg(1) )
       end select
       call next_command( unit, narg, arg )
+      call me % replace_variables( narg, arg )
     end do
     contains
+      !---------------------------------------------------------------------------------------------
+      subroutine define_command
+        type(Struc), pointer :: ptr
+        if ((narg /= 4).or.(arg(3) /= "as")) call error( "invalid define command" )
+        if (has_macros(arg(2))) call error( "invalid variable name", arg(2) )
+        call me % variable_list % search( arg(2:2), ptr )
+        if (associated(ptr)) then
+          call writeln( "Redefining variable", join(arg(2:4)) )
+          ptr % params = arg(4)
+        else
+          arg(3) = arg(4)
+          call me % variable_list % add( 2, arg(2:3) )
+        end if
+      end subroutine define_command
       !---------------------------------------------------------------------------------------------
       subroutine prefix_command
         if (narg < 3) call error( "invalid prefix command" )
@@ -529,6 +548,35 @@ contains
 
   !=================================================================================================
 
+  subroutine tPlaymol_replace_variables( me, narg, arg )
+    class(tPlaymol), intent(inout) :: me
+    integer,         intent(in)    :: narg
+    character(sl),   intent(inout) :: arg(:)
+    integer :: i, first, last
+    character(sl) :: vname
+    type(Struc), pointer :: ptr
+    i = 0
+    do while (i < narg)
+      i = i + 1
+      first = index(arg(i),"${")
+      if (first > 0) then
+        last = index(arg(i),"}")
+        if ((last == 0).or.(last == first+2)) call error( "invalid variable in command:", &
+                                                          join(arg(1:narg)) )
+        vname = arg(i)(first+2:last-1)
+        call me % variable_list % search( [vname], ptr )
+        if (associated(ptr)) then
+          arg(i) = arg(i)(1:first-1)//trim(ptr%params)//arg(i)(last+1:len_trim(arg(i)))
+          i = i - 1
+        else
+          call error( "undefined variable", vname )
+        end if
+      end if
+    end do
+  end subroutine tPlaymol_replace_variables
+
+  !=================================================================================================
+
   subroutine tPlaymol_read_xyz( me, unit )
     class(tPlaymol), intent(inout) :: me
     integer,      intent(in)    :: unit
@@ -541,6 +589,7 @@ contains
     natoms = me % atoms_in_molecules()
     allocate( prev(maxval(natoms)) )
     call next_command( unit, narg, arg )
+    call me % replace_variables( narg, arg )
     if (narg > 0) then
       call writeln( "Number of coordinates: ", arg(1) )
       N = str2int( arg(1) )
@@ -917,6 +966,9 @@ contains
     if (me % box % exists()) then
       call me % box % compute( sum(molcount*mass) )
       write(unit,'("- Box lengths: ",A)') trim(join(real2str(me % box % length)))
+      if (me % box % def_type == 4) then
+        write(unit,'("- Box angles: ",A)') trim(join(real2str(me % box % angle)))
+      end if
       write(unit,'("- Box density: ",A)') trim(real2str(me % box % density))
     end if
     write(unit,'("- Residual charge: ",A)') trim(real2str(sum(molcount*charge)))
@@ -1013,7 +1065,7 @@ contains
           ly = sqrt(b**2 - xy**2)
           yz = (b*c*cos(alpha) - xy*xz)/ly
           lz = sqrt(c**2 - xz**2 - yz**2)
-          L = [lz,ly,lx]
+          L = [lx,ly,lz]
           do i = 1, 3
             limits = join(real2str( L(i)*[-0.5_rb,+0.5_rb] ))
             write(unit,'(A," ",A,"lo ",A,"hi")') trim(limits), dir(i), dir(i)
