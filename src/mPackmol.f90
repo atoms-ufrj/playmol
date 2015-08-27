@@ -25,7 +25,7 @@ use mBox
 
 implicit none
 
-character(sl), parameter :: stdout_name = "/dev/stdout"
+character(sl), parameter :: stdout_name = "/proc/self/fd/1"
 character(sl), parameter :: logfile = "packmol.log"
 
 integer  :: seed = 1234
