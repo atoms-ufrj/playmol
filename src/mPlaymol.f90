@@ -372,16 +372,20 @@ contains
         allocate( Mass(N), Coord(3,N) )
         Mass = 1.0_rb
         call me % molecule_coordinates( imol, N, Coord, 1 )
+        lb = minval(Coord,dim=2)
+        ub = maxval(Coord,dim=2)
+        do i = 1, 3
+          call writeln( "Bounds in direction", dir(i)//":", join(real2str([lb(i),ub(i)])) )
+        end do
+        call writeln( "Bounding box lengths: ", join(real2str(ub-lb)) )
         call align_molecule( N, Mass, Coord, axis )
         call me % molecule_coordinates( imol, N, Coord, 2 )
         lb = minval(Coord,dim=2)
         ub = maxval(Coord,dim=2)
         do i = 1, 3
-          call writeln( "New bounds in direction", dir(i)//":", join(real2str([lb(i),ub(i)])) )
+          call writeln( "--> New bounds in direction", dir(i)//":", join(real2str([lb(i),ub(i)])) )
         end do
-        do i = 1, 3
-          call writeln( "New length in direction", dir(i)//":", real2str(ub(i)-lb(i)) )
-        end do
+        call writeln( "--> New bounding box lengths: ", join(real2str(ub-lb)) )
         deallocate( Mass, Coord )
       end subroutine align_command
       !---------------------------------------------------------------------------------------------

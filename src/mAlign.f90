@@ -40,9 +40,12 @@ contains
       delta(:,i) = Coord(:,i) - Rcm
       call add_inertia( inertia, Mass(i), delta(:,i) )
     end do
+
     ! Diagonalize the inertia tensor and compute rotation matrix:
-    MoI(axis) = sort_vector( eigenvalues( inertia ) )
-    A = transpose(eigenvectors( inertia, MoI ))
+    MoI(axis) = eigenvalues( inertia )
+    A = eigenvectors( inertia, MoI )
+    A = transpose(A(:,sort_vector(MoI)))
+
     ! Recalculate positions in the body-fixed frame:
     forall (i=1:N) Coord(:,i) = matmul( A, delta(:,i) )
   end subroutine align_molecule
@@ -230,16 +233,16 @@ contains
   !-------------------------------------------------------------------------------------------------
   function sort_vector( a ) result( b )
     real(rb), intent(in) :: a(3)
-    real(rb)             :: b(3)
+    integer              :: b(3)
     integer :: imin, imax
     imin = minloc(a,dim=1)
     imax = maxloc(a,dim=1)
     if (imin == imax) then
-      b = a
+      b = [1,2,3]
     else
-      b(1) = a(imin)
-      b(2) = a(6-imin-imax)
-      b(3) = a(imax)
+      b(1) = imin
+      b(2) = 6-imin-imax
+      b(3) = imax
     end if
   end function sort_vector
   !-------------------------------------------------------------------------------------------------
