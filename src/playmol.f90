@@ -34,5 +34,6 @@ do i = 1, iargc()
   call System % Read( inp, trim(infile) )
   close(inp)
 end do
+call reprint_warnings
 call stop_log
 end program playmol

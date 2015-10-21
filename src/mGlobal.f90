@@ -35,6 +35,14 @@ type rng
     procedure :: letters => rng_letters
 end type rng
 
+type tWarning
+  character(sl) :: msg
+  type(tWarning), pointer :: next => null()
+end type tWarning
+
+type(tWarning), pointer :: first_warning => null(), &
+                           last_warning => null()
+
 contains
 
   !=================================================================================================
@@ -93,18 +101,39 @@ contains
   subroutine warning( msg, msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9 )
     character(*), intent(in)           :: msg
     character(*), intent(in), optional :: msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9
-    call write_msg( "WARNING: ", trim(msg) )
-    if (present(msg1)) call write_msg( " ", trim(msg1) )
-    if (present(msg2)) call write_msg( " ", trim(msg2) )
-    if (present(msg3)) call write_msg( " ", trim(msg3) )
-    if (present(msg4)) call write_msg( " ", trim(msg4) )
-    if (present(msg5)) call write_msg( " ", trim(msg5) )
-    if (present(msg6)) call write_msg( " ", trim(msg6) )
-    if (present(msg7)) call write_msg( " ", trim(msg7) )
-    if (present(msg8)) call write_msg( " ", trim(msg8) )
-    if (present(msg9)) call write_msg( " ", trim(msg9) )
+    if (.not.associated(first_warning)) then
+      allocate( first_warning )
+      last_warning => first_warning
+    else
+      allocate( last_warning % next )
+      last_warning => last_warning % next
+    end if
+    last_warning % msg = trim(msg)
+    if (present(msg1)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg1)
+    if (present(msg2)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg2)
+    if (present(msg3)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg3)
+    if (present(msg4)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg4)
+    if (present(msg5)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg5)
+    if (present(msg6)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg6)
+    if (present(msg7)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg7)
+    if (present(msg8)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg8)
+    if (present(msg9)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg9)
+    call write_msg( "WARNING:", trim(last_warning % msg) )
     call end_line
   end subroutine warning
+
+  !=================================================================================================
+
+  subroutine reprint_warnings
+    type(tWarning), pointer :: ptr
+    ptr => first_warning
+    call writeln()
+    call writeln( "********** SUMMARY OF WARNINGS **********" )
+    do while (associated(ptr))
+      call writeln( ptr % msg )
+      ptr => ptr % next
+    end do
+  end subroutine reprint_warnings
 
   !=================================================================================================
 

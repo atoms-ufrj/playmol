@@ -28,6 +28,7 @@ clean:
 
 install:
 	cp -f $(BINDIR)/$(exec) /usr/local/bin
+	cp -f $(PACKMOL)/packmol/packmol /usr/local/bin
 	sh $(GTKDIR)/install.sh
 
 $(BINDIR)/$(exec): $(OBJDIR)/playmol.o $(OBJDIR)/mPlaymol.o $(OBJDIR)/mStruc.o  \
