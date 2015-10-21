@@ -65,8 +65,8 @@
       <keyword>atom</keyword>
       <keyword>charge</keyword>
       <keyword>bond</keyword>
-      <keyword>ionic_bond</keyword>
-      <keyword>extra_dihedral</keyword>
+      <keyword>link</keyword>
+      <keyword>extra\s*(bond|angle|dihedral)</keyword>
       <keyword>improper\s*search</keyword>
       <keyword>improper</keyword>
       <keyword>xyz</keyword>

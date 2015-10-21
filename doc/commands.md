@@ -14,7 +14,8 @@ Playmol is designed to execute scripts containing the commands described below:
 * [charge] - specifies the charge of a given atom.
 * [bond] - creates a bond between two given atoms (angles and dihedrals are automatically detected).
 * [improper] - creates an improper involving four given atoms or search for impropers.
-* [extra_dihedral] - creates an extra dihedral involving four given atoms.
+* [extra] - creates an extra bond, angle, or dihedral involving given atoms.
+* [link] - virtually link two atoms and fuse their molecules without actually bonding them.
 * [xyz] - defines positions for all atoms of one or more molecules.
 * [box] - defines the properties of a simulation box.
 * [packmol] - executes Packmol to create a packed molecular system.
@@ -382,31 +383,62 @@ Using keyword _search_: Playmol searches for impropers composed of any four atom
 
 [improper_type], [atom]
 
------------------------------------------
-<a name="extra_dihedral"/> extra_dihedral
------------------------------------------
+-----------------------
+<a name="extra"/> extra
+-----------------------
 
 **Syntax**:
 
-	extra_dihedral	<atom-1> <atom-2> <atom-3> <atom-4>
+	extra	bond		<atom-1> <atom-2>
+	extra	angle		<atom-1> <atom-2> <atom-3>
+	extra	dihedral	<atom-1> <atom-2> <atom-3> <atom-4>
 
 * _atom-x_ = name of a previously defined atom
 
 **Description**:
 
-This command creates an extra dihedral involving the specified atoms.
+This command creates an extra structure (bond, angle, dihedral) involving the specified atoms of a given molecule.
 
-The parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be provided, with no use of wildcard characters (* or ?). A previously defined dihedral type is required.
+The parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be provided, with no use of wildcard characters (* or ?). A previously defined corresponding structure type (that is, [bond_type], [angle_type], or [dihedral_type]) is required.
 
-IMPORTANT: Extra dihedrals are only required by some molecular models that define unconventional dihedrals, for example, involving non-bonded atoms. Most models, however, will involve only automatically detectable dihedrals.
+IMPORTANT: Extra bonds are not considered when Playmol automatically searches for angles and dihedrals.
+
+IMPORTANT: Extra structures are only required by some molecular models that define unconventional bonds, angles, or dihedrals, for example, those involving atoms which are not actually bonded in a molecule. Most models, however, will involve only automatically detectable angles and dihedrals.
 
 **Examples**:
 
-	extra_dihedral	C1 C2 C3 C4
+	extra bond	C1 C2
+	extra angle	C1 C2 C3
 
 **See also**:
 
-[dihedral_type], [atom]
+[bond_type], [angle_type], [dihedral_type], [atom]
+
+---------------------
+<a name="link"/> link
+---------------------
+
+**Syntax**:
+
+	link	<atom-1> <atom-2>
+
+* _atom-x_ = name of a previously defined atom
+
+**Description**:
+
+This command creates a virtual link involving the specified atoms of originally different molecules, which are then fused together as a single molecule. Nevertheless, no chemical bond is actually created between the linked atoms.
+
+The parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be provided, with no use of wildcard characters (* or ?).
+
+Sometimes, it is useful to consider two molecules as if they were a single one. For instance, when ions are present, one might want to consider an anion/cation pair as a single rigid structure, so that they can be in a previously aligned orientation when packed using the [packmol] command.
+
+**Examples**:
+
+	link	C1 C2
+
+**See also**:
+
+[atom], [packmol]
 
 -------------------
 <a name="xyz"/> xyz
@@ -851,7 +883,8 @@ The example above writes a summary of the current molecular system and then quit
 [atom]:			#atom
 [charge]:		#charge
 [bond]:			#bond
-[extra_dihedral]:	#extra_dihedral
+[extra]:		#extra
+[link]:			#link
 [improper]:		#improper
 [xyz]:			#xyz
 [box]:			#box

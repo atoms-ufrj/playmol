@@ -17,7 +17,7 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
-! TO DO: describe the command 'ionic_bond' in the manual.
+! TO DO: describe the command 'virtual_link' in the manual.
 
 module mPlaymol
 
@@ -41,9 +41,10 @@ type tPlaymol
   type(StrucList) :: atom_list = StrucList( name = "atom", number = 1 )
   type(StrucList) :: charge_list = StrucList( name = "charge", number = 1 )
   type(StrucList) :: bond_list = StrucList( name = "bond", number = 2 )
-  type(StrucList) :: ionic_bond_list = StrucList( name = "ionic bond", number = 2 )
+  type(StrucList) :: virtual_link_list = StrucList( name = "ionic bond", number = 2 )
   type(StrucList) :: angle_list = StrucList( name = "angle", number = 3 )
   type(StrucList) :: dihedral_list = StrucList( name = "dihedral", number = 4 )
+  type(StrucList) :: extra_bond_list = StrucList( name = "extra bond", number = 2 )
   type(StrucList) :: extra_angle_list = StrucList( name = "extra angle", number = 3 )
   type(StrucList) :: extra_dihedral_list = StrucList( name = "extra dihedral", number = 4 )
   type(StrucList) :: improper_list = StrucList( name = "improper", number = 4 )
@@ -97,9 +98,8 @@ contains
         case ("atom"); call atom_command
         case ("charge"); call charge_command
         case ("bond"); call bond_command
-        case ("ionic_bond"); call ionic_bond_command
-        case ("extra_angle"); call extra_angle_command
-        case ("extra_dihedral"); call extra_dihedral_command
+        case ("link"); call link_command
+        case ("extra"); call extra_command
         case ("improper"); call improper_command
         case ("xyz"); call xyz_command
         case ("align"); call align_command
@@ -279,47 +279,65 @@ contains
         end do
       end subroutine bond_command
       !---------------------------------------------------------------------------------------------
-      subroutine add_ionic_bond( atom )
+      subroutine add_virtual_link( atom )
         character(sl), intent(inout) :: atom(2)
-        call me % ionic_bond_list % add( 2, atom, me % atom_list )
-        if (atom(1) == atom(2)) call error( "atom", atom(1), "cannot bind to itself" )
+        integer :: imol, jmol
+        call me % virtual_link_list % add( 2, atom, me % atom_list )
+        if (atom(1) == atom(2)) call error( "atom", atom(1), "cannot be linked to itself" )
+        imol = str2int(me % molecule_list % parameters( atom(1:1) ))
+        jmol = str2int(me % molecule_list % parameters( atom(2:2) ))
+        if (imol == jmol) call error( "atoms", join(atom(1:2)), "must belong to distinc molecules" )
         call me % fuse_molecules( atom )
-      end subroutine add_ionic_bond
+      end subroutine add_virtual_link
       !---------------------------------------------------------------------------------------------
-      subroutine ionic_bond_command
+      subroutine link_command
         integer :: i
         character(sl) :: central
-        if (narg < 3) call error( "invalid ionic_bond command" )
+        if (narg < 3) call error( "invalid link command" )
         central = arg(2)
         do i = 3, narg
           arg(2) = central
           arg(3) = arg(i)
-          call add_ionic_bond( arg(2:3) )
+          call add_virtual_link( arg(2:3) )
         end do
-      end subroutine ionic_bond_command
+      end subroutine link_command
+      !---------------------------------------------------------------------------------------------
+      subroutine extra_command
+        character(sl) :: choice
+        integer :: i, imol, jmol
+        if (narg < 4) call error( "invalid extra command" )
+        choice = arg(2)
+        arg(2:narg-1) = arg(3:narg)
+        narg = narg-1
+        select case (choice)
+          case ("bond"); call extra_bond_command
+          case ("angle"); call extra_angle_command
+          case ("dihedral"); call extra_dihedral_command
+          case default; call error( "invalid extra command" )
+        end select
+        imol = str2int(me % molecule_list % parameters( arg(2:2) ))
+        do i = 3, narg
+          jmol = str2int(me % molecule_list % parameters( arg(i:i) ))
+          if (jmol /= imol) call error( "atoms", join(arg(2:narg)), "are not in the same molecule" )
+        end do
+      end subroutine extra_command
+      !---------------------------------------------------------------------------------------------
+      subroutine extra_bond_command
+        call me % extra_angle_list % add( narg-1, arg(2:narg), me % atom_list )
+        if (narg /= 3) call error( "invalid extra bond command")
+        call me % extra_bond_list % handle( arg(2:3), me%atom_list, me%bond_type_list, 2 )
+      end subroutine extra_bond_command
       !---------------------------------------------------------------------------------------------
       subroutine extra_angle_command
-        integer :: i, imol, jmol
         call me % extra_angle_list % add( narg-1, arg(2:narg), me % atom_list )
-        if (narg /= 4) call error( "invalid extra_angle command")
+        if (narg /= 4) call error( "invalid extra angle command")
         call me % extra_angle_list % handle( arg(2:4), me%atom_list, me%angle_type_list, 2 )
-        imol = str2int(me % molecule_list % parameters( arg(2:2) ))
-        do i = 3, 4
-          jmol = str2int(me % molecule_list % parameters( arg(i:i) ))
-          if (jmol /= imol) call error( "atoms", join(arg(2:4)), "are not in the same molecule" )
-        end do
       end subroutine extra_angle_command
       !---------------------------------------------------------------------------------------------
       subroutine extra_dihedral_command
-        integer :: i, imol, jmol
         call me % extra_dihedral_list % add( narg-1, arg(2:narg), me % atom_list )
-        if (narg /= 5) call error( "invalid extra_dihedral command")
+        if (narg /= 5) call error( "invalid extra dihedral command")
         call me % extra_dihedral_list % handle( arg(2:5), me%atom_list, me%dihedral_type_list, 2 )
-        imol = str2int(me % molecule_list % parameters( arg(2:2) ))
-        do i = 3, 5
-          jmol = str2int(me % molecule_list % parameters( arg(i:i) ))
-          if (jmol /= imol) call error( "atoms", join(arg(2:5)), "are not in the same molecule" )
-        end do
       end subroutine extra_dihedral_command
       !---------------------------------------------------------------------------------------------
       subroutine improper_command
@@ -909,6 +927,7 @@ contains
     call me % bond_list % print( unit )
     call me % angle_list % print( unit, comment = .true. )
     call me % dihedral_list % print( unit, comment = .true. )
+    call me % extra_bond_list % print( unit )
     call me % extra_angle_list % print( unit )
     call me % extra_dihedral_list % print( unit )
     call me % improper_list % print( unit )
@@ -945,7 +964,8 @@ contains
     call flush( "improper type", me % improper_type_list % count() )
     call flush( "atom", me % atom_list % count() )
     call flush( "bond", me % bond_list % count() )
-    call flush( "ionic bond", me % ionic_bond_list % count() )
+    call flush( "ionic bond", me % virtual_link_list % count() )
+    call flush( "extra bond", me % extra_bond_list % count() )
     call flush( "extra angle", me % extra_angle_list % count() )
     call flush( "extra dihedral", me % extra_dihedral_list % count() )
     call flush( "improper", me % improper_list % count() )
@@ -1011,24 +1031,11 @@ contains
     class(tPlaymol),  intent(inout) :: me
     integer,          intent(in)    :: unit
     integer :: nb, na, nd, ni, natoms(me % nmol)
-    logical :: angle_exists, dihedral_exists
-
+    logical :: bond_exists, angle_exists, dihedral_exists
     natoms = me % atoms_in_molecules()
-
-    angle_exists = associated(me % angle_list % first)
-    if (angle_exists) then
-      me % angle_list % last % next => me % extra_angle_list % first
-    else
-      me % angle_list % first => me % extra_angle_list % first
-    end if
-
-    dihedral_exists = associated(me % dihedral_list % first)
-    if (dihedral_exists) then
-      me % dihedral_list % last % next => me % extra_dihedral_list % first
-    else
-      me % dihedral_list % first => me % extra_dihedral_list % first
-    end if
-
+    call link_extra( bond_exists, me % bond_list, me % extra_bond_list )
+    call link_extra( angle_exists, me % angle_list, me % extra_angle_list )
+    call link_extra( dihedral_exists, me % dihedral_list, me % extra_dihedral_list )
     write(unit,'("LAMMPS data file",/,"# Generated by Playmol on ",A,/)') trim(now())
     call write_count( me % atom_type_list % count_used(), "atom types" )
     call write_count( me % bond_type_list % count_used(), "bond types" )
@@ -1057,20 +1064,31 @@ contains
     if (na > 0) call handle_struc( "Angles", me % angle_list, me % angle_type_list )
     if (nd > 0) call handle_struc( "Dihedrals", me % dihedral_list, me % dihedral_type_list )
     if (ni > 0) call handle_struc( "Impropers", me % improper_list, me % improper_type_list )
-
-    if (angle_exists) then
-      me % angle_list % last % next => null()
-    else
-      me % angle_list % first => null()
-    end if
-
-    if (dihedral_exists) then
-      me % dihedral_list % last % next => null()
-    else
-      me % dihedral_list % first => null()
-    end if
-
+    call unlink_extra( bond_exists, me % bond_list )
+    call unlink_extra( angle_exists, me % angle_list )
+    call unlink_extra( dihedral_exists, me % dihedral_list )
     contains
+      !---------------------------------------------------------------------------------------------
+      subroutine link_extra( exists, list, extra_list )
+        logical,         intent(inout) :: exists
+        type(StrucList), intent(inout) :: list, extra_list
+        exists = associated(list % first)
+        if (exists) then
+          list % last % next => extra_list % first
+        else
+          list % first => extra_list % first
+        end if
+      end subroutine link_extra
+      !---------------------------------------------------------------------------------------------
+      subroutine unlink_extra( exists, list )
+        logical,         intent(in)    :: exists
+        type(StrucList), intent(inout) :: list
+        if (exists) then
+          list % last % next => null()
+        else
+          list % first => null()
+        end if
+      end subroutine unlink_extra
       !---------------------------------------------------------------------------------------------
       subroutine write_count( n, name )
         integer,      intent(in) :: n
