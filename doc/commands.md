@@ -16,7 +16,8 @@ Playmol is designed to execute scripts containing the commands described below:
 * [improper] - creates an improper involving four given atoms or search for impropers.
 * [extra] - creates an extra bond, angle, or dihedral involving given atoms.
 * [link] - virtually link two atoms and fuse their molecules without actually bonding them.
-* [xyz] - defines positions for all atoms of one or more molecules.
+* [xyz] - reads the positions for all atoms of one or more molecules.
+* [build] - guess the atom positions of one or more molecules from provided geometric information.
 * [box] - defines the properties of a simulation box.
 * [packmol] - executes Packmol to create a packed molecular system.
 * [align] - aligns the principal axes of a molecule to the Cartesian axes.
@@ -454,13 +455,13 @@ Sometimes, it is useful to consider two molecules as if they were a single one. 
 
 This command specifies atomic coordinates for one or more molecules.
 
-The parameter _file_ is the name of a text file containing atomic coordinates. The required format is the [xyz file format], but with element symbols replaced by [atom] identifiers. The parameter _file_ is optional. If it is omitted, then the coordinates must be provided in the subsequent lines, also adhering to the xyz format. In this sense, it becomes completely equivalent to invoke _xyz <file>_ or to invoke _xyz_ followed by _include <file>_.
+The parameter _file_ is the name of a text file containing atomic coordinates. The required format is the [xyz file format], but with element symbols replaced by [atom] identifiers. The parameter _file_ is optional. If it is omitted, then the coordinates must be provided in the subsequent lines, also adhering to the xyz format. In this sense, issuing the command _xyz <file>_ is completely equivalent to issuing _xyz_, followed by _include <file>_.
 
 The xyz format for Playmol is:
 
 * The first line contains the number _N_ of coordinates to be provided
 * The second line contains a comment or title
-* The _N_ subsequent lines contain four fields separated be spaces or tabs: <atom-id>  <x>  <y>  <z>
+* The _N_ subsequent lines contain four fields separated by spaces or tabs: <atom-id>  <x>  <y>  <z>
 
 The provided coordinates are meant to define a list of actual structures for the molecules previously assembled using the commands [atom] and [bond]. Multiple molecules can be specified either using separate _xyz_ commands or using a unique _xyz_ command involving all coordinates together. The coordinates of all atoms of a given molecule must be provided in sequence, but not in any specific order. It is possible to specify many copies of the same molecule, but a given atom cannot reappear until all other atoms of the same molecule have been defined.
 
@@ -484,6 +485,82 @@ In the example above, the atomic coordinates of one or more copies of a water mo
 	H2  0.58588 -0.75695  1.50000
 
 In the example above, the atomic coordinates of two water molecules are provided inline in the Playmol script.
+
+**See also**:
+
+[atom], [bond], [box], [write], [include]
+
+-----------------------
+<a name="build"/> build
+-----------------------
+
+**Syntax**:
+
+	build     [<file>]
+
+* _file_ (optional) = name of a file containing geometric information
+
+**Description**:
+
+This command reads geometric information and uses them to guess the atomic coordinates for one or more molecules.
+
+The parameter _file_ is the name of a text file containing geometric information. The required format is described below. The parameter _file_ is optional. If it is omitted, then the geometric information must be provided in the lines subsequent to the command _build_. In this sense, issuing the command _build <file>_ is equivalent to issuing _build_, followed by _include <file>_.
+
+The geometric information that Playmol expects to receive has the following format:
+
+* The first non-empty line contains the number _N_ of geometric data to be provided
+* The _N_ subsequent non-empty lines contain an [atom] identifier, followed by fields separated by spaces or tabs. Only the following formats are valid:
+
+Coordinates _x_, _y_, and _z_ of _atom-I_:
+
+	<atom-I>  <x>  <y>  <z>
+
+The _length_ of a bond formed by _atom-I_ with _atom-J_:
+
+	<atom-I>  <atom-J>  <length>
+
+The _length_ of a bond formed by _atom-I_ with _atom-j_ and the _angle_ (in degrees) between the bonds formed by _atom-I_, _atom-J_, and _atom-K_:
+
+	<atom-I>  <atom-J>  <atom-K>  <length>  <angle>
+
+The _length_ of a bond formed by _atom-I_ with _atom-J_, the _angle_ (in degrees) between the bonds formed by _atom-I_, _atom-J_, and _atom-K_, and the <torsion> angle (in degrees) of the dihedral formed by _atom-I_, _atom-J_, _atom-K_, and _atom-L_:
+
+	<atom-I>  <atom-J>  <atom-K>  <atom-L>  <length>  <angle>  <torsion>
+
+IMPORTANT: in all formats above, _atom-I_ is the one whose coordinates will be defined, while _atom-J_, _atom-K_, and _atom-L_ must be atoms whose coordinates have already been defined in previous lines. Please see the examples below.
+
+The provided information is meant to define a list of actual structures for the molecules previously assembled using the commands [atom] and [bond]. Multiple molecules can be specified either using separate _build_ commands or using a unique _build_ command involving all atoms together. The information regarding all atoms of a given molecule must be provided in sequence, but not in any specific order. It is possible to specify many copies of the same molecule, but a given atom cannot reappear until all other atoms of the same molecule have been defined.
+
+The list of molecular structures created via _build_ will be employed to define a simulation box if the command [write] is invoked later on. The origin of the Cartesian space will be located in the center of the simulation box.
+
+**Examples**:
+
+	build	H2O.info
+
+In the example above, the geometric information of one or more copies of a water molecule is read from the file _H2O.info_.
+
+	build
+	3
+	O   0.00000  0.00000  0.00000
+	H1  O  0.9572
+	H2  O  H1  0.9572  104.52
+
+In the example above, the atomic coordinates of a water molecule are guessed by positioning the oxygen atom at the origin, defining the lengths of the oxygen-hydrogen bonds as 0.9572 Å, and defining the hydrogen-oxygen-hydrogen angle as 104.52 degrees.
+
+	build
+	5
+	C1              0.0     0.0    0.0
+	C2 C1           1.54
+	C3 C2 C1        1.33    114
+	C4 C3 C2 C1     1.54    114      0
+	C5 C4 C3 C2     1.54    114    180
+	
+	define file as cis_2_pentene.lammpstrj
+	box    density 1.0
+	write  lammpstrj ${file}
+	shell  gnome-terminal -e "vmd ${file}"
+
+In the example above, a united-atom cis-2-pentene molecule (C1-C2=C3-C4-C5) is defined. The length of the double bond is 1.33 Å and that of the single bonds is 1.54 Å. All bond-bending angles are 114 degrees. The torsional angle of the dihedral C1-C2=C3-C4 is zero (cis) and that of the dihedral C2=C3-C4-C5 is 180 degrees (trans). In the end, a configuration file is written down and [vmd] is involved in a new terminal window for visualization.
 
 **See also**:
 
@@ -887,6 +964,7 @@ The example above writes a summary of the current molecular system and then quit
 [link]:			#link
 [improper]:		#improper
 [xyz]:			#xyz
+[build]:		#build
 [box]:			#box
 [packmol]:		#packmol
 [align]:		#align

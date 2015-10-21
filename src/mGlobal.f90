@@ -32,6 +32,7 @@ type rng
   contains
     procedure :: init => rng_init
     procedure :: i32 => rng_i32
+    procedure :: uni => i32rng_uniform
     procedure :: letters => rng_letters
 end type rng
 
@@ -127,8 +128,10 @@ contains
   subroutine reprint_warnings
     type(tWarning), pointer :: ptr
     ptr => first_warning
-    call writeln()
-    call writeln( "********** SUMMARY OF WARNINGS **********" )
+    if (associated(ptr)) then
+      call writeln()
+      call writeln( "********** SUMMARY OF WARNINGS **********" )
+    end if
     do while (associated(ptr))
       call writeln( ptr % msg )
       ptr => ptr % next
@@ -188,6 +191,14 @@ contains
 
   !=================================================================================================
 
+  function i32rng_uniform( a ) result( uni )
+    class(rng), intent(inout) :: a
+    real(8)                   :: uni
+    uni = 0.5_8 + 0.2328306e-9_8 * a%i32()
+  end function i32rng_uniform
+
+  !=================================================================================================
+
   function rng_letters( a, n ) result( word )
     class(rng), intent(inout) :: a
     integer,    intent(in)    :: n
@@ -198,6 +209,42 @@ contains
       word = trim(word)//achar(97+mod(abs(a % i32()),26))
     end do
   end function rng_letters
+
+  !=================================================================================================
+
+  real(rb) function scalar( u, v )
+    real(rb), intent(in) :: u(:), v(:)
+    scalar = sum(u*v)
+  end function scalar
+
+  !=================================================================================================
+
+  real(rb) function norm( v )
+    real(rb), intent(in) :: v(:)
+    norm = sqrt(scalar(v,v))
+  end function norm
+
+  !=================================================================================================
+
+  function cross( a, b ) result( c )
+    real(rb), intent(in) :: a(3), b(3)
+    real(rb)             :: c(3)
+    c = [ a(2)*b(3) - a(3)*b(2), a(3)*b(1) - a(1)*b(3), a(1)*b(2) - a(2)*b(1) ]
+  end function cross
+
+  !=================================================================================================
+
+  elemental real(rb) function cosine( theta )
+    real(rb), intent(in) :: theta
+    cosine = cos(0.01745329251994329577_rb*theta)
+  end function cosine
+
+  !=================================================================================================
+
+  elemental real(rb) function sine( theta )
+    real(rb), intent(in) :: theta
+    sine = sin(0.01745329251994329577_rb*theta)
+  end function sine
 
   !=================================================================================================
 

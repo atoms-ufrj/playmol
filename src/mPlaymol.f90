@@ -41,7 +41,7 @@ type tPlaymol
   type(StrucList) :: atom_list = StrucList( name = "atom", number = 1 )
   type(StrucList) :: charge_list = StrucList( name = "charge", number = 1 )
   type(StrucList) :: bond_list = StrucList( name = "bond", number = 2 )
-  type(StrucList) :: virtual_link_list = StrucList( name = "ionic bond", number = 2 )
+  type(StrucList) :: virtual_link_list = StrucList( name = "virtual link", number = 2 )
   type(StrucList) :: angle_list = StrucList( name = "angle", number = 3 )
   type(StrucList) :: dihedral_list = StrucList( name = "dihedral", number = 4 )
   type(StrucList) :: extra_bond_list = StrucList( name = "extra bond", number = 2 )
@@ -49,7 +49,7 @@ type tPlaymol
   type(StrucList) :: extra_dihedral_list = StrucList( name = "extra dihedral", number = 4 )
   type(StrucList) :: improper_list = StrucList( name = "improper", number = 4 )
   type(StrucList) :: molecule_list = StrucList( name = "molecule", number = 1 )
-  type(StrucList) :: coordinate_list = StrucList( name = "position of atom", number = 1 )
+  type(StrucList) :: coordinate_list = StrucList( name = "coordinate", number = 1 )
   type(StrucList) :: packmol_list = StrucList( name = "packmol", number = 1 )
   type(StrucList) :: variable_list = StrucList( name = "variable", number = 1 )
   contains
@@ -59,6 +59,7 @@ type tPlaymol
     procedure :: write_lammps => tPlaymol_write_lammps
     procedure :: write_lammpstrj => tPlaymol_write_lammpstrj
     procedure :: read_xyz => tPlaymol_read_xyz
+    procedure :: read_geometry => tPlaymol_read_geometry
     procedure :: write_xyz => tPlaymol_write_xyz
     procedure :: summarize => tPlaymol_summarize
     procedure :: fuse_molecules => tPlaymol_fuse_molecules
@@ -102,6 +103,7 @@ contains
         case ("extra"); call extra_command
         case ("improper"); call improper_command
         case ("xyz"); call xyz_command
+        case ("build"); call build_command
         case ("align"); call align_command
         case ("write"); call write_command
         case ("include"); call include_command
@@ -279,36 +281,24 @@ contains
         end do
       end subroutine bond_command
       !---------------------------------------------------------------------------------------------
-      subroutine add_virtual_link( atom )
-        character(sl), intent(inout) :: atom(2)
-        integer :: imol, jmol
-        call me % virtual_link_list % add( 2, atom, me % atom_list )
-        if (atom(1) == atom(2)) call error( "atom", atom(1), "cannot be linked to itself" )
-        imol = str2int(me % molecule_list % parameters( atom(1:1) ))
-        jmol = str2int(me % molecule_list % parameters( atom(2:2) ))
-        if (imol == jmol) call error( "atoms", join(atom(1:2)), "must belong to distinc molecules" )
-        call me % fuse_molecules( atom )
-      end subroutine add_virtual_link
-      !---------------------------------------------------------------------------------------------
       subroutine link_command
-        integer :: i
-        character(sl) :: central
-        if (narg < 3) call error( "invalid link command" )
-        central = arg(2)
-        do i = 3, narg
-          arg(2) = central
-          arg(3) = arg(i)
-          call add_virtual_link( arg(2:3) )
-        end do
+        integer :: imol, jmol
+        if (narg /= 3) call error( "invalid link command" )
+        call me % virtual_link_list % add( 2, arg(2:3), me % atom_list )
+        if (arg(2) == arg(3)) call error( "atom", arg(2), "cannot be linked to itself" )
+        imol = str2int(me % molecule_list % parameters( arg(2:2) ))
+        jmol = str2int(me % molecule_list % parameters( arg(3:3) ))
+        if (imol == jmol) call error( "atoms", join(arg(2:3)), "must belong to distinc molecules" )
+        call me % fuse_molecules( arg(2:3) )
       end subroutine link_command
       !---------------------------------------------------------------------------------------------
       subroutine extra_command
         character(sl) :: choice
         integer :: i, imol, jmol
-        if (narg < 4) call error( "invalid extra command" )
+        if (narg < 2) call error( "invalid extra command" )
         choice = arg(2)
         arg(2:narg-1) = arg(3:narg)
-        narg = narg-1
+        narg = narg - 1
         select case (choice)
           case ("bond"); call extra_bond_command
           case ("angle"); call extra_angle_command
@@ -316,14 +306,14 @@ contains
           case default; call error( "invalid extra command" )
         end select
         imol = str2int(me % molecule_list % parameters( arg(2:2) ))
-        do i = 3, narg
+        do i = 2, narg
           jmol = str2int(me % molecule_list % parameters( arg(i:i) ))
           if (jmol /= imol) call error( "atoms", join(arg(2:narg)), "are not in the same molecule" )
         end do
       end subroutine extra_command
       !---------------------------------------------------------------------------------------------
       subroutine extra_bond_command
-        call me % extra_angle_list % add( narg-1, arg(2:narg), me % atom_list )
+        call me % extra_bond_list % add( narg-1, arg(2:narg), me % atom_list )
         if (narg /= 3) call error( "invalid extra bond command")
         call me % extra_bond_list % handle( arg(2:3), me%atom_list, me%bond_type_list, 2 )
       end subroutine extra_bond_command
@@ -374,6 +364,22 @@ contains
           close( xyz )
         end if
       end subroutine xyz_command
+      !---------------------------------------------------------------------------------------------
+      subroutine build_command
+        logical :: file_exists
+        integer :: geo
+        if (narg == 1) then
+          call writeln("Reading geometric data...")
+          call me % read_geometry( unit )
+        else
+          inquire( file = arg(2), exist = file_exists )
+          if (.not.file_exists) call error( "file", arg(2), "not found" )
+          open( newunit = geo, file = arg(2), status = "old" )
+          call writeln("Reading geometric data from file", trim(arg(2))//"..." )
+          call me % read_geometry( geo )
+          close( geo )
+        end if
+      end subroutine build_command
       !---------------------------------------------------------------------------------------------
       subroutine align_command
         use mAlign
@@ -661,6 +667,120 @@ contains
       end if
     end if
   end subroutine tPlaymol_read_xyz
+
+  !=================================================================================================
+
+  subroutine tPlaymol_read_geometry( me, unit )
+    class(tPlaymol), intent(inout) :: me
+    integer,      intent(in)    :: unit
+    integer       :: N, i, j, narg, imol, iatom, ind(3)
+    character(sl) :: arg(7), line, catom
+    integer :: natoms(me % nmol)
+    logical :: new_molecule
+    type(Struc), pointer :: atom
+    character(sl), allocatable :: prev(:)
+    character(sl), allocatable :: name(:)
+    real(rb), allocatable :: R(:,:)
+    real(rb) :: L, theta, phi, R1(3), R2(3), R3(3), x(3), y(3), z(3)
+    natoms = me % atoms_in_molecules()
+    allocate( prev(maxval(natoms)) )
+    call next_command( unit, narg, arg )
+    call me % replace_variables( narg, arg )
+    if (narg > 0) then
+      call writeln( "Number of provided geometric data: ", arg(1) )
+      N = str2int( arg(1) )
+      allocate( name(N), R(3,N) )
+      new_molecule = .true.
+      do i = 1, N
+        call split( line, narg, arg )
+        call next_command( unit, narg, arg )
+        if ((narg < 3).or.(narg > 7).or.(narg == 6)) call error( "invalid geometric info format" )
+        catom = trim(me % atom_list % prefix)//trim(arg(1))//trim(me % atom_list % suffix)
+        call me % molecule_list % search( [catom], atom )
+        if (associated(atom)) then
+          if (new_molecule) then
+            imol = str2int(atom%params)
+            iatom = 1
+            call writeln( "Reading", int2str(natoms(imol)), &
+                          "geometric data for molecule", trim(int2str(imol))//":" )
+          else if (trim(atom%params) /= trim(int2str(imol))) then
+            call error( "atom", catom, "does not belong to molecule", int2str(imol) )
+          else if (any(str_find([catom],prev(1:iatom)) > 0)) then
+            call error( "geometric info of atom", catom, "has already been given" )
+          else
+            iatom = iatom + 1
+          end if
+        end if
+        call writeln( "Data provided for atom", catom, ":", join(arg(2:narg)) )
+        name(i) = catom
+        select case (narg)
+          case (3) ! Bond
+            call check_atoms( arg(2:2), ind(1:1) )
+            L = str2real(arg(3))
+            x = real([1,0,0],rb)
+            R(:,i) = R(:,ind(1)) + L*x
+          case (4) ! Coordinates
+            do j = 1, 3
+              R(j,i) = str2real(arg(j+1))
+            end do
+          case (5) ! Bond and angle
+            call check_atoms( arg(2:3), ind(1:2) )
+            L = str2real(arg(4))
+            theta = str2real(arg(5))
+            R1 = R(:,ind(1))
+            R2 = R(:,ind(2))
+            x = (R1 - R2)/norm(R1 - R2)
+            y = real([0,1,0],rb)
+            if (abs(x(2)-1.0_rb) < 0.01_rb) y = real([1,0,0],rb)
+            y = y - scalar(y,x)*x
+            y = y / norm(y)
+            R(:,i) = R1 + L*(cosine(180-theta)*x + sine(180-theta)*y)
+          case (7) ! Bond, angle, and dihedral
+            call check_atoms( arg(2:4), ind(1:3) )
+            L = str2real(arg(5))
+            theta = str2real(arg(6))
+            phi = str2real(arg(7))
+            R1 = R(:,ind(1))
+            R2 = R(:,ind(2))
+            R3 = R(:,ind(3))
+            x = (R1 - R2)/norm(R1 - R2)
+            y = R3 - R2 - scalar(R3 - R2,x)*x
+            y = y / norm(y)
+            z = cross(x,y)
+            R(:,i) = R1 + L*(cosine(180-theta)*x + sine(180-theta)*(cosine(phi)*y + sine(phi)*z))
+          case default
+            call error( "bad geometric info" )
+        end select
+        arg(1) = catom
+        arg(2:4) = real2str(R(:,i))
+        call me % coordinate_list % add( 4, arg(1:4), me % atom_list, repeatable = .true. )
+!        if (.not.all(is_real(arg(2:4)))) call error( "invalid coordinate" )
+        prev(iatom) = arg(1)
+        new_molecule = iatom == natoms(imol)
+      end do
+      if (.not.new_molecule) then
+        call error( "geometric info for molecule", int2str(imol), "is incomplete" )
+      end if
+    end if
+    contains
+      subroutine check_atoms( atom, ind )
+        character(sl), intent(in) :: atom(:)
+        integer,       intent(inout) :: ind(size(atom))
+        integer :: j, k
+        do j = 1, size(atom)
+          if (.not. me % atom_list % find( [atom(j)])) call error( atom(j), "is not a valid atom" )
+          if (any(name(1:i-1) == atom(j))) then
+            k = 1
+            do while (name(k) /= atom(j))
+              k = k + 1
+            end do
+            ind(j) = k
+          else
+            call error( "atom", atom(j), "has not been defined")
+          end if
+        end do
+      end subroutine
+  end subroutine tPlaymol_read_geometry
 
   !=================================================================================================
 
@@ -964,7 +1084,7 @@ contains
     call flush( "improper type", me % improper_type_list % count() )
     call flush( "atom", me % atom_list % count() )
     call flush( "bond", me % bond_list % count() )
-    call flush( "ionic bond", me % virtual_link_list % count() )
+    call flush( "virtual link", me % virtual_link_list % count() )
     call flush( "extra bond", me % extra_bond_list % count() )
     call flush( "extra angle", me % extra_angle_list % count() )
     call flush( "extra dihedral", me % extra_dihedral_list % count() )
