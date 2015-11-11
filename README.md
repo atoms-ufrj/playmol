@@ -89,28 +89,30 @@ List of Playmol Commands
 Here is a complete list of Playmol commands:
 
 * **define** - defines a string variable for further substitution.
-* **atom_type**: creates an atom type with given name and parameters.
-* **mass**: specifies the mass of atoms of a given type.
-* **bond_type**: defines parameters for bonds between atoms of two given types.
-* **angle_type**: defines parameters for angles involving atoms of three given types.
-* **dihedral_type**: defines parameters for dihedrals involving atoms of four given types.
-* **improper_type**: defines parameters for impropers involving atoms of four given types.
-* **atom**: creates an atom with given name and type.
-* **charge**: specifies the charge of a given atom.
-* **bond**: creates a bond between two given atoms (angles and dihedrals are automatically detected).
-* **improper**: creates an improper involving four given atoms or search for improper.
-* **extra_dihedral**: creates an extra dihedral involving four given atoms.
-* **xyz**: defines positions for all atoms of one or more molecules.
-* **box**: defines the properties of a simulation box.
-* **packmol**: executes Packmol to create a packed molecular system.
-* **align**: aligns the principal axes of a molecule to the Cartesian axes.
-* **write**: writes down system info in different file formats (including LAMMPS data files).
-* **prefix**: defines default prefixes for atom types and atoms.
-* **suffix**: defines default suffixes for atom types and atoms.
-* **include**: includes commands from another script.
-* **reset**: resets a list of entities together with its dependent lists.
-* **shell**: executes an external shell command.
-* **quit**: interrupts the execution of a Playmol script.
+* **atom_type** - creates an atom type with given name and parameters.
+* **mass** - specifies the mass of atoms of a given type.
+* **bond_type** - defines parameters for bonds between atoms of two given types.
+* **angle_type** - defines parameters for angles involving atoms of three given types.
+* **dihedral_type** - defines parameters for dihedrals involving atoms of four given types.
+* **improper_type** - defines parameters for impropers involving atoms of four given types.
+* **atom** - creates an atom with given name and type.
+* **charge** - specifies the charge of a given atom.
+* **bond** - creates a bond between two given atoms (angles and dihedrals are automatically detected).
+* **improper** - creates an improper involving four given atoms or search for impropers.
+* **extra** - creates an extra bond, angle, or dihedral involving given atoms.
+* **link** - virtually link two atoms and fuse their molecules without actually bonding them.
+* **xyz** - reads the positions for all atoms of one or more molecules.
+* **build** - guesses the atom positions of one or more molecules from provided geometric information.
+* **box** - defines the properties of a simulation box.
+* **packmol** - executes Packmol to create a packed molecular system.
+* **align** - aligns the principal axes of a molecule to the Cartesian axes.
+* **write** - writes down system info in different file formats (including LAMMPS data files).
+* **prefix** - defines default prefixes for atom types and atoms.
+* **suffix** - defines default suffixes for atom types and atoms.
+* **include** - includes commands from another script.
+* **reset** - resets a list of entities together with its dependent lists.
+* **shell** - executes an external shell command.
+* **quit** - interrupts the execution of a Playmol script.
 
 The syntax and behavior of each command is described in the Playmol documentation.
 

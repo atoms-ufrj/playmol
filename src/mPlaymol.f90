@@ -241,12 +241,12 @@ contains
         call me % atom_type_list % search( arg(3:3), type_ptr )
         if (associated(type_ptr)) then
           type_ptr % used = .true.
-          call me % mass_list % search( arg(3:3), type_ptr )
-          type_ptr % used = .true.
         else
           call error( "atom type", arg(3), "required, but not found")
         end if
-        if (.not.me % mass_list % find(arg(3:3))) call error( "atom type",arg(3), "has no mass" )
+        if (.not.me % mass_list % find(arg(3:3))) then
+          call error( "mass of atom type",arg(3), "has not been defined" )
+        end if
         me%nmol = me%nmol + 1
         arg(3) = int2str( me%nmol )
         call me % molecule_list % add( 2, arg(2:3) )

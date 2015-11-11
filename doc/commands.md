@@ -17,7 +17,7 @@ Playmol is designed to execute scripts containing the commands described below:
 * [extra] - creates an extra bond, angle, or dihedral involving given atoms.
 * [link] - virtually link two atoms and fuse their molecules without actually bonding them.
 * [xyz] - reads the positions for all atoms of one or more molecules.
-* [build] - guess the atom positions of one or more molecules from provided geometric information.
+* [build] - guesses the atom positions of one or more molecules from provided geometric information.
 * [box] - defines the properties of a simulation box.
 * [packmol] - executes Packmol to create a packed molecular system.
 * [align] - aligns the principal axes of a molecule to the Cartesian axes.
