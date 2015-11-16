@@ -1,16 +1,16 @@
 # TIP3P water model:
-atom_type	H	0.000 0.000
-atom_type	O	0.102 3.188
+atom_type	HW	0.000 0.000
+atom_type	OW	0.102 3.188
 
-mass		H	1.008
-mass		O	15.9994
+mass		HW	1.008
+mass		OW	15.9994
 
-bond_type	H O	450.0 0.9572
-angle_type	H O H	55.0 104.52
+bond_type	HW OW		450.0 0.9572
+angle_type	HW OW HW	55.0 104.52
 
-atom		H1	H
-atom		O	O
-atom		H2	H
+atom		H1	HW
+atom		O	OW
+atom		H2	HW
 
 charge		H?	 0.415
 charge		O	-0.830
@@ -18,7 +18,7 @@ charge		O	-0.830
 bond		H1 O
 bond		O H2
 
-xyz
+build
 3
 # Water molecule coordinates:
 H1	0.0	0.0	0.0
@@ -28,5 +28,6 @@ H2	1.19719	0.92663	0.0
 box		density 0.602214
 packmol		tolerance 2.5 retry 0.95 pack 1 500 action execute
 write		lammps water.lmp
-write		simple water.conf
+write		lammpstrj water.lammpstrj
+write		xyz water.xyz
 write		summary

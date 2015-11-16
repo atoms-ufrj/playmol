@@ -17,8 +17,6 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
-! TO DO: describe the command 'virtual_link' in the manual.
-
 module mPlaymol
 
 use mGlobal
@@ -1414,7 +1412,8 @@ contains
       limits = join(real2str( me%box%length(i)*[-0.5_rb,+0.5_rb] ))
       write(unit,'(A)') trim(limits)
     end do
-    write(unit,'("ITEM: ATOMS id mol type x y z ix iy iz ")')
+!    write(unit,'("ITEM: ATOMS id mol type x y z ix iy iz ")')
+    write(unit,'("ITEM: ATOMS id mol type x y z")')
     natoms = me % atoms_in_molecules()
     current => me % coordinate_list % first
     iatom = 0
@@ -1433,9 +1432,10 @@ contains
             itype = itype + 1
             found = atom_type % match_id( arg, two_way = .false. )
           end if
-          atom_type => atom_type % next
+          if (.not.found) atom_type => atom_type % next
         end do
-        write(unit,'(3(A,X),"0 0 0")') trim(join(int2str([iatom,jmol,itype]))), trim(current%params)
+!        write(unit,'(3(A,X),"0 0 0")') trim(join(int2str([iatom,jmol,itype]))), trim(current%params)
+        write(unit,'(3(A,X))') trim(join([int2str([iatom,jmol]),atom_type%id(1)])), trim(current%params)
         current => current % next
       end do
     end do
