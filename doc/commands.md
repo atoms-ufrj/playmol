@@ -34,7 +34,7 @@ Playmol is designed to execute scripts containing the commands described below:
 Introduction
 ------------
 
-Playmol scripts are text files containing commands described in this section. Each command is a sequence of keywords and parameter values separated by spaces and/or tabs. A script can include comments, identified by the comment mark "#". When such mark is found, all trailing characters in the same line (including the comment mark itself) are ignored. A single command can span several lines by means of continuation marks "..." or "&". When the actual part of a command line (i.e., excluding comments) ends with a continuation mark, the command will continue in the next line.
+Playmol scripts are text files containing commands described in this section. Each command is a sequence of keywords and parameter values separated by spaces and/or tabs. A script can include comments, identified by the comment mark "#". When such mark is found, all trailing characters in the same line (including the comment mark itself) are ignored. A single command can span several lines by means of continuation marks "&". When the actual part of a command line (i.e., excluding comments) ends with a continuation mark, the command will continue in the next non-empty line.
 
 In all examples described in this section, the units employed for physically meaningful values are those corresponding to [LAMMPS real units].
 
@@ -46,18 +46,18 @@ In all examples described in this section, the units employed for physically mea
 
 	define 	<variable> as <string>
 
-* _variable_ = a name to be assigned to the defined variable
+* _variable_ = a valid name to be assigned to the defined variable
 * _string_ = a single character string
 
 **Description**:
 
 This command defines a variable that contains a character string to be substituted in forthcoming commands.
 
-The parameter _variable_ must be a single string with no comment tags (#) and no wildcard characters (* or ?).
+The parameter _variable_ the must be a single character string containing only letters (A-Z or a-z), numbers (0-9), and underscores (_). The first character must necessarily be a letter. IMPORTANT: variable names are case-sensitive.
 
-The parameter _value_ must be a single string with no comment tags (#). It can contain wildcard characters (* or ?).
+The parameter _value_ must be a single character string with no comment tags (#).
 
-Substitution is done in forthcoming commands by enclosing the defined variable name between symbols "${" and "}", with no spacing. Every time the sequence "${" is found in a command, Playmol will admit that a variable is being referred to. An error message will be produced if a closing bracket "}" is not found afterward. The actual command will only be issued after the variable has been replaced by its value. There can be multiple references to variables in a single command.
+Substitution is done in forthcoming commands by either preceding the variable name with a symbol "$" or enclosing it between symbols "${" and "}", with no spacing. Every time the symbol "$" is found in a command, Playmol will admit that a variable is being referred to. The actual command will only be issued after all variables have been replaced by their values.
 
 **Example**:
 

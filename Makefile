@@ -32,8 +32,9 @@ install:
 	sh $(GTKDIR)/install.sh
 
 $(BINDIR)/$(exec): $(OBJDIR)/playmol.o $(OBJDIR)/mPlaymol.o $(OBJDIR)/mStruc.o  \
-                   $(OBJDIR)/mPackmol.o $(OBJDIR)/mBox.o $(OBJDIR)/mString.o \
-                   $(OBJDIR)/mAlign.o $(OBJDIR)/mGlobal.o $(PACKMOL)/libpackmol.a
+                   $(OBJDIR)/mPackmol.o $(OBJDIR)/mBox.o $(OBJDIR)/mString.o    \
+                   $(OBJDIR)/mAlign.o $(OBJDIR)/mGlobal.o  $(OBJDIR)/mEval.o    \
+                   $(PACKMOL)/libpackmol.a
 	mkdir -p $(BINDIR)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -o $@ $^ -L$(PACKMOL) -lpackmol
 
@@ -43,7 +44,7 @@ $(PACKMOL)/libpackmol.a:
 $(OBJDIR)/playmol.o: $(SRCDIR)/playmol.f90 $(OBJDIR)/mPlaymol.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/mPlaymol.o: $(SRCDIR)/mPlaymol.f90 $(OBJDIR)/mPackmol.o $(OBJDIR)/mBox.o $(OBJDIR)/mAlign.o
+$(OBJDIR)/mPlaymol.o: $(SRCDIR)/mPlaymol.f90 $(OBJDIR)/mPackmol.o $(OBJDIR)/mBox.o $(OBJDIR)/mAlign.o $(OBJDIR)/mEval.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mPackmol.o: $(SRCDIR)/mPackmol.f90 $(OBJDIR)/mStruc.o $(OBJDIR)/mBox.o
@@ -62,6 +63,10 @@ $(OBJDIR)/mString.o: $(SRCDIR)/mString.f90 $(OBJDIR)/mGlobal.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mGlobal.o: $(SRCDIR)/mGlobal.f90
+	mkdir -p $(OBJDIR)
+	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
+
+$(OBJDIR)/mEval.o: $(SRCDIR)/mEval.f90
 	mkdir -p $(OBJDIR)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 

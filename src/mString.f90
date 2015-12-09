@@ -30,6 +30,27 @@ contains
 
   !=================================================================================================
 
+  elemental function is_variable( str ) result( yes )
+    character(*), intent(in) :: str
+    logical                  :: yes
+    character :: C
+    integer :: i, N
+    i = 0
+    N = len(str)
+    yes = N > 0
+    do while (yes.and.(i < N))
+      i = i + 1
+      C = str(i:i)
+      yes = ((C >= "A").and.(C <= "Z")) .or. &
+            ((C >= "a").and.(C <= "z")) .or. &
+            ((C >= "0").and.(C <= "9")) .or. &
+            (C == "_")
+    end do
+    if (yes) yes = (str(1:1) >= "A").and.(str(1:1) /= "_")
+  end function is_variable
+
+  !=================================================================================================
+
   elemental function has_macros( str ) result( yes )
     character(sl), intent(in) :: str
     logical                   :: yes
@@ -170,17 +191,15 @@ contains
 
   !=================================================================================================
 
-  subroutine next_command( unit, narg, arg )
+  subroutine read_command( unit, command )
     integer,      intent(in)  :: unit
-    integer,      intent(out) :: narg
-    character(*), intent(out) :: arg(:)
-    narg = 0
-    call add_items( narg, arg(1:) )
+    character(*), intent(out) :: command
+    command = ""
+    call add_string( command )
     contains
-      recursive subroutine add_items( narg, arg )
-        integer,      intent(inout) :: narg
-        character(*), intent(inout) :: arg(:)
-        integer       :: ioerr, extra
+      recursive subroutine add_string( command )
+        character(*), intent(inout) :: command
+        integer       :: ioerr, last
         character(sl) :: line
         read(unit,'(A'//csl//')',iostat=ioerr) line
         call clean( line )
@@ -189,16 +208,16 @@ contains
           call clean( line )
         end do
         if (ioerr == 0) then
-          call split( line, extra, arg )
-          if ((arg(extra) == "...").or.(arg(extra) == "&")) then
-            narg = narg + extra - 1
-            call add_items( narg, arg(extra:) )
+          last = len_trim(line)
+          if (line(last:last) == "&") then
+            command = trim(command)//" "//line(1:last-1)
+            call add_string( command )
           else
-            narg = narg + extra
+            command = trim(command)//" "//line(1:last)
           end if
         end if
-      end subroutine add_items
-  end subroutine next_command
+      end subroutine add_string
+  end subroutine read_command
 
   !=================================================================================================
 
