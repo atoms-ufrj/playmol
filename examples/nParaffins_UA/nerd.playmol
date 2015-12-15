@@ -1,0 +1,26 @@
+# NERD Force Field Parameters
+
+# Define variables:
+define		tol   as 3.91
+define		Lb    as 1.54
+define		theta as 114
+define		phi   as 180
+
+# Non-bonded interaction potential: lj/cut
+atom_type	CH3-C2	0.1998922 3.825
+atom_type	CH3-C3	0.2038662 3.875
+atom_type	CH3	0.2066480 3.910
+atom_type	CH2	0.0910046 3.730
+
+mass		CH3*	15.03450
+mass		CH2	14.02658
+
+# Bond stretching potential: harmonic
+bond_type	CH* CH*		95.87275 ${Lb}
+
+# Angle bending potential:
+angle_type	CH* CH* CH*	62.09375 ${theta}
+
+# Bond torsion potential: opls
+dihedral_type	CH* CH* CH* CH*	1.412 -0.271 2.787 0.00
+

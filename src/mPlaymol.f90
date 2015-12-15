@@ -17,30 +17,21 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
-! TO DO: Replace expression evaluation tool.
-! TO DO: tell "playmol.lang" that variable names cannot end with an underscore
-
 module mPlaymol
 
 use mGlobal
 use mStruc
 use mPackmol
 use mBox
-use mEval
+use mParser
 
 implicit none
-
-type tCommand
-  character(sl) :: content
-  type(tCommand), pointer :: next => null()
-end type tCommand
 
 type tPlaymol
   type(tBox) :: box
   integer  :: nmol = 0
 
-  type(tCommand), pointer :: commands => null()
-
+  type(StrucList) :: commands = StrucList( name = "command", number = 1 )
   type(StrucList) :: atom_type_list = StrucList( name = "atom type", number = 1 )
   type(StrucList) :: bond_type_list = StrucList( name = "bond type", number = 2 )
   type(StrucList) :: angle_type_list = StrucList( name = "angle type", number = 3 )
@@ -603,126 +594,203 @@ contains
     integer,         intent(in)    :: unit
     integer,         intent(out)   :: narg
     character(sl),   intent(inout) :: arg(:)
-    type(tCommand), pointer :: aux
+    type(Struc), pointer :: aux
     character(sl) :: command
-    if (associated(me % commands)) then
-      command = me % commands % content
-      aux => me % commands
-      me % commands => me % commands % next
+    if (associated(me % commands % first)) then
+      command = me % commands % first % params
+      aux => me % commands % first
+      me % commands % first => me % commands % first % next
       deallocate( aux )
     else
       call read_command( unit, command )
     end if
     call replace_variables
+    call evaluate_expressions
     call split( command, narg, arg )
     contains
-      !---------------------------------------------------------------------------------------------
-      subroutine for_command
-        integer :: i, ifirst, ilast
-        character(sl) :: variable, value, others
-        type list
-          type(tCommand), pointer :: first => null(), current => null()
-        end type
-        type(list) :: original, copy
-        type(tCommand), pointer :: aux
+!      !---------------------------------------------------------------------------------------------
+!      subroutine for_command
+!        integer :: i, ifirst, ilast
+!        character(sl) :: variable, value, others
+!        type list
+!          type(tCommand), pointer :: first => null(), current => null()
+!        end type
+!        type(list) :: original, copy
+!        type(tCommand), pointer :: aux
 
-        if (narg < 4) call error( "invalid loop definition" )
-        if ((arg(3) /= "in").and.(arg(3) /= "from")) call error( "invalid loop definition" )
+!        if (narg < 4) call error( "invalid loop definition" )
+!        if ((arg(3) /= "in").and.(arg(3) /= "from")) call error( "invalid loop definition" )
 
-        variable = arg(2)
-        if (has_macros(variable)) call error( "invalid variable name", variable )
-        value = arg(4)
-        if (arg(3) == "from") then
-          if (narg < 6) call error( "invalid loop definition" )
-          if (arg(5) /= "to") call error( "invalid loop definition" )
-          ifirst = str2int(arg(4)) + 1
-          ilast = str2int(arg(6))
-          if (ifirst == ilast) then
-            others = int2str(ifirst)
-          else if (ilast > ifirst) then
-            others = join([(int2str(i),i=ifirst,ilast)])
-          else
-            call error( "invalid loop definition" )
-          end if
-        else
-          others = join(arg(5:narg))
-        end if
+!        variable = arg(2)
+!        if (has_macros(variable)) call error( "invalid variable name", variable )
+!        value = arg(4)
+!        if (arg(3) == "from") then
+!          if (narg < 6) call error( "invalid loop definition" )
+!          if (arg(5) /= "to") call error( "invalid loop definition" )
+!          ifirst = str2int(arg(4)) + 1
+!          ilast = str2int(arg(6))
+!          if (ifirst == ilast) then
+!            others = int2str(ifirst)
+!          else if (ilast > ifirst) then
+!            others = join([(int2str(i),i=ifirst,ilast)])
+!          else
+!            call error( "invalid loop definition" )
+!          end if
+!        else
+!          others = join(arg(5:narg))
+!        end if
 
-        allocate( original % first )
-        original % first % content = "define "//trim(variable)//" as "//trim(value)
-        original % current => original % first
-        call read_next_command
-        do while ((narg /= 0).and.(arg(1) /= "end"))
-          allocate( original % current % next )
-          original % current => original % current % next
-          original % current % content = join(arg(1:narg))
-          call read_next_command
-        end do
-        if (narg == 0) call error( "unfinished loop" )
+!        allocate( original % first )
+!        original % first % content = "define "//trim(variable)//" as "//trim(value)
+!        original % current => original % first
+!        call read_next_command
+!        do while ((narg /= 0).and.(arg(1) /= "end"))
+!          allocate( original % current % next )
+!          original % current => original % current % next
+!          original % current % content = join(arg(1:narg))
+!          call read_next_command
+!        end do
+!        if (narg == 0) call error( "unfinished loop" )
 
-        if (others /= "") then
-          allocate( copy % first )
-          copy % first % content = "for "//trim(variable)//" in "//trim(others)
-          copy % current => copy % first
-          aux => original % first % next
-          do while (associated(aux))
-            allocate( copy % current % next )
-            copy % current => copy % current % next
-            copy % current % content = aux % content
-            aux => aux % next
-          end do
-          allocate( copy % current % next )
-          copy % current => copy % current % next
-          copy % current % content = "end"
-          original % current % next => copy % first
-          original % current => copy % current
-        end if
+!        if (others /= "") then
+!          allocate( copy % first )
+!          copy % first % content = "for "//trim(variable)//" in "//trim(others)
+!          copy % current => copy % first
+!          aux => original % first % next
+!          do while (associated(aux))
+!            allocate( copy % current % next )
+!            copy % current => copy % current % next
+!            copy % current % content = aux % content
+!            aux => aux % next
+!          end do
+!          allocate( copy % current % next )
+!          copy % current => copy % current % next
+!          copy % current % content = "end"
+!          original % current % next => copy % first
+!          original % current => copy % current
+!        end if
 
-        original % current % next => me % commands
-        me % commands => original % first
-      end subroutine for_command
+!        original % current % next => me % commands
+!        me % commands => original % first
+!      end subroutine for_command
       !---------------------------------------------------------------------------------------------
       subroutine replace_variables
         integer :: N, first, last
         character(sl) :: vname
         type(Struc), pointer :: ptr
+!        call writeln( "Command:", command )
         first = index(trim(command),"$",back=.true.)
         do while (first > 0)
           N = len_trim(command)
-          if (first == N) call error( "invalid variable in command:", command )
+          if (first == N) call error( "invalid variable" )
           if (command(first+1:first+1) == "{") then
             last = first + index(command(first+1:N),"}")
-            if ((last == 0).or.(last == first+2)) then
-              call error( "invalid variable in command:", command )
-            end if
-            if (.not.is_variable(command(first+2:last-1))) then
-              call error( "invalid variable in command:", command )
-            end if
+            if (last <= first+2) call error( "invalid variable" )
+            if (.not.is_variable(command(first+2:last-1))) call error( "invalid variable" )
             vname = command(first+2:last-1)
-            call me % variable_list % search( [vname], ptr )
-            if (associated(ptr)) then
-              command = command(1:first-1)//trim(ptr%params)//command(last+1:N)
-            else
-              call error( "undefined variable", vname )
-            end if
           else
-            last = N
-            do while (.not.is_variable(command(first+1:last)) .and. (last > first+1))
-              last = last - 1
+            last = first
+            do while (is_variable(command(first+1:last+1)) .and. (last < N))
+              last = last + 1
             end do
-            if (last == first) call error( "invalid variable in command:", command )
+            if (.not.is_variable(command(first+1:last)))  call error( "invalid variable" )
             vname = command(first+1:last)
-            call me % variable_list % search( [vname], ptr )
-            if (associated(ptr)) then
-              command = command(1:first-1)//trim(ptr%params)//command(last+1:N)
-            else
-              call error( "undefined variable", vname )
-            end if
+          end if
+          call me % variable_list % search( [vname], ptr )
+          if (associated(ptr)) then
+            command = command(1:first-1)//trim(ptr%params)//command(last+1:N)
+          else
+            call error( "undefined variable", vname )
           end if
           first = index(trim(command),"$",back=.true.)
         end do
       end subroutine replace_variables
       !---------------------------------------------------------------------------------------------
+      subroutine evaluate_expressions
+        integer :: N, first, last
+        real(rb) :: value
+        type(tParser) :: Comp
+        first = index(trim(command),"{",back=.true.)
+        do while (first > 0)
+          N = len_trim(command)
+          last = first + index(command(first+1:N),"}")
+          if (last == first) call error( "unfinished math expression" )
+          if (last == first+1) then
+            command = command(1:first-1)//command(last+1:N)
+          else
+            call Comp % parse( command(first+1:last-1) )
+            value = Comp % evaluate()
+            if (Comp % Is_Integer) then
+              command = command(1:first-1)//trim(int2str(nint(value)))//command(last+1:N)
+            else
+              command = command(1:first-1)//trim(real2str(value))//command(last+1:N)
+            end if
+          end if
+          first = index(trim(command),"{",back=.true.)
+        end do
+      end subroutine evaluate_expressions
+      !---------------------------------------------------------------------------------------------
+!      subroutine evaluate_expressions
+!       ! Declarations of GNU libmatheval procedures used.
+!  
+
+!interface
+
+!  integer(8) function evaluator_create( string ) bind( C )
+!    character :: string(:)
+!  end function evaluator_create
+
+!  subroutine evaluator_destroy( evaluator ) bind( C )
+!    integer(8) :: evaluator
+!  end subroutine evaluator_destroy
+
+!end interface
+
+!       !integer*8, external, bind(C) :: evaluator_create
+!       integer*8, external :: evaluator_derivative_x
+!       double precision, external :: evaluator_evaluate_x
+!       !external, bind(C) :: evaluator_destroy
+!     
+!       ! Size of input buffer.
+!       integer :: BUFFER_SIZE, i
+!       parameter(BUFFER_SIZE = 256)
+!     
+!       character(len = BUFFER_SIZE) :: buffer ! Input buffer.
+!       character :: buf(sl)
+!       integer*8 :: f, f_prim ! Evaluators for function and function derivative.
+!       double precision :: x ! Variable x value.
+!     
+!       ! Read function.  Function has to be over variable x, or result may
+!       ! be undetermined.  Size of textual represenatation will be truncated
+!       ! here to BUFFER_SIZE characters, in real conditions one should
+!       ! probably come with something smarter to avoid this limit.
+!       
+!       write (*, '(A)') 'f(x) = '
+!       read (*, '(A)') buffer
+!     
+!       ! Create evaluator for function.
+!       forall(i=1:len_trim(buffer)) buf(i) = buffer(i:i)
+!       f = evaluator_create( buf );
+!       if (f == 0) stop
+!     
+!       ! Create evaluator for function derivative.
+!       f_prim = evaluator_derivative_x (f);
+!       if (f_prim == 0) stop
+!     
+!       ! Read variable x value.
+!       write (*, '(A)') 'x = '
+!       read (*, *) x
+!     
+!       ! Calculate and print values of function and its derivative for given
+!       ! value of x.
+!       write (*,*) '  f (', x, ') = ', evaluator_evaluate_x (f, x)
+!       write (*,*) '  f'' (', x, ') = ', evaluator_evaluate_x (f_prim, x)
+!     
+!       ! Destroy evaluators.
+!       call evaluator_destroy (f)
+!       call evaluator_destroy (f_prim)
+!      end subroutine evaluate_expressions
+
   end subroutine tPlaymol_next_command
 
   !=================================================================================================

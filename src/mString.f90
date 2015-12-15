@@ -164,6 +164,16 @@ contains
 
   !=================================================================================================
 
+  function str2cchar( str ) result( array )
+    use iso_c_binding, only : c_char
+    character(*), intent(in) :: str
+    character(kind=c_char)   :: array(len(str))
+    integer :: i
+    forall(i=1:len(str)) array(i) = str(i:i)
+  end function str2cchar
+
+  !=================================================================================================
+
   function join( arg ) result( str )
     character(*), intent(in) :: arg(:)
     character(sl)            :: str
@@ -262,8 +272,8 @@ contains
   !=================================================================================================
 
   elemental function is_int( arg ) result( ok )
-    character(sl), intent(in) :: arg
-    logical                   :: ok
+    character(*), intent(in) :: arg
+    logical                  :: ok
     integer :: ioerr, i
     read(arg,*,iostat=ioerr) i
     ok = ioerr == 0
