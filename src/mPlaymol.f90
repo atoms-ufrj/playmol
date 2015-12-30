@@ -23,15 +23,14 @@ use mGlobal
 use mStruc
 use mPackmol
 use mBox
-use mParser
+use mCodeFlow
 
 implicit none
 
 type tPlaymol
-  type(tBox) :: box
   integer  :: nmol = 0
-
-  type(StrucList) :: commands = StrucList( name = "command", number = 1 )
+  type(tBox) :: box
+  type(tCodeFlow) :: code_flow
   type(StrucList) :: atom_type_list = StrucList( name = "atom type", number = 1 )
   type(StrucList) :: bond_type_list = StrucList( name = "bond type", number = 2 )
   type(StrucList) :: angle_type_list = StrucList( name = "angle type", number = 3 )
@@ -52,11 +51,9 @@ type tPlaymol
   type(StrucList) :: molecule_list = StrucList( name = "molecule", number = 1 )
   type(StrucList) :: coordinate_list = StrucList( name = "coordinate", number = 1 )
   type(StrucList) :: packmol_list = StrucList( name = "packmol", number = 1 )
-  type(StrucList) :: variable_list = StrucList( name = "variable", number = 1 )
   contains
     procedure :: read => tPlaymol_Read
     procedure :: write => tPlaymol_write
-    procedure :: next_command => tPlaymol_next_command
     procedure :: write_lammps => tPlaymol_write_lammps
     procedure :: write_lammpstrj => tPlaymol_write_lammpstrj
     procedure :: read_xyz => tPlaymol_read_xyz
@@ -83,10 +80,9 @@ contains
     character(*),    intent(in)    :: filename
     integer       :: narg
     character(sl) :: arg(50)
-    call me % next_command( unit, narg, arg )
+    call me % code_flow % next_command( unit, narg, arg )
     do while (narg > 0)
       select case (trim(arg(1)))
-        case ("define"); call define_command
         case ("prefix"); call prefix_command
         case ("suffix"); call suffix_command
         case ("box"); call box_command
@@ -122,23 +118,9 @@ contains
           end if
         case default; call error( "unknown command", arg(1) )
       end select
-      call me % next_command( unit, narg, arg )
+      call me % code_flow % next_command( unit, narg, arg )
     end do
     contains
-      !---------------------------------------------------------------------------------------------
-      subroutine define_command
-        type(Struc), pointer :: ptr
-        if ((narg /= 4).or.(arg(3) /= "as")) call error( "invalid define command" )
-        if (.not.is_variable(trim(arg(2)))) call error( "invalid variable name", arg(2) )
-        call me % variable_list % search( arg(2:2), ptr )
-        if (associated(ptr)) then
-          call writeln( "Redefining variable", join(arg(2:4)) )
-          ptr % params = arg(4)
-        else
-          arg(3) = arg(4)
-          call me % variable_list % add( 2, arg(2:3) )
-        end if
-      end subroutine define_command
       !---------------------------------------------------------------------------------------------
       subroutine prefix_command
         if (narg < 3) call error( "invalid prefix command" )
@@ -589,212 +571,6 @@ contains
 
   !=================================================================================================
 
-  subroutine tPlaymol_next_command( me, unit, narg, arg )
-    class(tPlaymol), intent(inout) :: me
-    integer,         intent(in)    :: unit
-    integer,         intent(out)   :: narg
-    character(sl),   intent(inout) :: arg(:)
-    type(Struc), pointer :: aux
-    character(sl) :: command
-    if (associated(me % commands % first)) then
-      command = me % commands % first % params
-      aux => me % commands % first
-      me % commands % first => me % commands % first % next
-      deallocate( aux )
-    else
-      call read_command( unit, command )
-    end if
-    call replace_variables
-    call evaluate_expressions
-    call split( command, narg, arg )
-    contains
-!      !---------------------------------------------------------------------------------------------
-!      subroutine for_command
-!        integer :: i, ifirst, ilast
-!        character(sl) :: variable, value, others
-!        type list
-!          type(tCommand), pointer :: first => null(), current => null()
-!        end type
-!        type(list) :: original, copy
-!        type(tCommand), pointer :: aux
-
-!        if (narg < 4) call error( "invalid loop definition" )
-!        if ((arg(3) /= "in").and.(arg(3) /= "from")) call error( "invalid loop definition" )
-
-!        variable = arg(2)
-!        if (has_macros(variable)) call error( "invalid variable name", variable )
-!        value = arg(4)
-!        if (arg(3) == "from") then
-!          if (narg < 6) call error( "invalid loop definition" )
-!          if (arg(5) /= "to") call error( "invalid loop definition" )
-!          ifirst = str2int(arg(4)) + 1
-!          ilast = str2int(arg(6))
-!          if (ifirst == ilast) then
-!            others = int2str(ifirst)
-!          else if (ilast > ifirst) then
-!            others = join([(int2str(i),i=ifirst,ilast)])
-!          else
-!            call error( "invalid loop definition" )
-!          end if
-!        else
-!          others = join(arg(5:narg))
-!        end if
-
-!        allocate( original % first )
-!        original % first % content = "define "//trim(variable)//" as "//trim(value)
-!        original % current => original % first
-!        call read_next_command
-!        do while ((narg /= 0).and.(arg(1) /= "end"))
-!          allocate( original % current % next )
-!          original % current => original % current % next
-!          original % current % content = join(arg(1:narg))
-!          call read_next_command
-!        end do
-!        if (narg == 0) call error( "unfinished loop" )
-
-!        if (others /= "") then
-!          allocate( copy % first )
-!          copy % first % content = "for "//trim(variable)//" in "//trim(others)
-!          copy % current => copy % first
-!          aux => original % first % next
-!          do while (associated(aux))
-!            allocate( copy % current % next )
-!            copy % current => copy % current % next
-!            copy % current % content = aux % content
-!            aux => aux % next
-!          end do
-!          allocate( copy % current % next )
-!          copy % current => copy % current % next
-!          copy % current % content = "end"
-!          original % current % next => copy % first
-!          original % current => copy % current
-!        end if
-
-!        original % current % next => me % commands
-!        me % commands => original % first
-!      end subroutine for_command
-      !---------------------------------------------------------------------------------------------
-      subroutine replace_variables
-        integer :: N, first, last
-        character(sl) :: vname
-        type(Struc), pointer :: ptr
-!        call writeln( "Command:", command )
-        first = index(trim(command),"$",back=.true.)
-        do while (first > 0)
-          N = len_trim(command)
-          if (first == N) call error( "invalid variable" )
-          if (command(first+1:first+1) == "{") then
-            last = first + index(command(first+1:N),"}")
-            if (last <= first+2) call error( "invalid variable" )
-            if (.not.is_variable(command(first+2:last-1))) call error( "invalid variable" )
-            vname = command(first+2:last-1)
-          else
-            last = first
-            do while (is_variable(command(first+1:last+1)) .and. (last < N))
-              last = last + 1
-            end do
-            if (.not.is_variable(command(first+1:last)))  call error( "invalid variable" )
-            vname = command(first+1:last)
-          end if
-          call me % variable_list % search( [vname], ptr )
-          if (associated(ptr)) then
-            command = command(1:first-1)//trim(ptr%params)//command(last+1:N)
-          else
-            call error( "undefined variable", vname )
-          end if
-          first = index(trim(command),"$",back=.true.)
-        end do
-      end subroutine replace_variables
-      !---------------------------------------------------------------------------------------------
-      subroutine evaluate_expressions
-        integer :: N, first, last
-        real(rb) :: value
-        type(tParser) :: Comp
-        first = index(trim(command),"{",back=.true.)
-        do while (first > 0)
-          N = len_trim(command)
-          last = first + index(command(first+1:N),"}")
-          if (last == first) call error( "unfinished math expression" )
-          if (last == first+1) then
-            command = command(1:first-1)//command(last+1:N)
-          else
-            call Comp % parse( command(first+1:last-1) )
-            value = Comp % evaluate()
-            if (Comp % Is_Integer) then
-              command = command(1:first-1)//trim(int2str(nint(value)))//command(last+1:N)
-            else
-              command = command(1:first-1)//trim(real2str(value))//command(last+1:N)
-            end if
-          end if
-          first = index(trim(command),"{",back=.true.)
-        end do
-      end subroutine evaluate_expressions
-      !---------------------------------------------------------------------------------------------
-!      subroutine evaluate_expressions
-!       ! Declarations of GNU libmatheval procedures used.
-!  
-
-!interface
-
-!  integer(8) function evaluator_create( string ) bind( C )
-!    character :: string(:)
-!  end function evaluator_create
-
-!  subroutine evaluator_destroy( evaluator ) bind( C )
-!    integer(8) :: evaluator
-!  end subroutine evaluator_destroy
-
-!end interface
-
-!       !integer*8, external, bind(C) :: evaluator_create
-!       integer*8, external :: evaluator_derivative_x
-!       double precision, external :: evaluator_evaluate_x
-!       !external, bind(C) :: evaluator_destroy
-!     
-!       ! Size of input buffer.
-!       integer :: BUFFER_SIZE, i
-!       parameter(BUFFER_SIZE = 256)
-!     
-!       character(len = BUFFER_SIZE) :: buffer ! Input buffer.
-!       character :: buf(sl)
-!       integer*8 :: f, f_prim ! Evaluators for function and function derivative.
-!       double precision :: x ! Variable x value.
-!     
-!       ! Read function.  Function has to be over variable x, or result may
-!       ! be undetermined.  Size of textual represenatation will be truncated
-!       ! here to BUFFER_SIZE characters, in real conditions one should
-!       ! probably come with something smarter to avoid this limit.
-!       
-!       write (*, '(A)') 'f(x) = '
-!       read (*, '(A)') buffer
-!     
-!       ! Create evaluator for function.
-!       forall(i=1:len_trim(buffer)) buf(i) = buffer(i:i)
-!       f = evaluator_create( buf );
-!       if (f == 0) stop
-!     
-!       ! Create evaluator for function derivative.
-!       f_prim = evaluator_derivative_x (f);
-!       if (f_prim == 0) stop
-!     
-!       ! Read variable x value.
-!       write (*, '(A)') 'x = '
-!       read (*, *) x
-!     
-!       ! Calculate and print values of function and its derivative for given
-!       ! value of x.
-!       write (*,*) '  f (', x, ') = ', evaluator_evaluate_x (f, x)
-!       write (*,*) '  f'' (', x, ') = ', evaluator_evaluate_x (f_prim, x)
-!     
-!       ! Destroy evaluators.
-!       call evaluator_destroy (f)
-!       call evaluator_destroy (f_prim)
-!      end subroutine evaluate_expressions
-
-  end subroutine tPlaymol_next_command
-
-  !=================================================================================================
-
   subroutine tPlaymol_read_xyz( me, unit )
     class(tPlaymol), intent(inout) :: me
     integer,      intent(in)    :: unit
@@ -806,7 +582,7 @@ contains
     character(sl), allocatable :: prev(:)
     natoms = me % atoms_in_molecules()
     allocate( prev(maxval(natoms)) )
-    call me % next_command( unit, narg, arg )
+    call me % code_flow % next_command( unit, narg, arg )
     if (narg > 0) then
       call writeln( "Number of coordinates: ", arg(1) )
       N = str2int( arg(1) )
@@ -859,14 +635,14 @@ contains
     real(rb) :: L, theta, phi, R1(3), R2(3), R3(3), x(3), y(3), z(3)
     natoms = me % atoms_in_molecules()
     allocate( prev(maxval(natoms)) )
-    call me % next_command( unit, narg, arg )
+    call me % code_flow % next_command( unit, narg, arg )
     if (narg > 0) then
       call writeln( "Number of provided geometric data: ", arg(1) )
       N = str2int( arg(1) )
       allocate( name(N), R(3,N) )
       new_molecule = .true.
       do i = 1, N
-        call me % next_command( unit, narg, arg )
+        call me % code_flow % next_command( unit, narg, arg )
         if ((narg < 3).or.(narg > 7).or.(narg == 6)) call error( "invalid geometric info format" )
         catom = trim(me % atom_list % prefix)//trim(arg(1))//trim(me % atom_list % suffix)
         call me % molecule_list % search( [catom], atom )

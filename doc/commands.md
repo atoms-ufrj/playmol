@@ -1,42 +1,36 @@
 Commands      {#commands}
 ========
 
-Playmol is designed to execute scripts containing the commands described below:
+Playmol is designed to execute scripts containing the commands described below. Click in the command name for detailed description and examples.
 
-* [define] - defines a string variable for further substitution.
-* [atom_type] - creates an atom type with given name and parameters.
-* [mass] - specifies the mass of atoms of a given type.
-* [bond_type] - defines parameters for bonds between atoms of two given types.
-* [angle_type] - defines parameters for angles involving atoms of three given types.
-* [dihedral_type] - defines parameters for dihedrals involving atoms of four given types.
-* [improper_type] - defines parameters for impropers involving atoms of four given types.
-* [atom] - creates an atom with given name and type.
-* [charge] - specifies the charge of a given atom.
-* [bond] - creates a bond between two given atoms (angles and dihedrals are automatically detected).
-* [improper] - creates an improper involving four given atoms or search for impropers.
-* [extra] - creates an extra bond, angle, or dihedral involving given atoms.
-* [link] - virtually link two atoms and fuse their molecules without actually bonding them.
-* [xyz] - reads the positions for all atoms of one or more molecules.
-* [build] - guesses the atom positions of one or more molecules from provided geometric information.
-* [box] - defines the properties of a simulation box.
-* [packmol] - executes Packmol to create a packed molecular system.
-* [align] - aligns the principal axes of a molecule to the Cartesian axes.
-* [write] - writes down system info in different file formats (including LAMMPS data files).
-* [prefix] - defines default prefixes for atom types and atoms.
-* [suffix] - defines default suffixes for atom types and atoms.
-* [include] - includes commands from another script.
-* [reset] - resets a list of entities together with its dependent lists.
-* [shell] - executes an external shell command.
-* [quit] - interrupts the execution of a Playmol script.
-
-
-------------
-Introduction
-------------
-
-Playmol scripts are text files containing commands described in this section. Each command is a sequence of keywords and parameter values separated by spaces and/or tabs. A script can include comments, identified by the comment mark "#". When such mark is found, all trailing characters in the same line (including the comment mark itself) are ignored. A single command can span several lines by means of continuation marks "&". When the actual part of a command line (i.e., excluding comments) ends with a continuation mark, the command will continue in the next non-empty line.
-
-In all examples described in this section, the units employed for physically meaningful values are those corresponding to [LAMMPS real units].
+| Command         | Description                                                                              |
+|:---------------:|:-----------------------------------------------------------------------------------------|
+| [define]        | defines a variable for further substitution                                              |
+| [for/next]      | executes a sequence of commands repeatedly while changing the value of a variable        |
+| [if/then/else]  | conditionally executes a sequence of commands or selects one out of two sequences        |
+| [atom_type]     | creates an atom type with given name and parameters                                      |
+| [mass]          | specifies the mass of atoms of a given type                                              |
+| [bond_type]     | defines parameters for bonds between atoms of two given types                            |
+| [angle_type]    | defines parameters for angles involving atoms of three given types                       |
+| [dihedral_type] | defines parameters for dihedrals involving atoms of four given types                     |
+| [improper_type] | defines parameters for impropers involving atoms of four given types                     |
+| [atom]          | creates an atom with given name and type                                                 |
+| [charge]        | specifies the charge of a given atom                                                     |
+| [bond]          | creates a bond between two given atoms (angles and dihedrals are automatically detected) |
+| [improper]      | creates an improper involving four given atoms or search for impropers                   |
+| [extra]         | creates an extra bond, angle, or dihedral involving given atoms                          |
+| [link]          | virtually link two atoms and fuse their molecules without actually bonding them          |
+| [build]         | guesses the atom positions of one or more molecules from provided geometric information  |
+| [box]           | defines the properties of a simulation box                                               |
+| [align]         | aligns the principal axes of a molecule to the Cartesian axes                            |
+| [packmol]       | executes Packmol in order to create a packed molecular system                            |
+| [write]         | writes down system info in different file formats (including LAMMPS data files)          |
+| [prefix]        | defines default prefixes for atom types and atoms                                        |
+| [suffix]        | defines default suffixes for atom types and atoms                                        |
+| [include]       | includes commands from another script                                                    |
+| [reset]         | resets a list of entities together with its dependent lists                              |
+| [shell]         | executes an external shell command                                                       |
+| [quit]          | interrupts the execution of a Playmol script                                             |
 
 -------------------------
 <a name="define"/> define
@@ -67,6 +61,74 @@ Substitution is done in forthcoming commands by either preceding the variable na
 	atom		${name}2 ${name}
 
 In the example above, an atom type named _A_ is defined with parameters 0.0914 and 3.95. Then, two atoms named _A1_ and _A2_ are created, both of type _A_.
+
+**See also**:
+
+[prefix], [suffix], [for/next], [if/then/else]
+
+-----------------------------
+<a name="for_next"/> for/next
+-----------------------------
+
+**Syntax**:
+
+	for <variable> from <min> to <max>
+		[commands]
+	next
+
+	for <variable> from <max> downto <min>
+		[commands]
+	next
+
+	for <variable> in <string-1> [<string-2> [<string-3> ...]]
+		[commands]
+	next
+
+* _min_, _max_ = either two integer numbers or two single characters, with _max_ >= _min_
+* _string_-x_ = any character string
+
+**Description**:
+
+
+**Examples**:
+
+~~~~{.playmol}
+atom	C1 CH3
+for i from 2 to {$N-1}
+	atom	C$i CH2
+next
+atom	C$N CH3
+~~~~
+
+In the example above, the units of a united-atom n-alkane molecule are defined and named as C1, C2, C3, etc. It is assumed that variable N (the number of carbon atoms) has already been defined.
+
+	for mol in water ethanol glycerol
+		build $mol.xyz
+	next
+
+**See also**:
+
+[define]
+
+-------------------------------------
+<a name="if_then_else"/> if/then/else
+-------------------------------------
+
+**Syntax**:
+
+	if <condition> then
+		[commands]
+	[else]
+		[commands]
+	endif
+
+* _condition_ = 1 or 0 (e.g. the result of a logical expression)
+
+**Description**:
+
+
+**Example**:
+
 
 **See also**:
 
@@ -504,34 +566,42 @@ In the example above, the atomic coordinates of two water molecules are provided
 
 This command reads geometric information and uses them to guess the atomic coordinates for one or more molecules.
 
-The parameter _file_ is the name of a text file containing geometric information. The required format is described below. The parameter _file_ is optional. If it is omitted, then the geometric information must be provided in the lines subsequent to the command _build_. In this sense, issuing the command _build <file>_ is equivalent to issuing _build_, followed by _include <file>_.
+The parameter _file_ is the name of a text file containing geometric information. The required format is described below. The parameter _file_ is optional. If it is omitted, then the geometric information must be provided in the subsequent lines. In this sense, issuing the command _build <file>_ is equivalent to issuing _build_, followed by _include <file>_.
 
 The geometric information that Playmol expects to receive has the following format:
 
-* The first non-empty line contains the number _N_ of geometric data to be provided
-* The _N_ subsequent non-empty lines contain an [atom] identifier, followed by fields separated by spaces or tabs. Only the following formats are valid:
+* The first non-empty line must contain the number _N_ of geometric data to be provided
+* Every one of the _N_ subsequent non-empty lines must contain an [atom] identifier, followed by fields separated by spaces or tabs. Only the following formats are valid:
 
-Coordinates _x_, _y_, and _z_ of _atom-I_:
+1. Coordinates _x_, _y_, and _z_ of _atom-I_:
 
 	<atom-I>  <x>  <y>  <z>
 
-The _length_ of a bond formed by _atom-I_ with _atom-J_:
+2. The _length_ of a bond formed by _atom-I_ with _atom-J_:
 
 	<atom-I>  <atom-J>  <length>
 
-The _length_ of a bond formed by _atom-I_ with _atom-j_ and the _angle_ (in degrees) between the bonds formed by _atom-I_, _atom-J_, and _atom-K_:
+3. The _length_ of a bond formed by _atom-I_ with _atom-j_ and the _angle_ (in degrees) between the bonds formed by _atom-I_, _atom-J_, and _atom-K_:
 
 	<atom-I>  <atom-J>  <atom-K>  <length>  <angle>
 
-The _length_ of a bond formed by _atom-I_ with _atom-J_, the _angle_ (in degrees) between the bonds formed by _atom-I_, _atom-J_, and _atom-K_, and the <torsion> angle (in degrees) of the dihedral formed by _atom-I_, _atom-J_, _atom-K_, and _atom-L_:
+4. The _length_ of a bond formed by _atom-I_ with _atom-J_, the _angle_ (in degrees) between the bonds formed by _atom-I_, _atom-J_, and _atom-K_, and the <torsion> angle (in degrees) of the dihedral formed by _atom-I_, _atom-J_, _atom-K_, and _atom-L_:
 
 	<atom-I>  <atom-J>  <atom-K>  <atom-L>  <length>  <angle>  <torsion>
 
-IMPORTANT: in all formats above, _atom-I_ is the one whose coordinates will be defined, while _atom-J_, _atom-K_, and _atom-L_ must be atoms whose coordinates have already been defined in previous lines. Please see the examples below.
+__IMPORTANT__: in all formats above, _atom-I_ is the one whose coordinates will be defined, while _atom-J_, _atom-K_, and _atom-L_ must be atoms whose coordinates have already been defined in previous lines. Please see the examples below.
 
-The provided information is meant to define a list of actual structures for the molecules previously assembled using the commands [atom] and [bond]. Multiple molecules can be specified either using separate _build_ commands or using a unique _build_ command involving all atoms together. The information regarding all atoms of a given molecule must be provided in sequence, but not in any specific order. It is possible to specify many copies of the same molecule, but a given atom cannot reappear until all other atoms of the same molecule have been defined.
+The provided information is meant to define a list of actual structures for the molecules previously assembled using the commands [atom] and [bond]. Multiple molecules can be specified either using separate _build_ commands or using a unique _build_ command involving all atoms together. The information regarding all atoms of a given molecule must be provided contiguously, but in any arbitrary order. It is possible to specify many copies of the same molecule, but a given atom cannot reappear until all other atoms of the same copy have been defined.
 
-The list of molecular structures created via _build_ will be employed to define a simulation box if the command [write] is invoked later on. The origin of the Cartesian space will be located in the center of the simulation box.
+Note that the very common [xyz file format] can be used to provide geometric information for the _build_ command, provided that:
+
+* The first line contains the number of atomic coordinates (_N_), as usual.
+* The second line is empty or starts with a comment mark (#).
+* The _N_ subsequent lines contain the following four fields separated by spaces or tabs: <atom-id>  <x>  <y>  <z>
+
+Therefore, one can use an external tool to generate the atomic coordinates, save them in [xyz file format], and replace the usual element symbols by atom identifiers.
+
+The list of molecular structures created via _build_ can be employed later on to define a simulation box when the command [write] is invoked. The origin of the Cartesian space will be located at the center of the simulation box.
 
 **Examples**:
 
@@ -620,6 +690,40 @@ The example above specifies a non-orthogonal simulation box which can be used to
 **See also**:
 
 [xyz], [packmol], [write]
+
+-----------------------
+<a name="align"/> align
+-----------------------
+
+**Syntax**:
+
+	align		 <molecule> <axis-1> <axis-2>
+
+* _molecule_ = the index of an existing molecule with predefined coordinates
+* _axis-1_ = the Cartesian axis (_x_, _y_, or _z_) with which the most elongated molecular axis will be aligned
+* _axis-2_ = the Cartesian axis (_x_, _y_, or _z_) with which the second most elongated molecular axis will be aligned
+
+**Description**:
+
+This command aligns the principal axes of a given molecule with the system's Cartesian axes. The principal axes are defined geometrically, as if the masses of all atoms were the same.
+
+The parameter _molecule_ species the index of the molecule to be aligned with the Cartesian axes. Such molecule must have predefined atomic coordinates. Exceptions are monoatomic, diatomic, and triatomic molecules, whose atomic coordinates can be automatically generated in some cases, as explained in the description of [packmol] command.
+
+**IMPORTANT**: the command [write] with its option _summary_ can be very useful for checking out the indexes of the molecules, which are required to use the align command.
+
+The parameter _axis-1_ must be equal to _x_, _y_, or _z_, and species the Cartesian axis with which the molecule will be aligned considering its most elongated principal axis.
+
+The parameter _axis-2_ must also be equal to _x_, _y_, or _z_, but different from _axis-1_. It species the Cartesian axis with which the molecule will be aligned considering its second most elongated principal axis. Of course, the shortest principal axis will be aligned to the Cartesian axis not explicitly specified in the command _align_.
+
+**Examples**:
+
+	align		1 x z
+
+The example above aligns the most elongated principal axis of molecule 1 to the Cartesian axis _x_, and its second most elongated principal axis to axis _z_.
+
+**See also**:
+
+[write], [packmol]
 
 ---------------------------
 <a name="packmol"/> packmol
@@ -711,40 +815,6 @@ The example above uses Packmol to create a random packing of molecules with dens
 **See also**:
 
 [box], [xyz], [write], [bond_type], [angle_type]
-
------------------------
-<a name="align"/> align
------------------------
-
-**Syntax**:
-
-	align		 <molecule> <axis-1> <axis-2>
-
-* _molecule_ = the index of an existing molecule with predefined coordinates
-* _axis-1_ = the Cartesian axis (_x_, _y_, or _z_) with which the most elongated molecular axis will be aligned
-* _axis-2_ = the Cartesian axis (_x_, _y_, or _z_) with which the second most elongated molecular axis will be aligned
-
-**Description**:
-
-This command aligns the principal axes of a given molecule with the system's Cartesian axes. The principal axes are defined geometrically, as if the masses of all atoms were the same.
-
-The parameter _molecule_ species the index of the molecule to be aligned with the Cartesian axes. Such molecule must have predefined atomic coordinates. Exceptions are monoatomic, diatomic, and triatomic molecules, whose atomic coordinates can be automatically generated in some cases, as explained in the description of [packmol] command.
-
-**IMPORTANT**: the command [write] with its option _summary_ can be very useful for checking out the indexes of the molecules, which are required to use the align command.
-
-The parameter _axis-1_ must be equal to _x_, _y_, or _z_, and species the Cartesian axis with which the molecule will be aligned considering its most elongated principal axis.
-
-The parameter _axis-2_ must also be equal to _x_, _y_, or _z_, but different from _axis-1_. It species the Cartesian axis with which the molecule will be aligned considering its second most elongated principal axis. Of course, the shortest principal axis will be aligned to the Cartesian axis not explicitly specified in the command _align_.
-
-**Examples**:
-
-	align		1 x z
-
-The example above aligns the most elongated principal axis of molecule 1 to the Cartesian axis _x_, and its second most elongated principal axis to axis _z_.
-
-**See also**:
-
-[write], [packmol]
 
 -----------------------
 <a name="write"/> write
@@ -951,6 +1021,8 @@ The example above writes a summary of the current molecular system and then quit
 ---------------------
 
 [define]:		#define
+[for/next]:		#for_next
+[if/then/else]:		#if_then_else
 [atom_type]:		#atom_type
 [mass]:			#mass
 [bond_type]:		#bond_type
@@ -963,7 +1035,6 @@ The example above writes a summary of the current molecular system and then quit
 [extra]:		#extra
 [link]:			#link
 [improper]:		#improper
-[xyz]:			#xyz
 [build]:		#build
 [box]:			#box
 [packmol]:		#packmol

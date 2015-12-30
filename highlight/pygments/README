@@ -1,0 +1,3 @@
+sudo apt-get install python-setuptools
+python setup.py install
+

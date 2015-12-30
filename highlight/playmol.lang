@@ -66,21 +66,26 @@
       <keyword>charge</keyword>
       <keyword>bond</keyword>
       <keyword>link</keyword>
-      <keyword>extra\s*(bond|angle|dihedral)</keyword>
-      <keyword>improper\s*search</keyword>
+      <keyword>extra\s+(bond|angle|dihedral)</keyword>
+      <keyword>improper\s+search</keyword>
       <keyword>improper</keyword>
       <keyword>xyz</keyword>
       <keyword>build</keyword>
       <keyword>align</keyword>
-      <keyword>box\s*(lengths|density|volume|angles)</keyword>
+      <keyword>box\s+(lengths|density|volume|angles)</keyword>
       <keyword>packmol</keyword>
-      <keyword>write\s*(playmol|lammps|summary|xyz|lammpstrj)</keyword>
-      <keyword>define</keyword>
-      <keyword>as</keyword>
-      <keyword>prefix\s*(atoms|types)</keyword>
+      <keyword>write\s+(playmol|lammps|summary|xyz|lammpstrj)</keyword>
+      <keyword>prefix\s+(atoms|types)</keyword>
       <keyword>prefix</keyword>
-      <keyword>suffix\s*(atoms|types)</keyword>
+      <keyword>suffix\s+(atoms|types)</keyword>
       <keyword>suffix</keyword>
+      <keyword>to</keyword>
+      <keyword>downto</keyword>
+      <keyword>next</keyword>
+      <keyword>if</keyword>
+      <keyword>then</keyword>
+      <keyword>else</keyword>
+      <keyword>endif</keyword>
       <keyword>include</keyword>
       <keyword>reset</keyword>
       <keyword>clean_types</keyword>
@@ -94,16 +99,32 @@
       <keyword>fix</keyword>
       <keyword>copy</keyword>
       <keyword>pack</keyword>
-      <keyword>action\s*(execute|setup)</keyword>
+      <keyword>action\s+(execute|setup)</keyword>
       <keyword>aspect</keyword>
+    </context>
+
+    <context id="define-command">
+      <match>\b(define)\b(.+)\b(as)\b</match>
+      <include>
+        <context sub-pattern="1" style-ref="keyword"/>
+        <context sub-pattern="3" style-ref="keyword"/>
+      </include>
+    </context>
+
+    <context id="for-command">
+      <match>\b(for)\b(.+)\b(from|in)\b</match>
+      <include>
+        <context sub-pattern="1" style-ref="keyword"/>
+        <context sub-pattern="3" style-ref="keyword"/>
+      </include>
     </context>
 
     <context id="floating-point-number" style-ref="floating-point">
       <match extended="true">
         (?&lt;![\w\.])
         [+-]?
-        ((\.[0-9]+ | [0-9]+\.[0-9]*) ([ed][+-]?[0-9]*)? |
-         ([0-9]+[ed][+-]?[0-9]*))
+        ((\.[0-9]+ | [0-9]+\.[0-9]*) ([edED][+-]?[0-9]*)? |
+         ([0-9]+[edED][+-]?[0-9]*))
          ([_]([0-9]+|[a-z][\w_]*))?
         (?![\w\.])
       </match>
@@ -141,6 +162,8 @@
         <context ref="def:single-quoted-string"/>
         <context ref="line-comment"/>
         <context ref="commands"/>
+        <context ref="for-command"/>
+        <context ref="define-command"/>
         <context ref="default-files"/>
       </include>
     </context>

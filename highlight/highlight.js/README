@@ -1,0 +1,8 @@
+1) Clone git repository:
+
+git clone https://github.com/isagalaev/highlight.js
+
+2) Copy file playmol.js to directory src/languages
+3) Create directory test/detect/playmol
+4) Copy file default.txt to test/detect/playmol
+

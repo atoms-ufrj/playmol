@@ -206,6 +206,7 @@ contains
     character(*), intent(out) :: command
     command = ""
     call add_string( command )
+    command = adjustl(command)
     contains
       recursive subroutine add_string( command )
         character(*), intent(inout) :: command
