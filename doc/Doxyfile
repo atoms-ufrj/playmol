@@ -1,7 +1,9 @@
 PROJECT_NAME      = "Playmol"
 OUTPUT_DIRECTORY  = ./doc
-HTML_HEADER       = 
+HTML_HEADER       = doc/header.html
+HTML_EXTRA_FILES  = doc/highlight.pack.js doc/styles/xcode.css
 HTML_FOOTER       = 
+HTML_STYLESHEET   = 
 QUIET             = NO
 WARNINGS          = YES
 DISABLE_INDEX     = YES
@@ -25,9 +27,8 @@ RECURSIVE         = NO
 TAGFILES          =
 ALLEXTERNALS      = NO
 PERL_PATH         = /usr/bin/perl
-SEARCHENGINE      = NO
+SEARCHENGINE      = YES
 PDF_HYPERLINKS    = YES
-USE_PDFLATEX      = YES
+USE_PDFLATEX      = NO
 STRIP_CODE_COMMENTS = NO
-HTML_STYLESHEET   = 
 

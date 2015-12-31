@@ -1,5 +1,5 @@
-Commands      {#commands}
-========
+Playmol Commands      {#commands}
+================
 
 Playmol is designed to execute scripts containing the commands described below. Click in the command name for detailed description and examples.
 
@@ -32,9 +32,10 @@ Playmol is designed to execute scripts containing the commands described below. 
 | [shell]         | executes an external shell command                                                       |
 | [quit]          | interrupts the execution of a Playmol script                                             |
 
--------------------------
-<a name="define"/> define
--------------------------
+--------------------------------------------------------------------------------
+<a name="define"/>
+define
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -45,20 +46,22 @@ Playmol is designed to execute scripts containing the commands described below. 
 
 **Description**:
 
-This command defines a variable that contains a character string to be substituted in forthcoming commands.
+This command defines a variable whose value (a character string) is intended to be substituted in forthcoming commands.
 
-The parameter _variable_ the must be a single character string containing only letters (A-Z or a-z), numbers (0-9), and underscores (_). The first character must necessarily be a letter. IMPORTANT: variable names are case-sensitive.
+The parameter _variable_ the must be a single character string containing only letters (A-Z or a-z), numbers (0-9), and underscores (_). The first character must necessarily be a letter. __IMPORTANT__: variable names are case-sensitive.
 
 The parameter _value_ must be a single character string with no comment tags (#).
 
-Substitution is done in forthcoming commands by either preceding the variable name with a symbol "$" or enclosing it between symbols "${" and "}", with no spacing. Every time the symbol "$" is found in a command, Playmol will admit that a variable is being referred to. The actual command will only be issued after all variables have been replaced by their values.
+Substitution is instructed in forthcoming commands by either preceding the variable name with a symbol "$" or enclosing it between symbols "${" and "}", with no spacing. Every time the symbol "$" is found in a command, Playmol will admit that a variable is being referred to. The actual command will only be issued after all variables have been replaced by their values.
 
 **Example**:
 
-	define		name as A
-	atom_type	${name}	0.0914 3.95
-	atom		${name}1 ${name}
-	atom		${name}2 ${name}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+define		name as A
+atom_type	$name	0.0914 3.95
+atom		${name}1 $name
+atom		${name}2 $name
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, an atom type named _A_ is defined with parameters 0.0914 and 3.95. Then, two atoms named _A1_ and _A2_ are created, both of type _A_.
 
@@ -66,60 +69,76 @@ In the example above, an atom type named _A_ is defined with parameters 0.0914 a
 
 [prefix], [suffix], [for/next], [if/then/else]
 
------------------------------
-<a name="for_next"/> for/next
------------------------------
+--------------------------------------------------------------------------------
+<a name="for_next"/>
+for/next
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
 	for <variable> from <min> to <max>
-		[commands]
+		commands
 	next
+
+or
 
 	for <variable> from <max> downto <min>
-		[commands]
+		commands
 	next
+
+or
 
 	for <variable> in <string-1> [<string-2> [<string-3> ...]]
-		[commands]
+		commands
 	next
 
+* _variable_ = a valid name to be assigned to the defined variable
 * _min_, _max_ = either two integer numbers or two single characters, with _max_ >= _min_
-* _string_-x_ = any character string
+* _string-x_ = any character string
 
 **Description**:
 
+This command 
+
+The parameter _variable_ the must be a valid variable name (see [define]).
+
+The parameters _min_ and _max_ can be either two integer numbers or two single characters, with the constraint that _max_ >= _min_.
 
 **Examples**:
 
-~~~~{.playmol}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 atom	C1 CH3
 for i from 2 to {$N-1}
 	atom	C$i CH2
 next
 atom	C$N CH3
-~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In the example above, the units of a united-atom n-alkane molecule are defined and named as C1, C2, C3, etc. It is assumed that variable N (the number of carbon atoms) has already been defined.
+In the example above, the units of a united-atom n-alkane molecule are defined
+and named as C1, C2, C3, etc. It is assumed that variable N (the number of
+carbon atoms) has already been defined.
 
-	for mol in water ethanol glycerol
-		build $mol.xyz
-	next
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+for mol in water ethanol glycerol
+	build $mol.xyz
+next
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **See also**:
 
 [define]
 
--------------------------------------
-<a name="if_then_else"/> if/then/else
--------------------------------------
+--------------------------------------------------------------------------------
+<a name="if_then_else"/>
+if/then/else
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
 	if <condition> then
-		[commands]
-	[else]
-		[commands]
+		commands
+	[else
+		commands]
 	endif
 
 * _condition_ = 1 or 0 (e.g. the result of a logical expression)
@@ -134,9 +153,10 @@ In the example above, the units of a united-atom n-alkane molecule are defined a
 
 [prefix], [suffix]
 
--------------------------------
-<a name="atom_type"/> atom_type
--------------------------------
+--------------------------------------------------------------------------------
+<a name="atomtype"/>
+atom_type
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -155,14 +175,18 @@ The parameter _attribute-list_ can be a sequence of strings containing any chara
 
 **Examples**:
 
-	atom_type	O	0.1553 3.166
-	atom_type	H	0.0000 0.000
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+atom_type	O	0.1553 3.166
+atom_type	H	0.0000 0.000
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, atom types _O_ and _H_ are defined with Lennard-Jones parameters _epsilon_ and _sigma_, respectively, corresponding to the SPC water model. This can be used to generate a LAMMPS configuration file associated with the pair style _lj/cut/coul/long_, for instance.
 
-	prefix		type TraPPE-
-	atom_type	CH3 lj/cut 0.1947 3.75
-	atom_type	CH2 lj/cut 0.0914 3.95
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+prefix		types TraPPE-
+atom_type	CH3 lj/cut 0.1947 3.75
+atom_type	CH2 lj/cut 0.0914 3.95
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, united-atom types _TraPPE-CH3_ and _TraPPE-CH2_ are defined with TraPPE Lennard-Jones parameters _epsilon_ and _sigma_, respectively. An explicit pair style specification like _lj/cut_ is necessary in LAMMPS if pair style _hybrid_ or _hybrid/overlay_ is employed.
 
@@ -170,9 +194,10 @@ In the example above, united-atom types _TraPPE-CH3_ and _TraPPE-CH2_ are define
 
 [atom], [bond_type], [angle_type], [dihedral_type], [improper_type], [prefix], [suffix]
 
----------------------
-<a name="mass"/> mass
----------------------
+--------------------------------------------------------------------------------
+<a name="mass"/>
+mass
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -189,8 +214,10 @@ An [atom] will not be created if a mass value has not been previously defined to
 
 **Examples**:
 
-	mass		CH2 14.0
-	mass		H* 1.008
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+mass		CH2 14.0
+mass		H* 1.008
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, a mass value of _14.0_ is assigned to atom type _CH2_ and a mass value of _1.008_ is assigned to all atoms types whose names start with _H_.
 
@@ -198,9 +225,10 @@ In the example above, a mass value of _14.0_ is assigned to atom type _CH2_ and 
 
 [atom_type], [atom]
 
--------------------------------
-<a name="bond_type"/> bond_type
--------------------------------
+--------------------------------------------------------------------------------
+<a name="bond_type"/>
+bond_type
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -221,7 +249,9 @@ It is possible to define multiple identical bond types. This can be done, for in
 
 **Examples**:
 
-	bond_type	CH* CH* 95.877 1.54
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+bond_type	CH* CH* 95.877 1.54
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, the given attributes will be associated with every bond involving atoms whose types have names starting with _CH_.
 
@@ -229,9 +259,10 @@ In the example above, the given attributes will be associated with every bond in
 
 [atom_type], [bond], [write], [prefix], [suffix]
 
----------------------------------
-<a name="angle_type"/> angle_type
----------------------------------
+--------------------------------------------------------------------------------
+<a name="angle_type"/>
+angle_type
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -254,15 +285,18 @@ Playmol detects angles automatically as chemical bonds are created. If a detecte
 
 **Examples**:
 
-	angle_type	CH3 CH2 CH2 62.0965 114
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+angle_type	CH3 CH2 CH2 62.0965 114
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **See also**:
 
 [atom_type], [write], [prefix], [suffix]
 
----------------------------------------
-<a name="dihedral_type"/> dihedral_type
----------------------------------------
+--------------------------------------------------------------------------------
+<a name="dihedral_type"/>
+dihedral_type
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -285,15 +319,18 @@ Playmol detects dihedrals automatically as chemical bonds are created. If a dete
 
 **Examples**:
 
-	dihedral_type	CH3 CH2 CH2 CH2 1.41095 -0.27100 3.14484 0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dihedral_type	CH3 CH2 CH2 CH2 1.41095 -0.27100 3.14484 0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **See also**:
 
 [atom_type], [write], [prefix], [suffix]
 
----------------------------------------
-<a name="improper_type"/> improper_type
----------------------------------------
+--------------------------------------------------------------------------------
+<a name="improper_type"/>
+improper_type
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -316,15 +353,18 @@ Impropers are created manually using the command [improper], which requires a pr
 
 **Examples**:
 
-	improper_type	CH3 CH2 CH2 CH2 1.41095 -0.27100 3.14484 0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+improper_type	CH3 CH2 CH2 CH2 1.41095 -0.27100 3.14484 0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **See also**:
 
 [atom_type], [improper], [write], [prefix], [suffix]
 
----------------------
-<a name="atom"/> atom
----------------------
+--------------------------------------------------------------------------------
+<a name="atom"/>
+atom
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -348,17 +388,20 @@ When an atom is created, a new monoatomic molecule is automatically detected. If
 
 **Examples**:
 
-	atom	C1 C
-	atom	C2 C
-	atom    H1 H
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+atom	C1 C
+atom	C2 C
+atom    H1 H
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **See also**:
 
 [atom_type], [mass], [bond], [charge]
 
--------------------------
-<a name="charge"/> charge
--------------------------
+--------------------------------------------------------------------------------
+<a name="charge"/>
+charge
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -375,7 +418,9 @@ If a given [atom] has no charge explicitly defined, then it is considered to be 
 
 **Examples**:
 
-	charge		O* -1.0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+charge		O* -1.0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, a change value of _-1.0_ is assigned to all atoms whose identifiers start with O.
 
@@ -383,9 +428,10 @@ In the example above, a change value of _-1.0_ is assigned to all atoms whose id
 
 [atom]
 
----------------------
-<a name="bond"/> bond
----------------------
+--------------------------------------------------------------------------------
+<a name="bond"/>
+bond
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -409,7 +455,9 @@ At any moment after chemical bonds have been created, one can visualize the curr
 
 **Examples**:
 
-	bond	C1 C2 C3
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+bond	C1 C2 C3
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, two chemical bonds are created: C1-C2 and C1-C3.
 
@@ -417,9 +465,10 @@ In the example above, two chemical bonds are created: C1-C2 and C1-C3.
 
 [bond_type], [atom_type]
 
------------------------------
-<a name="improper"/> improper
------------------------------
+--------------------------------------------------------------------------------
+<a name="improper"/>
+improper
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -440,15 +489,18 @@ Using keyword _search_: Playmol searches for impropers composed of any four atom
 
 **Examples**:
 
-	improper	C1 C2 C3 C4
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+improper	C1 C2 C3 C4
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **See also**:
 
 [improper_type], [atom]
 
------------------------
-<a name="extra"/> extra
------------------------
+--------------------------------------------------------------------------------
+<a name="extra"/>
+extra
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -470,16 +522,19 @@ IMPORTANT: Extra structures are only required by some molecular models that defi
 
 **Examples**:
 
-	extra bond	C1 C2
-	extra angle	C1 C2 C3
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+extra bond	C1 C2
+extra angle	C1 C2 C3
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **See also**:
 
 [bond_type], [angle_type], [dihedral_type], [atom]
 
----------------------
-<a name="link"/> link
----------------------
+--------------------------------------------------------------------------------
+<a name="link"/>
+link
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -497,64 +552,18 @@ Sometimes, it is useful to consider two molecules as if they were a single one. 
 
 **Examples**:
 
-	link	C1 C2
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+link	C1 C2
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **See also**:
 
 [atom], [packmol]
 
--------------------
-<a name="xyz"/> xyz
--------------------
-
-**Syntax**:
-
-	xyz     	[<file>]
-
-* _file_ (optional) = name of a file containing atom coordinates
-
-**Description**:
-
-This command specifies atomic coordinates for one or more molecules.
-
-The parameter _file_ is the name of a text file containing atomic coordinates. The required format is the [xyz file format], but with element symbols replaced by [atom] identifiers. The parameter _file_ is optional. If it is omitted, then the coordinates must be provided in the subsequent lines, also adhering to the xyz format. In this sense, issuing the command _xyz <file>_ is completely equivalent to issuing _xyz_, followed by _include <file>_.
-
-The xyz format for Playmol is:
-
-* The first line contains the number _N_ of coordinates to be provided
-* The second line contains a comment or title
-* The _N_ subsequent lines contain four fields separated by spaces or tabs: <atom-id>  <x>  <y>  <z>
-
-The provided coordinates are meant to define a list of actual structures for the molecules previously assembled using the commands [atom] and [bond]. Multiple molecules can be specified either using separate _xyz_ commands or using a unique _xyz_ command involving all coordinates together. The coordinates of all atoms of a given molecule must be provided in sequence, but not in any specific order. It is possible to specify many copies of the same molecule, but a given atom cannot reappear until all other atoms of the same molecule have been defined.
-
-The list of molecular structures created via _xyz_ will be employed to define a simulation box if the command [write] is invoked later on. The origin of the Cartesian space will be located in the center of the simulation box.
-
-**Examples**:
-
-	xyz	H2O.xyz
-
-In the example above, the atomic coordinates of one or more copies of a water molecule is read from the file _H2O.xyz_.
-
-	xyz
-
-	6
-	# TIP3P water molecules:
-	O   0.00000  0.00000 -1.50000
-	H1 -0.58588  0.75695 -1.50000
-	H2  0.58588  0.75695 -1.50000
-	O   0.00000  0.00000  1.50000
-	H1 -0.58588 -0.75695  1.50000
-	H2  0.58588 -0.75695  1.50000
-
-In the example above, the atomic coordinates of two water molecules are provided inline in the Playmol script.
-
-**See also**:
-
-[atom], [bond], [box], [write], [include]
-
------------------------
-<a name="build"/> build
------------------------
+--------------------------------------------------------------------------------
+<a name="build"/>
+build
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -605,30 +614,36 @@ The list of molecular structures created via _build_ can be employed later on to
 
 **Examples**:
 
-	build	H2O.info
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build	H2O.info
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, the geometric information of one or more copies of a water molecule is read from the file _H2O.info_.
 
-	build
-	3
-	O   0.00000  0.00000  0.00000
-	H1  O  0.9572
-	H2  O  H1  0.9572  104.52
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build
+3
+O   0.00000  0.00000  0.00000
+H1  O  0.9572
+H2  O  H1  0.9572  104.52
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, the atomic coordinates of a water molecule are guessed by positioning the oxygen atom at the origin, defining the lengths of the oxygen-hydrogen bonds as 0.9572 Å, and defining the hydrogen-oxygen-hydrogen angle as 104.52 degrees.
 
-	build
-	5
-	C1              0.0     0.0    0.0
-	C2 C1           1.54
-	C3 C2 C1        1.33    114
-	C4 C3 C2 C1     1.54    114      0
-	C5 C4 C3 C2     1.54    114    180
-	
-	define file as cis_2_pentene.lammpstrj
-	box    density 1.0
-	write  lammpstrj ${file}
-	shell  gnome-terminal -e "vmd ${file}"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build
+5
+C1              0.0     0.0    0.0
+C2 C1           1.54
+C3 C2 C1        1.33    114
+C4 C3 C2 C1     1.54    114      0
+C5 C4 C3 C2     1.54    114    180
+
+define	file as cis_2_pentene.lammpstrj
+box	density 1.0
+write	lammpstrj ${file}
+shell	gnome-terminal -e "vmd ${file}"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, a united-atom cis-2-pentene molecule (C1-C2=C3-C4-C5) is defined. The length of the double bond is 1.33 Å and that of the single bonds is 1.54 Å. All bond-bending angles are 114 degrees. The torsional angle of the dihedral C1-C2=C3-C4 is zero (cis) and that of the dihedral C2=C3-C4-C5 is 180 degrees (trans). In the end, a configuration file is written down and [vmd] is involved in a new terminal window for visualization.
 
@@ -636,9 +651,10 @@ In the example above, a united-atom cis-2-pentene molecule (C1-C2=C3-C4-C5) is d
 
 [atom], [bond], [box], [write], [include]
 
--------------------
-<a name="box"/> box
--------------------
+--------------------------------------------------------------------------------
+<a name="box"/>
+box
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -691,9 +707,10 @@ The example above specifies a non-orthogonal simulation box which can be used to
 
 [xyz], [packmol], [write]
 
------------------------
-<a name="align"/> align
------------------------
+--------------------------------------------------------------------------------
+<a name="align"/>
+align
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -725,9 +742,10 @@ The example above aligns the most elongated principal axis of molecule 1 to the 
 
 [write], [packmol]
 
----------------------------
-<a name="packmol"/> packmol
----------------------------
+--------------------------------------------------------------------------------
+<a name="packmol"/>
+packmol
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -784,10 +802,12 @@ The keyword _action_ is used to create Packmol input files or to invoke Packmol.
 * __setup__: this option generates an input file named _packmol.inp_ and coordinate files _molecule-x.inp_, where _x_ is the index of each involved molecule. These files are prepared for running Packmol externally in order to generate a file _packmol-output.xyz_ containing the final packing if the algorithm succeeds with the given tolerance. For illustration, one may notice that a successful use of the packmol command with options _retry 1.0 action execute_ would have exactly the same result as the following sequence of commands:
 
 
-	packmol 	action setup
-	shell   	packmol < packmol.inp
-	reset		xyz
-	xyz     	packmol_output.xyz
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+packmol 	action setup
+shell   	packmol < packmol.inp
+reset		xyz
+build     	packmol_output.xyz
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Nevertheless, the real usefulness of the option _setup_ is to permit editing of the file _packmol.inp_ in order to impose some additional constraints, which are not directly handled in the current version of Playmol. Please see [Packmol User's Guide] for additional information.
 
@@ -806,9 +826,12 @@ The Packmol algorithm is described in the following paper:
 
 **Examples**:
 
-	box    		density 0.602214
-	packmol		tolerance 3.0 retry 0.9 fix 1 0.0 0.0 0.0 pack 2 1000 action execute
-	write		lammps system.data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+box    		density 0.602214
+packmol		tolerance 3.0 retry 0.9 fix 1 0.0 0.0 0.0 pack 2 1000
+packmol		action execute
+write		lammps system.data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The example above uses Packmol to create a random packing of molecules with density equal to 0.602214 Da/Å³ (1.0 g/cm³) in which one copy of molecule 1 is centered at the origin and 1000 copies of molecule 2 are packed with random positions and random orientations. The desired mininum intermolecular atomic distance is initially set to 3.0 Å, but Packmol will keep reducing the tolerance in 90% until the packing is successful. Finally, a LAMMPS configuration file is generated.
 
@@ -816,9 +839,10 @@ The example above uses Packmol to create a random packing of molecules with dens
 
 [box], [xyz], [write], [bond_type], [angle_type]
 
------------------------
-<a name="write"/> write
------------------------
+--------------------------------------------------------------------------------
+<a name="write"/>
+write
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -847,12 +871,15 @@ The optional parameter _file_ is the name of the file which will contain the sys
 
 **Examples**:
 
-	write	playmol water.mol
-	write	lammps water.data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+write	playmol water.mol
+write	lammps water.data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
--------------------------
-<a name="prefix"/> prefix
--------------------------
+--------------------------------------------------------------------------------
+<a name="prefix"/>
+prefix
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -873,9 +900,11 @@ Both prefix and [suffix] can be defined simultaneously.
 
 **Examples**:
 
-	prefix		atoms H2O-
-	atom		H1 H
-	atom		H2 H
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+prefix		atoms H2O-
+atom		H1 H
+atom		H2 H
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The example above creates two atoms whose identifiers are H2O-H1 and H2O-H2.
 
@@ -883,9 +912,10 @@ The example above creates two atoms whose identifiers are H2O-H1 and H2O-H2.
 
 [atom_type], [atom], [suffix]
 
--------------------------
-<a name="suffix"/> suffix
--------------------------
+--------------------------------------------------------------------------------
+<a name="suffix"/>
+suffix
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -906,9 +936,11 @@ Both [prefix] and suffix can be defined simultaneously.
 
 **Examples**:
 
-	suffix		atoms -H2O
-	atom		H1 H
-	atom		H2 H
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+suffix		atoms -H2O
+atom		H1 H
+atom		H2 H
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The example above creates two atoms whose identifiers are H1-H2O and H2-H2O.
 
@@ -916,9 +948,10 @@ The example above creates two atoms whose identifiers are H1-H2O and H2-H2O.
 
 [atom_type], [atom], [prefix], [suffix]
 
----------------------------
-<a name="include"/> include
----------------------------
+--------------------------------------------------------------------------------
+<a name="include"/>
+include
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -932,15 +965,18 @@ This command redirects Playmol to read and execute commands from another script.
 
 **Examples**:
 
-	include		H2O.mol
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+include		H2O.mol
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **See also**:
 
 [atom_type], [atom]
 
------------------------
-<a name="reset"/> reset
------------------------
+--------------------------------------------------------------------------------
+<a name="reset"/>
+reset
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -968,9 +1004,10 @@ The options *bond_types*, *angle_types*, *dihedral_types*, *improper_types*, *ch
 
 [packmol]
 
------------------------
-<a name="shell"/> shell
------------------------
+--------------------------------------------------------------------------------
+<a name="shell"/>
+shell
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -984,8 +1021,10 @@ This command executes an external shell command.
 
 **Example**:
 
-	shell	mv packmol.inp system.inp
-	shell	packmol < system.inp
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+shell	mv packmol.inp system.inp
+shell	packmol < system.inp
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The example above uses Linux command _mv_ to rename a file from _packmol.inp_ to _system.inp_ and then executes Packmol using it as input.
 
@@ -993,9 +1032,10 @@ The example above uses Linux command _mv_ to rename a file from _packmol.inp_ to
 
 [packmol]
 
----------------------
-<a name="quit"/> quit
----------------------
+--------------------------------------------------------------------------------
+<a name="quit"/>
+quit
+--------------------------------------------------------------------------------
 
 **Syntax**:
 
@@ -1009,8 +1049,10 @@ The optional keyword _all_ forces Playmol to stop completely. In the absence of 
 
 **Example**:
 
-	write summary
-	quit
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+write summary
+quit
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The example above writes a summary of the current molecular system and then quits Playmol.
 
@@ -1018,7 +1060,7 @@ The example above writes a summary of the current molecular system and then quit
 
 [include]
 
----------------------
+--------------------------------------------------------------------------------
 
 [define]:		#define
 [for/next]:		#for_next

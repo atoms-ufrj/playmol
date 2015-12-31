@@ -5,7 +5,7 @@ Playmol is a(nother) software for building molecular models.
 
 Its main distinguishing features are:
 
-* Molecules are created with simple scripts consisting of a small set of [commands](@ref commands).
+* Molecules are created with simple scripts consisting of a small set of [commands](commands.html).
 * Molecular topology arises naturally when atoms are connected (automatic detection of angles and dihedrals).
 * Multiple copies of a molecule are automatically created when new coordinates are defined for their atoms.
 * Integration with [Packmol] provides a way of creating complex molecular systems.
@@ -13,9 +13,10 @@ Its main distinguishing features are:
 
 The sections of this manual are:
 
-* [installation](@ref install): provides instructions for installing Playmol
-* [commands](@ref commands): provides descriptions of all playmol commands
-* [scripts](@ref scripts): provides sample playmol scripts.
+* [Installation](install.html): provides instructions for Playmol installation
+* [Playmol Basics](basics.html): explains the working logic of Playmol
+* [Commands](commands.html): describes all Playmol commands
+* [Sample Scripts](scripts.html): provides sample Playmol scripts
 
 @copyright GNU Public License.
 

@@ -1,5 +1,7 @@
 /*
 Language: Playmol
+Description: a script-based software for building molecular models
+Repository: https://github.com/atoms-ufrj/playmol
 Author: Charlles Abreu <abreu@eq.ufrj.br>
 Category: scientific
 */
@@ -9,7 +11,7 @@ function(hljs) {
   var VARIABLE = {
     variants: [
       { 
-        begin: /\$\{[a-zA-Z][a-zA-Z0-9_]*\}/,
+        begin: /\$\{[a-zA-Z]\w*\}/,
         returnBegin: true,
         contains: [
           {
@@ -23,36 +25,49 @@ function(hljs) {
       },
       {
         className: 'variable',
-        begin: /\$[a-zA-Z][a-zA-Z0-9_]*/
+        begin: /\$[a-zA-Z]\w*/
       }
     ]
   };
 
   var NUMBER = {
     className: 'number',
-    begin: '(?=\\b|\\+|\\-|\\.)(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*)(?:[de][+-]?\\d+)?\\b\\.?'
+    begin: /[-+]?[0-9]*\.?[0-9]+([dDeE][-+]?[0-9]+)?/
   };
 
   var KEYWORDS = {
     keyword:
       'define as for from in to downto next if then else endif atom_type mass ' +
       'bond_type angle_type dihedral_type improper_type atom charge bond link ' +
-      'build align include reset clean_types shell aspect ' +
-      'packmol tolerance seed retry nloops fix copy pack',
+      'build align include shell aspect packmol tolerance seed retry nloops ' +
+      'fix copy pack',
     built_in:
-      'not abs exp log ln sqrt sinh cosh tanh sin cos tan asin acos atan int nint ceil floor'
+      'not abs exp log ln sqrt sinh cosh tanh sin cos tan asin acos atan ' +
+      'int nint ceil floor'
   };
 
-  var EXTRA_KEYWORDS = {
+  var SPECIAL_KEYWORDS = {
     className: 'keyword',
     variants: [
-      { begin: /^\s*box\s+(lengths|density|volume|angles)\b/ },
-      { begin: /^\s*write\s+(playmol|lammps|summary|xyz|lammpstrj)\b/ },
-      { begin: /\s+action\s+(execute|setup)\b/ },
-      { begin: /^\s*(pre|suf)fix\s+(atom|type)s(\s+none)?\b/ },
-      { begin: /^\s*improper(\s+search)?\b/ },
-      { begin: /^\s*extra\s+(bond|angle|dihedral)\b/ },
-      { begin: /^\s*quit(\s+all)?\b/ }
+      { begin: /\bbox\s+(lengths|density|volume|angles)\b/ },
+      { begin: /\bwrite\s+(playmol|lammps|summary|xyz|lammpstrj)\b/ },
+      { begin: /\baction\s+(execute|setup)\b/ },
+      { begin: /\b(pre|suf)fix\s+(atom|type)s(\s+none)?\b/ },
+      { begin: /\bimproper(\s+search)?\b/ },
+      { begin: /\bextra\s+(bond|angle|dihedral)\b/ },
+      { begin: /\bquit(\s+all)?\b/ },
+      { begin: /\breset\s+all/ },
+      { begin: /\breset(\s+((bond|angle|dihedral|improper)_types|atoms|charges|bonds|impropers|xyz|packmol))+/ }
+    ]
+  };
+
+  var FILE_NAMES = {
+    className: 'string',
+    variants: [
+      { begin: /[^\s]*\.xyz\b/ },
+      { begin: /[^\s]*\.(p|play)?mol\b/ },
+      { begin: /[^\s]*\.(l(mp|ammps)_)?data\b/ },
+      { begin: /[^\s]*\.l(mp|ammps|ammpstrj)\b/ }
     ]
   };
 
@@ -63,9 +78,10 @@ function(hljs) {
       hljs.inherit(hljs.APOS_STRING_MODE, {className: 'string', relevance: 0}),
       hljs.inherit(hljs.QUOTE_STRING_MODE, {className: 'string', relevance: 0}),
       hljs.COMMENT('#', '$', {relevance: 0}),
-      NUMBER,
+      hljs.C_NUMBER_MODE,
       VARIABLE,
-      EXTRA_KEYWORDS
+      SPECIAL_KEYWORDS,
+      FILE_NAMES
     ]
   };
 }
