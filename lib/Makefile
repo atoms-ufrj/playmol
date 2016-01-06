@@ -1,8 +1,8 @@
-VERSION = 14.072
+VERSION = 15.287
 
 all:
 	tar -zxvf packmol-$(VERSION).tar.gz
-	cd packmol && patch < ../packmol.patch && make && make lib
+	cd packmol && sed -i 's/\r//g' *.f90 && patch < ../packmol.patch && make && make lib
 	mv packmol/libpackmol.a ./
 
 clean:

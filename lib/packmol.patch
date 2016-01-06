@@ -1,391 +1,465 @@
-diff -rupN original/initial.f packmol/initial.f
---- original/initial.f	2013-04-19 14:59:08.000000000 -0300
-+++ packmol/initial.f	2015-03-24 19:04:24.786881897 -0300
-@@ -15,7 +15,7 @@ c
+diff -wrupN original/initial.f90 packmol/initial.f90
+--- original/initial.f90	2015-06-27 14:25:55.000000000 -0300
++++ packmol/initial.f90	2016-01-05 17:40:24.704862702 -0200
+@@ -15,7 +15,7 @@
  
-       subroutine initial(isem,randini,x,n,ntfix,fix,
-      +                   moldy,chkgrad,nloop,discale,precision,sidemax,
--     +                   movefrac,check)
-+     +                   movefrac,check,stopped)
+ subroutine initial(isem,randini,x,n,ntfix,fix,&
+                    moldy,chkgrad,nloop,discale,precision,sidemax,&
+-                   movefrac,movebadrandom,check)
++                   movefrac,movebadrandom,check,quit)
  
-       implicit none
-       include 'sizes.i'
-@@ -32,10 +32,11 @@ c
-       parameter(twopi = 2.d0 * 3.1415925655d0)
+   use sizes
+   use molpa
+@@ -33,7 +33,9 @@ subroutine initial(isem,randini,x,n,ntfi
       
-       logical fix, randini, moldy, chkgrad, hasfixed(nbp,nbp,nbp),
--     +        overlap, movebadprint, hasbad, check
-+     +        overlap, movebadprint, hasbad, check, stopped
- 
- c We need to initialize the move logical variable
- 
-+      stopped = .false.
-       move = .false.
- 
- c Default status of the function evaluation
-@@ -175,7 +176,8 @@ c Performing some steps of optimization
-      +               ') was achieved.' 
-           write(*,*) '  You may try increasing it with the',
-      +               ' nloop keyword, as in: nloop 1000 '
--        stop
-+        stopped = .true.
-+        return
-       end if
- 
- c Rescaling sizemin and sizemax in order to build the patch of boxes
-diff -rupN original/io.f packmol/io.f
---- original/io.f	2013-08-31 07:46:31.000000000 -0300
-+++ packmol/io.f	2015-03-24 19:02:56.206878225 -0300
-@@ -14,7 +14,7 @@ c
- c
- c
- 
--      subroutine getinp(dism,precision,sidemax,
-+      subroutine getinp(inp,dism,precision,sidemax,
-      +                  ntype,nlines,nrest,
-      +                  natoms,idfirst,nconnect,maxcon,nmols,
-      +                  isem,
-@@ -36,7 +36,7 @@ c
-      +                 discale, movefrac, precision, add_sides_fix,
-      +                 sidemax
- 
--      integer i, j, k, ii, iarg, iline, nlines, idatom, iatom, 
-+      integer inp, i, j, k, ii, iarg, iline, nlines, idatom, iatom, 
-      +        in, lixo, irest, itype, itest, isem, imark, ntype, nrest, 
-      +        nmols(maxtype), natoms(maxtype), idfirst(maxtype),
-      +        ityperest(maxrest), irestline(maxrest), 
-@@ -47,7 +47,7 @@ c
-       character*200 inputfile(maxlines), keyword(maxlines,maxkeywords), 
-      +              record, blank, xyzout, name(maxtype)
-       character*80 pdbfile(maxtype)
--      character*3 ele(maxatom)
-+      character*30 ele(maxatom)
- 
-       logical tinker,pdb,xyz,moldy, error, ignore, randini, check, 
-      +        chkgrad, writebad, add_amber_ter, add_box_sides
-@@ -75,7 +75,7 @@ c Getting input lines from the input fil
-       write(*,*) ' Reading input file... (Control-C aborts)'
-       nlines = 0
-       do while (.true.)
--        read(5,1000,err=10,end=10) record
-+        read(inp,1000,err=10,end=10) record
- 
- c Checking if the line is empty or if it is a commentary
- 
-@@ -855,7 +855,7 @@ c
-       character chain
-       character*200 record
-       character*64 title
--      character*3 ele(maxatom)
-+      character*30 ele(maxatom)
-       character*200 name(maxtype)
-       character*80 pdbfile(maxtype)
-       character*200 xyzout
-@@ -903,7 +903,7 @@ c Write the output (xyz file)
-      +                        coor(idatom,3),
-      +                        v1,v2,v3) 
-                 write(30, 910) ele(idatom), (xcart(icart, k), k = 1, 3)
--910             format(tr2,a3,tr2,3(tr2,f14.6))
-+910             format(tr2,a,tr2,3(tr2,f14.6))
-               end do 
-               ilugan = ilugan + 3 
-               ilubar = ilubar + 3 
-@@ -1529,7 +1529,7 @@ c
-       integer nloop, isem
-       integer input_itype(maxtype)
- 
--      character*3 ele(maxatom)
-+      character*30 ele(maxatom)
-       character*80 pdbfile(maxtype) 
-       character*200 xyzout
-       character*200 name(maxtype)
-diff -rupN original/main.f packmol/main.f
---- original/main.f	1969-12-31 21:00:00.000000000 -0300
-+++ packmol/main.f	2015-03-24 19:02:56.210878225 -0300
-@@ -0,0 +1,4 @@
-+       program main
-+       integer stat
-+       call packmol( 5, stat )
-+       end program main
-diff -rupN original/Makefile packmol/Makefile
---- original/Makefile	2014-03-12 18:25:02.000000000 -0300
-+++ packmol/Makefile	2015-03-24 19:02:56.210878225 -0300
-@@ -1,4 +1,3 @@
--# configure generated Makefile
- #
- # Makefile for Packmol: Read the comments if you have some
- #                       problem while compiling.
-@@ -19,7 +18,7 @@
- # below to the path of your fortran compiler. The parallel version
- # must be compiled with gfortran version 4.2 or greater. 
- #
--FORTRAN = /usr/bin/gfortran
-+FORTRAN = gfortran
- #
- FORTRAN_PARALLEL = gfortran 
- #
-@@ -35,6 +34,7 @@ FORTRAN_PARALLEL = gfortran
- #
- # Change the flags of the compilation if you want:
- #
-+ 
- SERIALFLAGS = -O3 -ffast-math 
- #
- # Flags for the compilation of the parallel version
-@@ -49,14 +49,16 @@ PARALLELFLAGS = -O3 -ffast-math -fopenmp
- #
- # Get the default fortran compiler
- #
-+ 
- ifeq ($(FORTRAN),AUTO)
- FORTRAN = $(FC)
- endif 
- #
- # Files required
- #
--srcall = cenmass.f gencan.f initial.f io.f fgcommon.f packmolnew.f \
--         polartocart.f heuristics.f  
-+srclib = cenmass.f gencan.f initial.f io.f fgcommon.f packmolnew.f \
-+         polartocart.f heuristics.f
-+srcall = $(srclib) main.f
- srcserial = feasy.f geasy.f
- srcparallel = feasyparallel.f geasyparallel.f compindexes.f
- commons = Makefile sizes.i gencan.i molpa.i
-@@ -70,7 +72,20 @@ serial : $(srcall) $(srcserial) $(common
- 	@echo " ------------------------------------------------------ " 
- 	@$(FORTRAN) $(SERIALFLAGS) $(srcall) $(srcserial) -o packmol
- 	@chmod +x solvate.tcl 
--	@echo " Packmol succesfully built." 
-+	@echo " Packmol successfully built." 
-+	@echo " ------------------------------------------------------ " 
-+#
-+# Compiling the serial static library version
-+#
-+lib : $(srlib) $(srcserial) $(commons)
-+	@echo " ------------------------------------------------------ " 
-+	@echo " Compiling packmol with $(FORTRAN) " 
-+	@echo " Flags: $(SERIALFLAGS) " 
-+	@echo " ------------------------------------------------------ " 
-+	@$(FORTRAN) $(SERIALFLAGS) $(srclib) $(srcserial) -c
-+	@ar cr libpackmol.a $(srclib:.f=.o) $(srcserial:.f=.o)
-+	@chmod +x solvate.tcl 
-+	@echo " Packmol static library successfully built." 
- 	@echo " ------------------------------------------------------ " 
- #
- # Compiling the parallel version: under development.
-@@ -85,7 +100,7 @@ parallel : $(srcall) $(srcparallel) $(co
- 	@chmod +x ppackmol
- 	@chmod +x solvate.tcl 
- 	@echo " ------------------------------------------------------ " 
--	@echo " Packmol succesfully built. Paralell version available. " 
-+	@echo " Packmol successfully built. Paralell version available. " 
- 	@echo " ------------------------------------------------------ " 
- #
- # Compiling with flags for development
-@@ -98,5 +113,5 @@ devel : $(srcall) $(srcserial) $(srcpara
- 	@$(FORTRAN) -Wunused $(srcall) $(srcserial) -o packmol
- 	@chmod +x solvate.tcl 
- 	@echo " ------------------------------------------------------ " 
--	@echo " Packmol succesfully built. " 
-+	@echo " Packmol successfully built. " 
- 	@echo " ------------------------------------------------------ " 
-diff -rupN original/Makefile.default packmol/Makefile.default
---- original/Makefile.default	2009-05-11 14:49:06.000000000 -0300
-+++ packmol/Makefile.default	2015-03-24 19:02:56.210878225 -0300
-@@ -56,8 +56,9 @@ endif
- #
- # Files required
- #
--srcall = cenmass.f gencan.f initial.f io.f fgcommon.f packmolnew.f \
--         polartocart.f heuristics.f  
-+srclib = cenmass.f gencan.f initial.f io.f fgcommon.f packmolnew.f \
-+         polartocart.f heuristics.f
-+srcall = $(srclib) main.f
- srcserial = feasy.f geasy.f
- srcparallel = feasyparallel.f geasyparallel.f compindexes.f
- commons = Makefile sizes.i gencan.i molpa.i
-@@ -70,7 +71,21 @@ serial : $(srcall) $(srcserial) $(common
- 	@echo " Flags: $(SERIALFLAGS) " 
- 	@echo " ------------------------------------------------------ " 
- 	@$(FORTRAN) $(SERIALFLAGS) $(srcall) $(srcserial) -o packmol
--	@echo " Packmol succesfully built." 
-+	@chmod +x solvate.tcl 
-+	@echo " Packmol successfully built." 
-+	@echo " ------------------------------------------------------ " 
-+#
-+# Compiling the serial static library version
-+#
-+lib : $(srlib) $(srcserial) $(commons)
-+	@echo " ------------------------------------------------------ " 
-+	@echo " Compiling packmol with $(FORTRAN) " 
-+	@echo " Flags: $(SERIALFLAGS) " 
-+	@echo " ------------------------------------------------------ " 
-+	@$(FORTRAN) $(SERIALFLAGS) $(srclib) $(srcserial) -c
-+	@ar cr libpackmol.a $(srclib:.f=.o) $(srcserial:.f=.o)
-+	@chmod +x solvate.tcl 
-+	@echo " Packmol static library successfully built." 
- 	@echo " ------------------------------------------------------ " 
- #
- # Compiling the parallel version: under development.
-@@ -83,8 +98,9 @@ parallel : $(srcall) $(srcparallel) $(co
- 	@$(FORTRAN_PARALLEL) $(PARALLELFLAGS) $(srcall) $(srcparallel)\
-                            -o packmol
- 	@chmod +x ppackmol
-+	@chmod +x solvate.tcl 
- 	@echo " ------------------------------------------------------ " 
--	@echo " Packmol succesfully built. Paralell version available. " 
-+	@echo " Packmol successfully built. Paralell version available. " 
- 	@echo " ------------------------------------------------------ " 
- #
- # Compiling with flags for development
-@@ -95,6 +111,7 @@ devel : $(srcall) $(srcserial) $(srcpara
- 	@echo " Flags: -Wunused"
- 	@echo " ------------------------------------------------------ "
- 	@$(FORTRAN) -Wunused $(srcall) $(srcserial) -o packmol
-+	@chmod +x solvate.tcl 
- 	@echo " ------------------------------------------------------ " 
--	@echo " Packmol succesfully built. " 
-+	@echo " Packmol successfully built. " 
- 	@echo " ------------------------------------------------------ " 
-diff -rupN original/packmolnew.f packmol/packmolnew.f
---- original/packmolnew.f	2014-03-13 11:16:01.000000000 -0300
-+++ packmol/packmolnew.f	2015-03-24 19:06:25.294886893 -0300
-@@ -39,13 +39,23 @@ c http://www.ime.usp.br/~egbirgin/tango
- c
- c
- 
--      program packmol
-+      subroutine packmol( inp, stat )
+   logical :: fix, randini, moldy, chkgrad, &
+              hasfixed(0:nbp+1,0:nbp+1,0:nbp+1), &
+-             overlap, movebadprint, hasbad, check, movebadrandom
++             overlap, movebadprint, hasbad, check, movebadrandom, quit
 +
-+c     Returned stat values:
-+c
-+c     0 - Mission accomplished.
-+c     1 - Maximum loops achieved -> best solution written to output file
-+c     2 - Number of some fixed molecule is greater than one -> Aborted.
-+c     3 - Some molecule has no geometrical restriction defined -> Aborted.
-+c     4 - Total number of atoms greater than maxatom -> Aborted.
-+c     5 - Unable to put the molecules in the desired regions
++  quit = .false.
  
-       implicit none
-       include 'sizes.i'
-       include 'molpa.i'
-       include 'gencan.i'
+   ! We need to initialize the move logical variable
  
-+      integer inp, stat
-       integer irestline(maxrest)
-       integer linestrut(maxtype,2)
-       integer itype, nrest, irest, idatom, iatom
-@@ -83,13 +93,13 @@ c      integer iargc, narg, charl, write
-       character*200 record
-       character*200 name(maxtype)
-       character*80 pdbfile(maxtype), xyzfile
--      character*3 ele(maxatom)
-+      character*30 ele(maxatom)
-       character*200 xyzout        
+@@ -134,7 +136,8 @@ subroutine initial(isem,randini,x,n,ntfi
+       nboxes(i) = nb
+     end do
+     call compgrad(n,x)
+-    stop
++    quit = .true.
++    return
+   end if
  
-       logical fix,fixed(maxtype),fixtmp,randini,check,chkgrad
-       logical pdb,tinker,xyz,moldy,rests,writebad
-       logical add_amber_ter, add_box_sides
--      logical movebadprint, hasbad
-+      logical movebadprint, hasbad, stopped
-       logical thisisfixed(maxtype)
+   ! Performing some steps of optimization for the restrictions only
+@@ -176,7 +179,8 @@ subroutine initial(isem,randini,x,n,ntfi
+     end if
+       write(*,*) ' >The maximum number of cycles (',nloop,') was achieved.' 
+       write(*,*) '  You may try increasing it with the',' nloop keyword, as in: nloop 1000 '
+-    stop
++    quit = .true.
++    return
+   end if
  
- c Start time computation
-@@ -126,7 +136,7 @@ c Printing title
+   ! Rescaling sizemin and sizemax in order to build the patch of boxes
+diff -wrupN original/io.f90 packmol/io.f90
+--- original/io.f90	2015-10-14 06:48:07.000000000 -0300
++++ packmol/io.f90	2016-01-05 17:40:24.708862702 -0200
+@@ -14,7 +14,7 @@
+ !
+ !
  
- c Reading input file
+-subroutine getinp(dism,precision,sidemax,&
++subroutine getinp(unit,dism,precision,sidemax,&
+                   ntype,nlines,nrest,&
+                   natoms,idfirst,nconnect,maxcon,nmols,&
+                   isem,&
+@@ -36,7 +36,7 @@ subroutine getinp(dism,precision,sidemax
+                       discale, movefrac, precision, add_sides_fix,&
+                       sidemax
  
--      call getinp(dism,precision,sidemax,
-+      call getinp(inp,dism,precision,sidemax,
-      +            ntype,nlines,nrest,
-      +            natoms,idfirst,nconnect,maxcon,nmols,
-      +            isem,
-@@ -157,7 +167,8 @@ c Computing the total number of atoms
-       if(ntotat.gt.maxatom) then
-         write(*,*)' ERROR: Total number of atoms greater than maxatom.'
-         write(*,*)'        Change the maxatom (sizes.i file) '
--        stop
-+        stat = 4
-+        return
+-  integer :: i, j, k, ii, iarg, iline, nlines, idatom, iatom,&
++  integer :: unit, i, j, k, ii, iarg, iline, nlines, idatom, iatom,&
+              in, lixo, irest, itype, itest, isem, imark, ntype, nrest,&
+              nmols(maxtype), natoms(maxtype), idfirst(maxtype),&
+              ityperest(maxrest), irestline(maxrest),&
+@@ -47,7 +47,7 @@ subroutine getinp(dism,precision,sidemax
+   character(len=200) :: inputfile(maxlines), keyword(maxlines,maxkeywords),&
+                         record, blank, xyzout, name(maxtype)
+   character(len=80) :: pdbfile(maxtype)
+-  character(len=3) :: ele(maxatom)
++  character(len=30) :: ele(maxatom)
+ 
+   logical :: tinker,pdb,xyz,moldy, ignore, randini, check, &
+              chkgrad, writebad, add_amber_ter, add_box_sides, &
+@@ -76,7 +76,7 @@ subroutine getinp(dism,precision,sidemax
+   write(*,*) ' Reading input file... (Control-C aborts)'
+   nlines = 0
+   do while (.true.)
+-    read(5,"( a200 )",iostat=ioerr) record
++    read(unit,"( a200 )",iostat=ioerr) record
+     if ( ioerr /= 0 ) exit
+ 
+     ! Checking if the line is empty or if it is a commentary
+@@ -879,7 +879,7 @@ subroutine output(x,amass,&
+   character :: chain, even_chain, odd_chain
+   character(len=200) :: record
+   character(len=64) :: title
+-  character(len=3) :: ele(maxatom)
++  character(len=30) :: efmt, ele(maxatom)
+   character(len=200) :: name(maxtype)
+   character(len=80) :: pdbfile(maxtype), pdb_atom_line, pdb_hetatm_line,&
+                        tinker_atom_line
+@@ -897,6 +897,8 @@ subroutine output(x,amass,&
+   ! Write the output (xyz file)
+ 
+   if(xyz) then
++    write(efmt,"(I2)") maxval(len_trim(ele))
++    efmt = "(tr2,a"//trim(adjustl(efmt))//",tr2,3(tr2,f14.6))"
+     open(30,file=xyzout,status='unknown') 
+     write(30,*) ntotat
+     write(30,*) title 
+@@ -925,7 +927,7 @@ subroutine output(x,amass,&
+                           coor(idatom,1),coor(idatom,2),&
+                           coor(idatom,3),&
+                           v1,v2,v3) 
+-            write(30,"( tr2,a3,tr2,3(tr2,f14.6) )") ele(idatom), (xcart(icart, k), k = 1, 3)
++            write(30,efmt) trim(ele(idatom)), (xcart(icart, k), k = 1, 3)
+           end do 
+           ilugan = ilugan + 3 
+           ilubar = ilubar + 3 
+@@ -935,7 +937,7 @@ subroutine output(x,amass,&
+         idatom = idfirst(i_fixed) - 1
+         do iatom = 1, natoms(i_fixed)
+           idatom = idatom + 1
+-          write(30,"( tr2,a3,tr2,3(tr2,f14.6) )") ele(idatom), (coor(idatom,k),k=1,3)
++          write(30,efmt) trim(ele(idatom)), (coor(idatom,k),k=1,3)
+         end do
        end if
+     end do
+@@ -1541,7 +1543,7 @@ subroutine checkpoint(n,x,amass,&
+   integer :: nloop, isem
+   integer :: input_itype(maxtype)
  
- c Put fixed molecules in the specified position
-@@ -205,12 +216,13 @@ c Compute rotation matrix from euler ang
-               if(nmols(itype).gt.1) then
-                 write(*,*)' ERROR: You cannot set number > 1',
-      +                    ' for fixed molecules. '
--                stop
-+                stat = 2
-+                return
-               end if
-             end if
-           end do
-         end if
--      end do 
-+      end do
+-  character(len=3) :: ele(maxatom)
++  character(len=30) :: ele(maxatom)
+   character(len=80) :: pdbfile(maxtype) 
+   character(len=200) :: xyzout
+   character(len=200) :: name(maxtype)
+Binary files original/libpackmol.a and packmol/libpackmol.a differ
+diff -wrupN original/main.f90 packmol/main.f90
+--- original/main.f90	1969-12-31 21:00:00.000000000 -0300
++++ packmol/main.f90	2016-01-05 17:40:24.708862702 -0200
+@@ -0,0 +1,4 @@
++program main
++integer :: stat
++call packmol( 5, stat )
++end program main
+diff -wrupN original/Makefile packmol/Makefile
+--- original/Makefile	2015-06-27 14:25:50.000000000 -0300
++++ packmol/Makefile	2016-01-05 18:18:18.452798039 -0200
+@@ -14,6 +14,10 @@
+ #
+ # The default compilation compiles only the serial version of packmol.
+ #
++# If you want to compile the serial static library version, type
++#
++#          make lib
++#
+ # If you want to compile with some specific fortran compiler, or
+ # to enable the parallel implementation, you must change the line
+ # below to the path of your fortran compiler. The parallel version
+@@ -52,7 +56,7 @@ endif
+ #
+ # Files required
+ #
+-oall = cenmass.o \
++olib = cenmass.o \
+        gencan.o \
+        pgencan.o \
+        initial.o \
+@@ -64,6 +68,7 @@ oall = cenmass.o \
+        sizes.o \
+        usegencan.o \
+        molpa.o
++oall = $(olib) main.o
+ oserial = feasy.o geasy.o
+ oparallel = feasyparallel.o geasyparallel.o compindexes.o
+ #
+@@ -75,11 +80,22 @@ serial : $(oall) $(oserial)
+ 	@echo " Flags: $(FLAGS) " 
+ 	@echo " ------------------------------------------------------ " 
+ 	@$(FORTRAN) -o packmol $(oall) $(oserial) $(FLAGS) 
+-	@\rm -f *.mod *.o
+ 	@echo " ------------------------------------------------------ " 
+ 	@echo " Packmol succesfully built." 
+ 	@echo " ------------------------------------------------------ " 
+ #
++# Linking the serial static library version
++#
++lib : $(olib) $(oserial)
++	@echo " ------------------------------------------------------ " 
++	@echo " Compiling packmol with $(FORTRAN) " 
++	@echo " Flags: $(FLAGS) " 
++	@echo " ------------------------------------------------------ " 
++	@ar cr libpackmol.a $(olib) $(oserial)
++	@echo " ------------------------------------------------------ " 
++	@echo " Packmol succesfully built. Static library available. " 
++	@echo " ------------------------------------------------------ " 
++#
+ # Linking the parallel version
+ #
+ parallel : $(oall) $(oparallel) ppackmol
+@@ -89,7 +105,6 @@ parallel : $(oall) $(oparallel) ppackmol
+ 	@echo " ------------------------------------------------------ "
+ 	@$(FORTRAN) -o packmol $(oall) $(oparallel) $(FLAGS) $(OPENMPFLAGS) 
+ 	@chmod +x ppackmol
+-	@\rm -f *.mod *.o
+ 	@echo " ------------------------------------------------------ " 
+ 	@echo " Packmol succesfully built. Paralell version available. " 
+ 	@echo " ------------------------------------------------------ " 
+@@ -118,6 +133,8 @@ usegencan.o : usegencan.f90
+ #
+ # Code compiled only for all versions
+ #
++main.o : main.f90 packmol.o $(modules)
++	@$(FORTRAN) $(FLAGS) -c main.f90
+ cenmass.o : cenmass.f90 $(modules)
+ 	@$(FORTRAN) $(FLAGS) -c cenmass.f90
+ initial.o : initial.f90 $(modules)
+diff -wrupN original/Makefile.default packmol/Makefile.default
+--- original/Makefile.default	2015-06-27 14:25:56.000000000 -0300
++++ packmol/Makefile.default	2016-01-05 18:19:10.224796567 -0200
+@@ -13,6 +13,10 @@
+ #
+ # The default compilation compiles only the serial version of packmol.
+ #
++# If you want to compile the serial static library version, type
++#
++#          make lib
++#
+ # If you want to compile with some specific fortran compiler, or
+ # to enable the parallel implementation, you must change the line
+ # below to the path of your fortran compiler. The parallel version
+@@ -51,7 +55,7 @@ endif
+ #
+ # Files required
+ #
+-oall = cenmass.o \
++olib = cenmass.o \
+        gencan.o \
+        pgencan.o \
+        initial.o \
+@@ -63,6 +67,7 @@ oall = cenmass.o \
+        sizes.o \
+        usegencan.o \
+        molpa.o
++oall = $(olib) main.o
+ oserial = feasy.o geasy.o
+ oparallel = feasyparallel.o geasyparallel.o compindexes.o
  
- c Reseting parameters for removing the fixed molecules
+@@ -75,11 +80,22 @@ serial : $(oall) $(oserial)
+ 	@echo " Flags: $(FLAGS) " 
+ 	@echo " ------------------------------------------------------ " 
+ 	@$(FORTRAN) -o packmol $(oall) $(oserial) $(FLAGS) 
+-	@\rm -f *.mod *.o
+ 	@echo " ------------------------------------------------------ " 
+ 	@echo " Packmol succesfully built." 
+ 	@echo " ------------------------------------------------------ " 
+ #
++# Linking the serial static library version
++#
++lib : $(olib) $(oserial)
++	@echo " ------------------------------------------------------ " 
++	@echo " Compiling packmol with $(FORTRAN) " 
++	@echo " Flags: $(FLAGS) " 
++	@echo " ------------------------------------------------------ " 
++	@ar cr libpackmol.a $(olib) $(oserial)
++	@echo " ------------------------------------------------------ " 
++	@echo " Packmol succesfully built. Static library available. " 
++	@echo " ------------------------------------------------------ " 
++#
+ # Linking the parallel version
+ #
+ parallel : $(oall) $(oparallel) ppackmol
+@@ -89,7 +105,6 @@ parallel : $(oall) $(oparallel) ppackmol
+ 	@echo " ------------------------------------------------------ "
+ 	@$(FORTRAN) -o packmol $(oall) $(oparallel) $(FLAGS) $(OPENMPFLAGS) 
+ 	@chmod +x ppackmol
+-	@\rm -f *.mod *.o
+ 	@echo " ------------------------------------------------------ " 
+ 	@echo " Packmol succesfully built. Paralell version available. " 
+ 	@echo " ------------------------------------------------------ " 
+@@ -126,6 +141,9 @@ usegencan.o : usegencan.f90
+ # Code compiled only for all versions
+ #
  
-@@ -362,7 +374,8 @@ c Setting the array that contains the re
-           if(.not.rests) then
-             write(*,*) ' ERROR: Some molecule has no geometrical',
-      +                 ' restriction defined: nothing to do.'
++main.o : main.f90 packmol.o $(modules)
++	@$(FORTRAN) $(FLAGS) -c main.f90
++
+ cenmass.o : cenmass.f90 $(modules)
+ 	@$(FORTRAN) $(FLAGS) -c cenmass.f90
+ 
+Binary files original/packmol and packmol/packmol differ
+diff -wrupN original/packmol.f90 packmol/packmol.f90
+--- original/packmol.f90	2015-10-14 06:48:30.000000000 -0300
++++ packmol/packmol.f90	2016-01-05 17:40:24.708862702 -0200
+@@ -39,13 +39,28 @@
+ !
+ !
+ 
+-program packmol
++subroutine packmol( unit, stat )
++
++!     Returned stat values:
++!
++!     0 - Mission accomplished.
++!     1 - Maximum loops achieved -> best solution written to output file.
++!     2 - Analytical and finite-difference gradients comparison carried out.
++!     3 - Unable to put the molecules in the desired regions.
++!     4 - Number of some fixed molecule is greater than one -> Aborted.
++!     5 - Some molecule has no geometrical restriction defined -> Aborted.
++!     6 - Total number of atoms greater than maxatom -> Aborted.
++!     7 - Could not read radius from keyword -> Aborted.
++!     8 - Atom selection with index greater than number of atoms in structure -> Aborted.
+ 
+   use sizes
+   use molpa
+   use usegencan
+   implicit none
+ 
++  integer, intent(in)  :: unit
++  integer, intent(out) :: stat
++
+   integer :: irestline(maxrest)
+   integer :: linestrut(maxtype,2)
+   integer :: itype, nrest, irest, idatom, iatom
+@@ -81,14 +96,14 @@ program packmol
+   character(len=200) :: record
+   character(len=200) :: name(maxtype)
+   character(len=80) :: pdbfile(maxtype), xyzfile
+-  character(len=3) :: ele(maxatom)
++  character(len=30) :: ele(maxatom)
+   character(len=200) :: xyzout        
+   character(len=80) :: dash1_line
+ 
+   logical :: fix,fixed(maxtype),fixtmp,randini,check,chkgrad
+   logical :: pdb,tinker,xyz,moldy,rests,writebad,writexyz
+   logical :: add_amber_ter, add_box_sides
+-  logical :: movebadprint, hasbad, movebadrandom
++  logical :: movebadprint, hasbad, movebadrandom, quit
+   logical :: thisisfixed(maxtype), changechains(maxtype)
+ 
+   ! Start time computation
+@@ -108,7 +123,7 @@ program packmol
+       
+   ! Reading input file
+ 
+-  call getinp(dism,precision,sidemax,&
++  call getinp(unit,dism,precision,sidemax,&
+               ntype,nlines,nrest,&
+               natoms,idfirst,nconnect,maxcon,nmols,&
+               isem,&
+@@ -137,7 +152,8 @@ program packmol
+   if(ntotat.gt.maxatom) then
+     write(*,*)' ERROR: Total number of atoms greater than maxatom.'
+     write(*,*)'        Change the maxatom (sizes.f90 file) '
+-    stop
++    stat = 6
++    return
+   end if
+ 
+   ! Setting the vector that contains the default tolerance
+@@ -170,7 +186,8 @@ program packmol
+           read(keyword(iline,2),*,iostat=ioerr) rad
+           if ( ioerr /= 0 ) then
+             write(*,*) ' ERROR: Could not read radius from keyword. '
 -            stop
-+            stat = 3
++            stat = 7
 +            return
            end if
-         end do
+           iicart = icart
+           do imol = 1, nmols(itype)
+@@ -210,7 +227,8 @@ program packmol
+           read(keyword(iline,2),*,iostat=ioerr) rad
+           if ( ioerr /= 0 ) then
+             write(*,*) ' ERROR: Could not read radius from keyword. '
+-            stop
++            stat = 7
++            return
+           end if
+           ival = 2
+           do
+@@ -219,7 +237,8 @@ program packmol
+             if ( iat > natoms(itype) ) then
+               write(*,*) ' ERROR: atom selection with index greater than number of '
+               write(*,*) '        atoms in structure ', itype
+-              stop
++              stat = 8
++              return
+             end if
+             radius(icart+iat) = rad
+             ival = ival + 1
+@@ -283,7 +302,8 @@ program packmol
+           if(nmols(itype).gt.1) then
+             write(*,*)' ERROR: You cannot set number > 1',&
+                       ' for fixed molecules. '
+-            stop
++            stat = 4
++            return
+           end if
+         end if
        end do
-@@ -436,7 +449,8 @@ c If there are no variables (only fixed
-         write(*,*) ' The output file contains the fixed molecule '
-         write(*,*) ' in the desired position. '
-         write(*,908)
+@@ -441,7 +461,8 @@ program packmol
+       if(.not.rests) then
+         write(*,*) ' ERROR: Some molecule has no geometrical',&
+                    ' restriction defined: nothing to do.'
 -        stop
-+        stat = 0
-+        return
-       end if
-   
- c
-@@ -445,7 +459,11 @@ c
- 
-       call initial(isem,randini,x,n,ntfix,fix,moldy,
-      +             chkgrad,nloop,discale,precision,sidemax,
--     +             movefrac,check)
-+     +             movefrac,check,stopped)
-+      if (stopped) then
 +        stat = 5
 +        return
-+      end if
+       end if
+     end do
+   end do
+@@ -515,7 +536,8 @@ program packmol
+     write(*,*) ' The output file contains the fixed molecule '
+     write(*,*) ' in the desired position. '
+     write(*,dash1_line)
+-    stop
++    stat = 0
++    return
+   end if
+   
+   !
+@@ -524,7 +546,16 @@ program packmol
  
- c Computing the energy at the initial point
+   call initial(isem,randini,x,n,ntfix,fix,moldy,&
+                chkgrad,nloop,discale,precision,sidemax,&
+-               movefrac,movebadrandom,check)
++               movefrac,movebadrandom,check,quit)
++
++  if (quit) then
++    if (chkgrad) then
++      stat = 2
++    else
++      stat = 3
++    end if
++    return
++  end if
  
-@@ -470,7 +488,8 @@ c Computing the energy at the initial po
-      +              input_itype,thisisfixed)
-         write(*,*) ' Wrote initial point to output file: ',
-      +             xyzout(1:charl(xyzout)) 
+   ! Computing the energy at the initial point
+ 
+@@ -551,7 +582,8 @@ program packmol
+                 input_itype,thisisfixed,changechains)
+     write(*,*) ' Wrote initial point to output file: ',&
+                xyzout(1:charl(xyzout)) 
+-    stop
++    stat = 0
++    return
+   end if
+ 
+   !
+@@ -677,7 +709,8 @@ program packmol
+                         movefrac,movebadrandom,precision,isem,resnumbers,&
+                         add_amber_ter,add_box_sides,add_sides_fix,&
+                         input_itype,thisisfixed,changechains)
 -        stop
-+        stat = 0
++        stat = 1
 +        return
        end if
  
- c
-@@ -589,7 +608,8 @@ c Moving bad molecules
-      +                    movefrac,precision,isem,resnumbers,
-      +                    add_amber_ter,add_box_sides,add_sides_fix,
-      +                    input_itype,thisisfixed)
--          stop
-+          stat = 1
+       write(*,"( /, 17('-'),' Starting GENCAN loop(',i4,') ',17('-'),/&
+@@ -802,7 +835,8 @@ program packmol
+        ' Journal of Computational Chemistry, 30:2157-2164,2009.',&
+             /,/,62('#'),/ )" ) bestf, fdist, frest
+           write(*,*) '  Running time: ', etime(tarray) - time0,' seconds. ' 
+-          stop 
++          stat = 0
 +          return
          end if
+       end if
  
-         write(*,905) loop, dism   
-@@ -705,7 +725,8 @@ c When the solution is found, print succ
-             write(*,909) bestf, dsqrt(fdist), frest
-             write(*,*) '  Running time: ', 
-      +                    etime(tarray) - time0,' seconds. ' 
--            stop 
-+            stat = 0
-+            return
-           end if
-         end if
+@@ -825,4 +859,4 @@ program packmol
  
+   end do main
+ 
+-end program packmol
++end subroutine packmol

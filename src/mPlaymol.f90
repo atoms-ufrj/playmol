@@ -17,6 +17,9 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
+! TO DO: redefine the command "align" as an option of the command packmol.
+! TO DO: in the "packmol" command , let the molecule be defined by one of its atoms.
+
 module mPlaymol
 
 use mGlobal
@@ -38,6 +41,7 @@ type tPlaymol
   type(StrucList) :: improper_type_list = StrucList( name = "improper type", number = 4, & 
                                                      two_way = .false. )
   type(StrucList) :: mass_list = StrucList( name = "mass", number = 1 )
+  type(StrucList) :: diameter_list = StrucList( name = "diameter", number = 1 )
   type(StrucList) :: atom_list = StrucList( name = "atom", number = 1 )
   type(StrucList) :: charge_list = StrucList( name = "charge", number = 1 )
   type(StrucList) :: bond_list = StrucList( name = "bond", number = 2 )
@@ -92,6 +96,7 @@ contains
         case ("dihedral_type"); call dihedral_type_command
         case ("improper_type"); call improper_type_command
         case ("mass"); call mass_command
+        case ("diameter"); call diameter_command
         case ("atom"); call atom_command
         case ("charge"); call charge_command
         case ("bond"); call bond_command
@@ -209,8 +214,16 @@ contains
       end subroutine improper_type_command
       !---------------------------------------------------------------------------------------------
       subroutine mass_command
+        if (narg /= 3) call error( "invalid mass command" )
         call me % mass_list % add( narg-1, arg(2:narg) )
+        if (str2real(arg(3)) < 0.0_rb) call error( "invalid mass value" )
       end subroutine mass_command
+      !---------------------------------------------------------------------------------------------
+      subroutine diameter_command
+        if (narg /= 3) call error( "invalid diameter command" )
+        call me % diameter_list % add( narg-1, arg(2:narg) )
+        if (str2real(arg(3)) < 0.0_rb) call error( "invalid diameter value" )
+      end subroutine diameter_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_command
         type(Struc), pointer :: type_ptr

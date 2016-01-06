@@ -4,7 +4,8 @@ Sample Scripts    {#scripts}
 TIP3P Water
 -----------
 
-The following script builds a simulation box with 1 g/cm³ density and 500 water molecules, and creates a LAMMPS data file to be used for an MD simulation with the TIP3P model parameters:
+The following script builds a simulation box with 1 g/cm³ density and 500 water molecules, and
+creates a LAMMPS data file to be used for an MD simulation with the TIP3P model parameters:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Modified TIP3P model: Price and Brooks, J Chem Phys, 121, 10096 (2004).
@@ -16,7 +17,7 @@ mass		H	1.008
 mass		O	15.9994
 
 bond_type	H O  	450.0 0.9572
-angle_type	H O H	55.0 104.52
+angle_type	H O H	 55.0 104.52
 
 atom		H1	H
 atom		O	O

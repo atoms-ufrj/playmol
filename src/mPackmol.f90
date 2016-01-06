@@ -31,7 +31,7 @@ character(sl), parameter :: logfile = "packmol.log"
 integer  :: seed = 1234
 integer  :: nloops = 50
 real(rb) :: change = 1.0_rb
-real(rb) :: tolerance = 1.0_rb
+real(rb) :: tolerance = 2.0_rb
 
 interface
   subroutine packmol( inp, stat )

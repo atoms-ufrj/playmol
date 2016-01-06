@@ -38,9 +38,9 @@ function(hljs) {
   var KEYWORDS = {
     keyword:
       'define as for from in to downto next if then else endif atom_type mass ' +
-      'bond_type angle_type dihedral_type improper_type atom charge bond link ' +
-      'build align include shell aspect packmol tolerance seed retry nloops ' +
-      'fix copy pack',
+      'diameter bond_type angle_type dihedral_type improper_type atom charge ' +
+      'bond link build align include shell aspect packmol tolerance seed retry ' +
+      'nloops fix copy pack diameter',
     built_in:
       'not abs exp log ln sqrt sinh cosh tanh sin cos tan asin acos atan ' +
       'int nint ceil floor'
@@ -64,10 +64,10 @@ function(hljs) {
   var FILE_NAMES = {
     className: 'string',
     variants: [
-      { begin: /[^\s]*\.xyz\b/ },
-      { begin: /[^\s]*\.(p|play)?mol\b/ },
-      { begin: /[^\s]*\.(l(mp|ammps)_)?data\b/ },
-      { begin: /[^\s]*\.l(mp|ammps|ammpstrj)\b/ }
+      { begin: /\b[^\$]+\.xyz\b/ },
+      { begin: /\b[^\$]+\.(p|play)?mol\b/ },
+      { begin: /\b[^\$]+\.(l(mp|ammps)_)?data\b/ },
+      { begin: /\b[^\$]+\.l(mp|ammps|ammpstrj)\b/ }
     ]
   };
 

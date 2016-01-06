@@ -49,15 +49,16 @@
     </context>
 
     <context id="default-files" style-ref="string">
-      <keyword>[\w_/.]+\.xyz</keyword>
-      <keyword>[\w_/.]+\.(p|play)?mol</keyword>
-      <keyword>[\w_/.]+\.(lmp|lammps)?_?data</keyword>
-      <keyword>[\w_/.]+\.l(mp|ammps|ammpstrj)</keyword>
+      <keyword>[^\$]+\.xyz</keyword>
+      <keyword>[^\$]+\.(p|play)?mol</keyword>
+      <keyword>[^\$]+\.(l(mp|ammps)_)?data</keyword>
+      <keyword>[^\$]+\.l(mp|ammps|ammpstrj)</keyword>
     </context>
 
     <context id="commands" style-ref="keyword">
       <keyword>atom_type</keyword>
       <keyword>mass</keyword>
+      <keyword>diameter</keyword>
       <keyword>bond_type</keyword>
       <keyword>angle_type</keyword>
       <keyword>dihedral_type</keyword>
