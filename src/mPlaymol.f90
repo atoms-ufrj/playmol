@@ -32,8 +32,10 @@ implicit none
 
 type tPlaymol
   integer  :: nmol = 0
-  type(tBox) :: box
+  type(tBox)      :: box
+  type(tPackmol)  :: packmol
   type(tCodeFlow) :: code_flow
+
   type(StrucList) :: atom_type_list = StrucList( name = "atom type", number = 1 )
   type(StrucList) :: bond_type_list = StrucList( name = "bond type", number = 2 )
   type(StrucList) :: angle_type_list = StrucList( name = "angle type", number = 3 )
@@ -54,7 +56,6 @@ type tPlaymol
   type(StrucList) :: improper_list = StrucList( name = "improper", number = 4 )
   type(StrucList) :: molecule_list = StrucList( name = "molecule", number = 1 )
   type(StrucList) :: coordinate_list = StrucList( name = "coordinate", number = 1 )
-  type(StrucList) :: packmol_list = StrucList( name = "packmol", number = 1 )
   contains
     procedure :: read => tPlaymol_Read
     procedure :: write => tPlaymol_write
@@ -251,7 +252,9 @@ contains
       end subroutine atom_command
       !---------------------------------------------------------------------------------------------
       subroutine charge_command
-        call me % charge_list % add( narg-1, arg(2:narg) )
+        if (narg /= 3) call error( "invalid charge command" )
+        call me % charge_list % add( narg-1, arg(2:3) )
+        if (.not.is_real(arg(3))) call error( "invalid charge value" )
       end subroutine charge_command
       !---------------------------------------------------------------------------------------------
       subroutine add_bond( atom )
@@ -423,7 +426,7 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine write_command
         integer :: unit
-        if ((narg < 2).or.(narg > 4)) call error( "invalid write command" )
+        if ((narg < 2).or.(narg > 3)) call error( "invalid write command" )
         if (.not.any(arg(2) == [character(9)::"playmol","lammps","summary","xyz","lammpstrj"]) ) then
           call error( "invalid write command" )
         end if
@@ -470,7 +473,7 @@ contains
         if (any(lists == 12)) call me % improper_list % destroy
         if (any(lists == 13)) call me % molecule_list % destroy
         if (any(lists == 14)) call me % coordinate_list % destroy
-        if (any(lists == 15)) call me % packmol_list % destroy
+        if (any(lists == 15)) call me % packmol % list % destroy
       end subroutine reset_lists
       !---------------------------------------------------------------------------------------------
       subroutine reset_command
@@ -486,7 +489,7 @@ contains
           case ("improper_types"); call me % improper_type_list % destroy
           case ("impropers"); call me % improper_list % destroy
           case ("xyz"); call me % coordinate_list % destroy
-          case ("packmol"); call me % packmol_list % destroy
+          case ("packmol"); call me % packmol % list % destroy
           case default; call error( "invalid reset command" )
         end select
       end subroutine reset_command
@@ -511,27 +514,29 @@ contains
             case ("seed")
               if (narg < iarg+1) call error( "invalid packmol command" )
               call writeln( "Setting packmol seed to", arg(iarg+1) )
-              seed = str2int(arg(iarg+1))
+              me % packmol % seed = str2int(arg(iarg+1))
               iarg = iarg + 2
 
             case ("tolerance")
               if (narg < iarg+1) call error( "invalid packmol command" )
               call writeln( "Setting packmol tolerance to", arg(iarg+1) )
-              tolerance = str2real(arg(iarg+1))
+              me % packmol % tolerance = str2real(arg(iarg+1))
+              if (me % packmol % tolerance < 0.0_rb) call error( "invalid parameter value" )
               iarg = iarg + 2
 
             case ("nloops")
               if (narg < iarg+1) call error( "invalid packmol command" )
               call writeln( "Setting packmol nloops parameter to", arg(iarg+1) )
-              nloops = str2int(arg(iarg+1))
-              if (nloops <= 0) call error( "invalid parameter value" )
+              me % packmol % nloops = str2int(arg(iarg+1))
+              if (me % packmol % nloops <= 0) call error( "invalid parameter value" )
               iarg = iarg + 2
 
             case ("retry")
               if (narg < iarg+1) call error( "invalid packmol command" )
               call writeln( "Setting packmol retry parameter to", arg(iarg+1) )
-              change = str2real(arg(iarg+1))
-              if ((change <= 0.0_rb).or.(change > 1.0_rb)) call error( "invalid parameter value" )
+              me % packmol % change = str2real(arg(iarg+1))
+              if ((me % packmol % change <= 0.0_rb) .or. &
+                  (me % packmol % change > 1.0_rb)) call error( "invalid parameter value" )
               iarg = iarg + 2
 
             case ("fix","move","copy","pack")
@@ -541,7 +546,7 @@ contains
                 case ("copy","pack"); nopts = 1
                 case default; call error( "invalid packmol command" )
               end select
-              call me % packmol_list % add( nopts+2, arg(iarg:iarg+1+nopts), repeatable = .true. )
+              call me % packmol % list % add( nopts+2, arg(iarg:iarg+1+nopts), repeatable = .true. )
               imol = str2int(arg(iarg+1))
               if ((imol < 1).or.(imol > me%nmol)) call error( "last molecule is", int2str(me%nmol) )
               call me % check_coordinates( imol )
@@ -563,6 +568,7 @@ contains
               if (.not. me % box % exists()) then
                 call error( "packmol action keyword requires previous box definition" )
               end if
+              me % packmol % setup = action == "setup"
               iarg = iarg + 2
 
             case default
@@ -572,11 +578,12 @@ contains
         end do
         if (action /= "") then
           call me % count_molecules( mass = mass )
-          call me % box % compute( packmol_total_mass( me % packmol_list, mass ) )
+          call me % box % compute( me % packmol % total_mass( mass ) )
           call writeln( "Box lengths are ", join(real2str(me % box % length)))
-          call run_packmol( me % packmol_list, me % molecule_list, me % coordinate_list, &
-                            me % nmol, me % atoms_in_molecules(), me % box % length, &
-                            seed, tolerance, action )
+          call writeln( "Packmol invoked with action <"//trim(action)//">" )
+          call me % packmol % run( me % molecule_list, me % coordinate_list,      &
+                                   me % atom_list, me % diameter_list, me % nmol, &
+                                   me % box % length )
         end if
       end subroutine packmol_command
       !---------------------------------------------------------------------------------------------
@@ -1419,7 +1426,7 @@ contains
       coord => coord % next
     end do
     if (.not.found) then
-      call warning( "No predefined coordinates for molecule", int2str(imol) )
+      call warning( "no predefined coordinates for molecule", int2str(imol) )
       atom => me % molecule_list % first
       natoms = 0
       do while (associated(atom))
@@ -1447,7 +1454,7 @@ contains
       !-------------------------------------------------------------------------
       subroutine build_monoatomic_molecule
         character(sl) :: arg(4)
-        call writeln( "Molecule", int2str(imol), "is monoatomic:" )
+        call writeln( "Molecule", int2str(imol), "is monoatomic" )
         arg = [first%params, "0.0", "0.0", "0.0"]
         call me % coordinate_list % add( 4, arg )
       end subroutine build_monoatomic_molecule
@@ -1455,15 +1462,15 @@ contains
       subroutine build_diatomic_molecule
         integer :: narg
         character(sl) :: atoms(2), types(2), arg(10), R0
-        call writeln( "Molecule", int2str(imol), "is diatomic:" )
+        call writeln( "Molecule", int2str(imol), "is diatomic" )
         atoms = [first % params, first % next % params]
         call me % get_types( atoms, types )
         call split( me % bond_type_list % parameters( types ), narg, arg )
         if (narg /= 2) call error( "cannot guess coordinates" )
         R0 = arg(2)
         if (.not.is_real(R0)) call error( "cannot guess coordinates" )
-        call writeln( "Considering harmonic potential with R0 = ", R0 )
-        call warning( "if this is wrong, please provide coordinates manually via xyz" )
+        call warning( "considering harmonic potential (otherwise, please provide coordinates)" )
+        call writeln( "R0 = ", R0 )
         arg(1:4) = [atoms(1), "0.0", "0.0", "0.0"]
         call me % coordinate_list % add( 4, arg )
         arg(1:4) = [atoms(2), R0, "0.0", "0.0"]
@@ -1474,7 +1481,7 @@ contains
         integer :: narg
         character(sl) :: atoms(3), types(3), arg(10), R0A, R0B, Theta0
         real(rb) :: X3, Y3
-        call writeln( "Molecule", int2str(imol), "is triatomic:" )
+        call writeln( "Molecule", int2str(imol), "is triatomic" )
         atoms = [first % params, first % next % params, first % next % next % params ]
         call me % bond_list % search( atoms(1:2), current )
         if (associated(current)) then
@@ -1494,11 +1501,10 @@ contains
         if (narg /= 2) call error( "cannot guess coordinates" )
         Theta0 = arg(2)
         if (is_real(R0A).and.is_real(R0B).and.is_real(Theta0)) then
-          call writeln( "Considering harmonic potentials:" )
+        call warning( "considering harmonic potentials (otherwise, please provide coordinates)" )
           call writeln( "R0(",atoms(1),"-",atoms(2),") = ", R0A )
           call writeln( "R0(",atoms(2),"-",atoms(3),") = ", R0B )
           call writeln( "Theta0(",atoms(1),"-",atoms(2),"-",atoms(3),") = ", Theta0, "degrees" )
-          call warning( "if this is wrong, please provide coordinates manually via xyz" )
         else
           call error( "cannot guess coordinates" )
         end if
@@ -1529,7 +1535,7 @@ contains
       if (.not.found) current => current % next
     end do
     do i = 1, N
-      if (option == 1) then ! Retrieve coordinates and masses:
+      if (option == 1) then ! Retrieve coordinates:
         call split( current % params, narg, arg )
         Coord(:,i) = [str2real(arg(1)), str2real(arg(2)), str2real(arg(3))]
       else ! Set coordinates:

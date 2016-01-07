@@ -119,7 +119,7 @@ contains
     if (present(msg7)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg7)
     if (present(msg8)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg8)
     if (present(msg9)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg9)
-    call write_msg( "WARNING:", trim(last_warning % msg) )
+    call write_msg( "WARNING: ", trim(last_warning % msg) )
     call end_line
   end subroutine warning
 

@@ -61,16 +61,6 @@ function(hljs) {
     ]
   };
 
-  var FILE_NAMES = {
-    className: 'string',
-    variants: [
-      { begin: /\b[^\$]+\.xyz\b/ },
-      { begin: /\b[^\$]+\.(p|play)?mol\b/ },
-      { begin: /\b[^\$]+\.(l(mp|ammps)_)?data\b/ },
-      { begin: /\b[^\$]+\.l(mp|ammps|ammpstrj)\b/ }
-    ]
-  };
-
   return {
     aliases: ['playmol', 'pmol', 'mol'],
     keywords: KEYWORDS,
@@ -80,8 +70,7 @@ function(hljs) {
       hljs.COMMENT('#', '$', {relevance: 0}),
       hljs.C_NUMBER_MODE,
       VARIABLE,
-      SPECIAL_KEYWORDS,
-      FILE_NAMES
+      SPECIAL_KEYWORDS
     ]
   };
 }

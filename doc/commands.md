@@ -97,22 +97,33 @@ or
 
 or
 
-	for <variable> in <string-1> [<string-2> [<string-3> ...]]
+	for <variable> in <string-list>
 		commands
 	next
 
 * _variable_ = a valid name to be assigned to the defined variable
-* _min_, _max_ = either two integer numbers or two single characters, with _max_ >= _min_
-* _string-x_ = any character string
+* _min_, _max_ = either two integer numbers or two single characters, with _max_ &ge; _min_
+* _string-list_ = a list of character strings
 
 **Description**:
 
-This command 
+This command repeatedly executes a sequence of command-lines between the _for_ and _next_ statements
+while the value of a variable changes in accordance with a specified range or list.
 
-The parameter _variable_ the must be a valid variable name (see details [here](basics.html#variables)).
+The parameter _variable_ the must be a valid variable name, that is, the first character must be a
+letter (A-Z or a-z) and the remaining characters can be letters (A-Z or a-z), numbers (0-9) or
+underscores (_).
 
-The parameters _min_ and _max_ can be either two integer numbers or two single characters, with the
-constraint that _max_ >= _min_.
+The parameters _min_ and _max_ can be either two integer numbers with _max_ &ge; _min_ or two single
+characters with _max_ not preceding _min_ in the [ASCII] character table. If the corresponding
+condition is not met, then the command-lines between _for_ and _next_ will be ignored. Otherwise,
+these command-lines will be executed repeatedly, with the value of _variable_ ranging either from
+_min_ up to _max_ or from _max_ down to _min_, depending on the chosen syntax (see above).
+
+The parameter _string-list_ is a list of character strings separated by spaces and/or tabs. If the
+list is empty, then the command-lines between _for_ and _next_ will be ignored. Otherwise, these
+command-lines with be executed repeatedly, with the value of _variable_ turning into the entries of
+_string-list_, one at a time and in the order they appear in the list.
 
 **Examples**:
 
@@ -134,9 +145,12 @@ for mol in water ethanol glycerol
 next
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+In the example above, the files _water.xyz_, _ethanol.xyz_, and _glycerol.xyz_ are employed as
+inputs for the [build] command.
+
 **See also**:
 
-[define]
+[define], [if/then/else]
 
 ----------------------------------------------------------------------------------------------------
 <a name="if_then_else"/>
@@ -147,14 +161,31 @@ if/then/else
 
 	if <condition> then
 		commands
-	[else
-		commands]
+	endif
+
+or
+
+	if <condition> then
+		commands
+	else
+		commands
 	endif
 
 * _condition_ = 1 or 0 (e.g. the result of a logical expression)
 
 **Description**:
 
+This command conditionally executes a sequence of command-lines or selects between two given
+sequences of command-lines.
+
+The parameter _condition_ can be either _1_ (true) or _0_ (false). If any value other than these two
+is passed, an error message is produced. In practice, _condition_ might be the result of a variable
+substitution or a logical expression evaluation (see the [basics] section for details).
+
+If the first syntax above is used (that is, without the _else_ statement), then the command-lines
+between _if_ and _endif_ will be executed if _condition_ = _1_ or ignored if _condition_ == 0.
+Otherwise, if the second syntax is chosen, then the executed command-lines will either be those
+between _if_ and _else_ if _condition_ = 1 or those between _else_ and _endif_ if _condition_ = 0.
 
 **Example**:
 
@@ -173,9 +204,13 @@ else
 endif
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+In the example above, the attribute list of the atom type _CH3_ will depend on the number of carbon
+atoms (_N_) of the n-alkane molecule. Ethane and propane have their own parameters, while n-butane
+and superior alkanes share the same parameters.
+
 **See also**:
 
-[prefix/suffix]
+[define], [for/next]
 
 ----------------------------------------------------------------------------------------------------
 <a name="atom_type"/>
@@ -959,7 +994,7 @@ The following commands are affected by the `prefix atoms` and `suffix atoms` com
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 prefix		atoms	H2O-
-suffix		type	A
+suffix		types	A
 atom		H1 H
 atom		H2 H
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1031,7 +1066,7 @@ inside this box.
 **Examples**:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-box	size 30 30 30
+box	lengths 30 30 30
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The example above specifies a cubic simulation box.
@@ -1051,8 +1086,8 @@ The example above specifies a simulation box with density equal to 0.602214 in [
 directions.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-box	size 28.224 28.224 34.443
-box	angle 90 90 120
+box	lengths 28.224 28.224 34.443
+box	angles	90 90 120
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The example above specifies a non-orthogonal simulation box that can be used to simulate a hexagonal
@@ -1445,6 +1480,7 @@ The example above writes a summary of the current molecular system and then quit
 [shell]:		#shell
 [quit]:			#quit
 
+[basics]:			basics.html
 [LAMMPS real units]:		http://lammps.sandia.gov/doc/units.html
 [LAMMPS data file]:		http://lammps.sandia.gov/doc/read_data.html
 [LAMMPS pair style]:		http://lammps.sandia.gov/doc/pair_style.html
@@ -1457,3 +1493,4 @@ The example above writes a summary of the current molecular system and then quit
 [Packmol User's Guide]:		http://www.ime.unicamp.br/~martinez/packmol/quickguide
 [VMD]:				http://www.ks.uiuc.edu/Research/vmd
 [Avogadro]:			http://avogadro.cc/wiki/Main_Page
+[ASCII]:			https://en.wikipedia.org/wiki/ASCII#ASCII_printable_code_chart

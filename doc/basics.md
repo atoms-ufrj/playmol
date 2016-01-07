@@ -72,12 +72,17 @@ Variables
 
 Variable assignment is done via the [define] command:
 
-
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 define compound as H2O
 write  xyz ${compound}.xyz
 diameter a b
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Substitution is instructed in forthcoming commands by either preceding the variable name with a
+symbol "$" or enclosing it between symbols "${" and "}", with no spacing. Every time the symbol "$"
+is found in a command, Playmol will admit that a variable is being referred to. The actual command
+will only be issued after all variables have been replaced by their values.
+
 
 ----------------------------------------------------------------------------------------------------
 <a name="math"/>

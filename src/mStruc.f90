@@ -76,8 +76,12 @@ contains
     character(sl), intent(in) :: id(:)
     logical,       intent(in) :: two_way
     logical                   :: match
+    integer :: n
     match = all(match_str( me % id, id ))
-    if (two_way) match = match .or. all(match_str( me % id, id(size(id):1:-1) ))
+    if (two_way) then
+      n = size(id)
+      if (n > 1) match = match .or. all(match_str( me % id, id(n:1:-1) ))
+    end if
   end function Struc_match_id
 
   !=================================================================================================

@@ -5,6 +5,8 @@ atom_type	OW	0.102 3.188
 mass		HW	1.008
 mass		OW	15.9994
 
+diameter	HW	1.5
+
 bond_type	HW OW		450.0 0.9572
 angle_type	HW OW HW	55.0 104.52
 
@@ -16,7 +18,7 @@ charge		H?	 0.415
 charge		O	-0.830
 
 bond		H1 O
-bond		O H2
+#bond		O H2
 
 build
 3
@@ -25,8 +27,9 @@ H1	0.0	0.0	0.0
 O	0.9572	0.0 	0.0
 H2	1.19719	0.92663	0.0
 
-box		density 0.602214
-packmol		tolerance 2.5 retry 0.95 pack 1 500 action execute
+box		density 0.0602214
+packmol		tolerance 2.5 retry 1.0 pack 1 200 pack 2 200 action setup
+quit
 write		lammps water.lmp
 write		lammpstrj water.lammpstrj
 write		xyz water.xyz

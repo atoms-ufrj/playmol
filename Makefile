@@ -17,7 +17,7 @@ all: $(BINDIR)/$(exec)
 .PHONY: install clean doc
 
 doc:
-	doxygen $(DOCDIR)/Doxyfile
+	cd doc && doxygen
 
 clean:
 	rm -rf $(OBJDIR)
