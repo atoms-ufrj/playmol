@@ -10,6 +10,7 @@ diameter	HW	1.5
 bond_type	HW OW		450.0 0.9572
 angle_type	HW OW HW	55.0 104.52
 
+prefix atoms W_
 atom		H1	HW
 atom		O	OW
 atom		H2	HW
@@ -20,15 +21,17 @@ charge		O	-0.830
 bond		H1 O
 #bond		O H2
 
-build
-3
-# Water molecule coordinates:
-H1	0.0	0.0	0.0
-O	0.9572	0.0 	0.0
-H2	1.19719	0.92663	0.0
+#build
+#3
+## Water molecule coordinates:
+#H1	0.0	0.0	0.0
+#O	0.9572	0.0 	0.0
+#H2	1.19719	0.92663	0.0
 
+align		mol(W_H2) x y
+quit
 box		density 0.0602214
-packmol		tolerance 2.5 retry 1.0 pack 1 200 pack 2 200 action setup
+packmol		tolerance 2.5 retry 1.0 pack 2 200 pack mol(W_H1) 200 action execute
 quit
 write		lammps water.lmp
 write		lammpstrj water.lammpstrj

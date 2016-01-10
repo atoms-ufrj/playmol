@@ -33,14 +33,14 @@ initial configuration for molecular dynamics.
 5. __Formatting and storage__: finally, the system configuration and the force field parameters are
 stored in a file whose format can be understood by a simulation software such as [LAMMPS].
 
-Practical examples of the use of Playmol can be found in the section that describes its [commands]
-and in a special section with sample [scripts].
+Practical examples of the use of Playmol can be found in the section [Playmol Commands] and in a
+special section with sample [scripts].
 
 ----------------------------------------------------------------------------------------------------
 Playmol Scripts
 ----------------------------------------------------------------------------------------------------
 
-Playmol interprets scripts composed of specific types of [commands]. Each command is a sequence of
+Playmol interprets scripts composed of specific [Playmol commands]. Each command is a sequence of
 keywords and parameter values separated by spaces and/or tabs. A script can include comments,
 identified by the comment mark "#", which instructs Playmol to ignore all trailing characters in the
 same line. A single command can span several lines by means of continuation marks "&", as in the
@@ -66,7 +66,7 @@ Note that Playmol does not perform any previous syntax checks, which means that 
 be handled at run-time.
 
 ----------------------------------------------------------------------------------------------------
-<a name="variables"/>
+<a name="variables"></a>
 Variables
 ----------------------------------------------------------------------------------------------------
 
@@ -85,7 +85,7 @@ will only be issued after all variables have been replaced by their values.
 
 
 ----------------------------------------------------------------------------------------------------
-<a name="math"/>
+<a name="math"></a>
 Mathematical Expressions
 ----------------------------------------------------------------------------------------------------
 
@@ -93,7 +93,7 @@ In a Playmol script, mathematical expressions are placed between curly brackets 
 a command line, Playmol first substitutes the value of every variable in it (please see the section
 [Variables] for details), then it searches for mathematical expressions to evaluate.
 
-<a name="Table_1"/> **Table 1**: Precedence order of mathematical operators
+<a name="Table_1"></a> **Table 1**: Precedence order of mathematical operators
 
 | Operator                                 | Description                             | Prececence  |
 |:----------------------------------------:|:----------------------------------------|:-----------:|
@@ -109,7 +109,7 @@ a command line, Playmol first substitutes the value of every variable in it (ple
 __Note__: There is not a specific operator for logical NOT. Its effect is obtained by using the
 function `not()`.
 
-<a name="Table_2"/> **Table 2**: Available mathematical functions
+<a name="Table_2"></a> **Table 2**: Available mathematical functions
 
 | Function | Result type      | Description                |
 |:--------:|:----------------:|:---------------------------|
@@ -142,7 +142,7 @@ function `not()`.
 
 <!-- External links -->
 [scripts]:		scripts.html
-[commands]:             commands.html
+[Playmol Commands]:	commands.html
 [define]:		commands.html#define
 [for/next]:		commands.html#for_next
 [if/then/else]:		commands.html#if_then_else

@@ -35,7 +35,7 @@ physically meaningful values are those corresponding to [LAMMPS real units].
 | [quit]          | interrupts the execution of a Playmol script                              |
 
 ----------------------------------------------------------------------------------------------------
-<a name="define"/>
+<a name="define"></a>
 define
 ----------------------------------------------------------------------------------------------------
 
@@ -79,7 +79,7 @@ atoms named _C1_ and _C2_ are created, both of type _C_.
 [for/next], [if/then/else], [atom_type], [atom]
 
 ----------------------------------------------------------------------------------------------------
-<a name="for_next"/>
+<a name="for_next"></a>
 for/next
 ----------------------------------------------------------------------------------------------------
 
@@ -153,7 +153,7 @@ inputs for the [build] command.
 [define], [if/then/else]
 
 ----------------------------------------------------------------------------------------------------
-<a name="if_then_else"/>
+<a name="if_then_else"></a>
 if/then/else
 ----------------------------------------------------------------------------------------------------
 
@@ -180,7 +180,7 @@ sequences of command-lines.
 
 The parameter _condition_ can be either _1_ (true) or _0_ (false). If any value other than these two
 is passed, an error message is produced. In practice, _condition_ might be the result of a variable
-substitution or a logical expression evaluation (see the [basics] section for details).
+substitution or a logical expression evaluation (see the [Playmol Basics] section for details).
 
 If the first syntax above is used (that is, without the _else_ statement), then the command-lines
 between _if_ and _endif_ will be executed if _condition_ = _1_ or ignored if _condition_ == 0.
@@ -213,7 +213,7 @@ and superior alkanes share the same parameters.
 [define], [for/next]
 
 ----------------------------------------------------------------------------------------------------
-<a name="atom_type"/>
+<a name="atom_type"></a>
 atom_type
 ----------------------------------------------------------------------------------------------------
 
@@ -267,7 +267,7 @@ will be employed in LAMMPS.
 [atom], [bond_type], [angle_type], [dihedral_type], [improper_type], [prefix/suffix]
 
 ----------------------------------------------------------------------------------------------------
-<a name="mass"/>
+<a name="mass"></a>
 mass
 ----------------------------------------------------------------------------------------------------
 
@@ -307,7 +307,7 @@ _1.008_ is assigned to all atoms types whose identifiers start with _H_.
 [atom_type], [atom]
 
 ----------------------------------------------------------------------------------------------------
-<a name="diameter"/>
+<a name="diameter"></a>
 diameter
 ----------------------------------------------------------------------------------------------------
 
@@ -348,7 +348,7 @@ of _2.0_ is assigned to all atoms types whose identifiers start with _H_.
 [atom_type], [atom], [packmol]
 
 ----------------------------------------------------------------------------------------------------
-<a name="bond_type"/>
+<a name="bond_type"></a>
 bond_type
 ----------------------------------------------------------------------------------------------------
 
@@ -395,7 +395,7 @@ types have identifiers starting with _CH_.
 [atom_type], [bond], [write], [prefix/suffix]
 
 ----------------------------------------------------------------------------------------------------
-<a name="angle_type"/>
+<a name="angle_type"></a>
 angle_type
 ----------------------------------------------------------------------------------------------------
 
@@ -449,7 +449,7 @@ _CH3_.
 [atom_type], [write], [prefix/suffix], [extra]
 
 ----------------------------------------------------------------------------------------------------
-<a name="dihedral_type"/>
+<a name="dihedral_type"></a>
 dihedral_type
 ----------------------------------------------------------------------------------------------------
 
@@ -504,7 +504,7 @@ in this specific order.
 [atom_type], [write], [prefix/suffix], [extra]
 
 ----------------------------------------------------------------------------------------------------
-<a name="improper_type"/>
+<a name="improper_type"></a>
 improper_type
 ----------------------------------------------------------------------------------------------------
 
@@ -555,7 +555,7 @@ in this specific order.
 [atom_type], [improper], [write], [prefix/suffix]
 
 ----------------------------------------------------------------------------------------------------
-<a name="atom"/>
+<a name="atom"></a>
 atom
 ----------------------------------------------------------------------------------------------------
 
@@ -603,7 +603,7 @@ atom    H1 H
 [atom_type], [mass], [bond], [charge]
 
 ----------------------------------------------------------------------------------------------------
-<a name="charge"/>
+<a name="charge"></a>
 charge
 ----------------------------------------------------------------------------------------------------
 
@@ -640,7 +640,7 @@ the letter _O_.
 [atom]
 
 ----------------------------------------------------------------------------------------------------
-<a name="bond"/>
+<a name="bond"></a>
 bond
 ----------------------------------------------------------------------------------------------------
 
@@ -695,7 +695,7 @@ molecules.
 [bond_type], [atom_type], [write], [quit]
 
 ----------------------------------------------------------------------------------------------------
-<a name="improper"/>
+<a name="improper"></a>
 improper
 ----------------------------------------------------------------------------------------------------
 
@@ -745,7 +745,7 @@ searches for impropers of this type.
 [improper_type], [atom]
 
 ----------------------------------------------------------------------------------------------------
-<a name="extra"/>
+<a name="extra"></a>
 extra
 ----------------------------------------------------------------------------------------------------
 
@@ -793,7 +793,7 @@ extra angle	C1 C2 C3
 [bond_type], [angle_type], [dihedral_type], [atom]
 
 ----------------------------------------------------------------------------------------------------
-<a name="link"/>
+<a name="link"></a>
 link
 ----------------------------------------------------------------------------------------------------
 
@@ -829,7 +829,7 @@ link	C1 C2
 [atom], [packmol]
 
 ----------------------------------------------------------------------------------------------------
-<a name="build"/>
+<a name="build"></a>
 build
 ----------------------------------------------------------------------------------------------------
 
@@ -841,66 +841,68 @@ build
 
 **Description**:
 
-This command reads geometric information and uses them to guess the atomic coordinates for one or
+This command reads geometric information and uses them to determine atomic coordinates for one or
 more molecules.
 
-The parameter _file_ is the name of a text file containing geometric information. The required
-format is described below. The parameter _file_ is optional. If it is omitted, then the geometric
-information must be provided in the subsequent lines. In this sense, issuing the command `build
-<file>` is equivalent to issuing `build`, followed by `include <file>`.
+The optional parameter _file_ is the name of a text file containing geometric information, whose
+required format is described below. If it is omitted, then the geometric information must be
+provided in the subsequent lines. In this sense, issuing the command `build <file>` is equivalent to
+issuing `build`, followed by `include <file>`.
 
 The geometric information that Playmol expects to receive has the following format:
 
-* The first non-empty line must contain the number _N_ of geometric data to be provided
-* Every one of the _N_ subsequent non-empty lines must contain an [atom] identifier, followed by
-fields separated by spaces or tabs. Only the following formats are valid:
+* The first non-empty line must contain the number _N_ of geometric assignments that will be made.
+* The subsequent non-empty lines must contain the _N_ geometric assignments, which can possibly be
+intertwined with [define] commands, [for/next] constructs, and [if/then/else] constructs. No other
+commands are permitted until all _N_ assignments have been made. Each geometric assignments consists
+of an [atom] identifier followed by some fields separated by spaces and/or tabs. Only the following
+formats are valid:
 
 Coordinates _x_, _y_, and _z_ of _atom-I_:
 
 	<atom-I>  <x>  <y>  <z>
 
-The _length_ of a bond formed by _atom-I_ with _atom-J_:
+The _length_ of a bond formed by atoms _I_ and _J_:
 
 	<atom-I>  <atom-J>  <length>
 
-The _length_ of a bond formed by _atom-I_ with _atom-j_ and the _angle_ (in degrees) between the
-bonds formed by _atom-I_, _atom-J_, and _atom-K_:
+The _length_ of a bond formed by atoms _I_ and _J_ and the _angle_ (in degrees) between the bonds
+formed by atoms _I_, _J_, and _K_:
 
 	<atom-I>  <atom-J>  <atom-K>  <length>  <angle>
 
-The _length_ of a bond formed by _atom-I_ with _atom-J_, the _angle_ (in degrees) between the bonds
-formed by _atom-I_, _atom-J_, and _atom-K_, and the <torsion> angle (in degrees) of the dihedral
-formed by _atom-I_, _atom-J_, _atom-K_, and _atom-L_:
+The _length_ of a bond formed by atoms _I_ and _J_, the _angle_ (in degrees) between the bonds
+formed by atoms _I_, _J_, and _K_, and the _torsion_ angle (in degrees) of the proper dihedral
+formed by atoms _I_, _J_, _K_, and _L_:
 
 	<atom-I>  <atom-J>  <atom-K>  <atom-L>  <length>  <angle>  <torsion>
 
-__Important__: an active atom-related [prefix/suffix] will apply to each parameter _atom-x_ present
-in the description above. In all cases, _atom-I_ is the atom whose coordinates will be defined by
-the current statement, while _atom-J_, _atom-K_, and _atom-L_ must be atoms whose coordinates have
-already been defined in previous statements. Please see the examples below.
+An active atom-related [prefix/suffix] will apply to every parameter _atom-x_ present in the
+assignments described above. In all cases, atom _I_ is the one whose coordinates are being assigned,
+while atoms _J_, _K_, and _L_ must be atoms whose coordinates have already been assigned (please see
+the examples below).
 
-The provided information is meant to define a list of actual structures for the molecules previously
-assembled using the commands [atom] and [bond]. Multiple structures can be specified issuing either
-separate _build_ commands or a unique _build_ command involving all atoms together. The information
-regarding all atoms of a given molecule must be provided contiguously, but in any arbitrary order.
-It is possible to specify many copies of the same molecule, but a given atom cannot reappear until
-all other atoms of the same copy have been defined.
+Every molecule must be instantiated at once, meaning that the geometric information regarding all
+atoms of a given molecule must be provided contiguously. However, no particular order is required.
+Multiple molecules of one or more compounds can be instantiated either using separate _build_
+constructs or a unique _build_ constructs with all atoms together.
 
-Note that the very common [xyz file format] can be used to provide geometric information for the
-_build_ command, provided that:
+Note that the ubiquitous [xyz file format] can be used to provide geometric information for the
+_build_ constraint, given that:
 
 * The first line contains the number of atomic coordinates (_N_), as usual.
 * The second line is empty or starts with a comment mark (#).
-* The _N_ subsequent lines contain the following four fields separated by spaces or tabs:
+* The _N_ subsequent lines contain the following four fields separated by spaces and/or tabs:
 
-	<atom-id> <x>  <y>  <z>
+	<atom-id>  <x>  <y>  <z>
 
 Therefore, one can use an external software to generate the atomic coordinates (e.g., [Avogadro]),
-save them in [xyz file format], and replace the usual element symbols by atom identifiers.
+save them in the [xyz file format], and replace the usual element symbols by atom identifiers.
 
-The list of molecular structures created via _build_ can be employed later on to define a simulation
-box when the command [write] is invoked. The origin of the Cartesian space will be located at the
-center of the simulation box.
+The list of molecular structures created via _build_ can be employed later on as prototypes for
+replication and packing with the [packmol] command. They can also be directly employed to produce a
+simulation box when the command [write] is invoked. In this case, the origin of the Cartesian space
+will be located at the center of the simulation box.
 
 **Examples**:
 
@@ -949,7 +951,7 @@ involved in a new terminal window for visualization.
 [atom], [bond], [box], [write], [include]
 
 ----------------------------------------------------------------------------------------------------
-<a name="prefix_suffix"/>
+<a name="prefix_suffix"></a>
 prefix/suffix
 ----------------------------------------------------------------------------------------------------
 
@@ -1007,7 +1009,7 @@ the same type _HA_.
 [atom_type], [atom]
 
 ----------------------------------------------------------------------------------------------------
-<a name="box"/>
+<a name="box"></a>
 box
 ----------------------------------------------------------------------------------------------------
 
@@ -1098,7 +1100,7 @@ lattice system (_lx_ = _ly_ ≠ _lz_ and _alpha_ = _beta_ ≠ _gamma_).
 [build], [packmol], [write]
 
 ----------------------------------------------------------------------------------------------------
-<a name="align"/>
+<a name="align"></a>
 align
 ----------------------------------------------------------------------------------------------------
 
@@ -1145,7 +1147,7 @@ and its second most elongated principal axis to axis _z_.
 [write], [packmol]
 
 ----------------------------------------------------------------------------------------------------
-<a name="packmol"/>
+<a name="packmol"></a>
 packmol
 ----------------------------------------------------------------------------------------------------
 
@@ -1153,14 +1155,14 @@ packmol
 
 	packmol		<keyword> <arguments> [<keyword> <arguments> ...]
 
-* _keyword_ =  _seed_ or _tolerance_ or _nloops_ or _retry_ or _fix_ or _copy_ or _pack_ or _action_
+* _keyword_ =  _seed_ or _diameter_ or _nloops_ or _retry_ or _fix_ or _copy_ or _pack_ or _action_
 
 **Keywords and arguments**:
 
 * seed <iseed>
     * _iseed_ = an integer seed for Packmol's random number generator (_default_ = 1234)
-* tolerance <tol>
-    * _tol_ = the minimum allowed distance between atoms of distinct molecules (_default_ = 2.0)
+* diameter <D>
+    * _D_ = diameter assigned to all atoms expect those with explicit definition (_default_ = 2.5)
 * nloops <N>
     * _N_ = the maximum number of iterations of the Packmol algorithm (_default_ = 50)
 * retry <factor>
@@ -1179,66 +1181,102 @@ packmol
 
 **Description**:
 
-This command creates Packmol input files or invokes Packmol to build a low-energy molecular packing
-inside a previously specified simulation box.
+This command invokes the [Packmol package] to:
 
-The keywords _seed_, _tolerance_, and _nloops_ change the values of some parameters that affect
-Packmol's behavior. Different integer values for _seed_ tell Packmol to use different random number
-sequences for its packing algorithm. The parameter _tolerance_ is the minimum distance that atoms of
-distinct molecules must keep from each other in the final packing. The parameter _nloops_ is the
-maximum number of iterations to be carried out with the Packmol algorithm in a packing attempt.
+1. Build an overlap-free molecular packing by considering atoms as hard spheres. In this case, an
+overlap is considered to occur if the distance between any two atoms of distinct molecules is
+smaller than the sum of their radii. After a packing is successfully built, all atomic coordinates
+defined beforehand are deleted (as if a [reset] command was issued with option _xyz_) and fully
+replaced with the new Packmol-generated coordinates.
 
-The parameter _retry_ is a reduction factor. If its value is 1.0, Playmol will invoke Packmol only
-once with the specified tolerance and will produce a warning message if the packing fails. If
-_retry_ is smaller than 1.0, then Playmol will invoke Packmol as many times as necessary to achieve
-a successful packing, with tolerance being iteratively multiplied by the value of _retry_ at each
-new attempt.
+2. Create input files so that the molecular packing can be produced by executing Packmol externally.
 
-The keywords _fix_, _copy_, and _pack_ require the index of an existing molecule for which at least
-one set of atomic coordinates have been defined using the command [build]. The first of these sets
-of coordinates will be used as a rigid-body model for translation or replication. Only a few
-exceptions can work without previously defined coordinates. Monoatomic molecules never require them.
-In the case of diatomic and triatomic molecules, if no coordinates were previously defined, Playmol
-will try to guess them by supposing that the involved [bond_type]'s and [angle_type] describe
-harmonic potentials, with their second parameters being the equilibrium bond distances and angle
-value (in degrees).
+The keywords _seed_, _diameter_, and _nloops_ change the values of some parameters that affect the
+behavior of Packmol.
 
-__Important__: the command [write] with its option _summary_ can be very useful for checking out the
-indexes of the molecules, which are required to use the keywords mentioned above.
+The parameter _iseed_ is a seed for Packmol's pseudo-random number generator. Even with all other
+parameters unchanged, different values of _iseed_ will produce distinct random packings. It must be
+an integer number and its default value is _1234_.
+
+The parameter _D_ is the default atom diameter, that is, the diameter to be assigned to all atom
+types except those whose diameters have been explicitly defined using the [diameter] command. It
+must be a nonnegative real number and its default value is _2.5_. This might be a suitable value for
+all-atom models when distances are expressed in Angstroms.
+
+The parameter _N_ is the maximum number of iterations allowed for the Packmol algorithm. If this
+number is exceeded, then a packing attempt is considered as unsuccessful. It must be a positive
+integer number and its default value is _50_.
+
+The parameter _factor_ is a diameter reduction factor. It must satisfy 0.0 &lt; _factor_ &le; 1.0
+and its default value is 1.0. If _factor_ = 1.0, then Packmol will be invoked only once with the
+specified atom diameters and will produce an error message if the packing attempt fails. Otherwise,
+Packmol will be invoked as many times as necessary to achieve a successful packing, with all atom
+diameters being iteratively multiplied by the value of _factor_ at each new attempt.
+
+The keywords _fix_, _copy_, and _pack_ require specifying an existing molecule. Except in a few
+special cases, such molecule must have already been instantiated (see the [Playmol Basics] section).
+In this case, the first sets of atomic coordinates previously provided for such molecule will be
+used to define a rigid-body that can undergo replications, translations, and rotations. The special
+cases, which might not require previous instantiation, are: (1) monoatomic molecules, (2) diatomic
+molecules whose involved [bond_type] describes a harmonic potential, and (3) triatomic molecules
+whose involved [bond_type] and [angle_type] both describe harmonic potentials. In these cases,
+Playmol will consider the second [bond_type]'s attribute as an equilibrium distance and the second
+[angle_type]'s attribute as an equilibrium angle (in degrees).
+
+A molecule specification for the _fix/copy/pack_ keywords can be done in either of the following
+ways:
+
+1. By directly employing the numerical index of the compound. The command [write], with its option
+_summary_, can be helpful for checking the indexes of the existing ones. One may note, however,
+that these indexes are dynamical (please see the [bond] command)
+
+, but packmol index
+specifications do not update accordingly.
+
+2. 
 
 The usage of each keyword _fix_, _copy_, or _pack_ is:
 
-* fix <index> <x> <y> <z>: makes a copy of Molecule _index_ with its geometric center located at the
-provided coordinate (_x_, _y_, _z_), keeping its original orientation.
+	fix <molecule> <x> <y> <z>
 
-* copy <index> <N>: makes _N_ copies of Molecule _index_ in random positions, but keeping the
-original orientation (i.e. all _N_ copies will be aligned in the final packing). This is useful for
-packing long molecules.
+This makes a copy of a molecule and, while keeping the original orientation, places its geometric
+center at the provided coordinate (_x_, _y_, _z_).
 
-* pack <index> <N>: makes _N_ copies of Molecule _index_ in random positions and with random
-orientations.
+	copy <molecule> <N>
+
+This makes _N_ copies of a molecule in random positions, but keeping the original orientation
+(i.e. all _N_ copies will be aligned to each other in the final packing). This is useful for
+facilitating the packing of elongated molecules.
+
+	pack <molecule> <N>
+
+This makes _N_ copies of a molecule in random positions and with random orientations.
 
 The keyword _action_ is used to create Packmol input files or to invoke Packmol. The following
 options are available:
 
-* __execute__: this option calls Packmol to build the desired molecular packing. It requires the
-previous definition of a simulation [box]. Moreover, it requires that at least one keyword _fix_,
-_copy_, or _pack_ has appeared in a previous packmol command or appears in the same packmol command,
-either before or after the keyword _action_. If the parameter _retry_ is currently equal to 1.0 (its
+	action execute
+
+This option calls Packmol to build the desired molecular packing. It requires the previous
+definition of a simulation [box]. Moreover, it requires that at least one keyword _fix_, _copy_, or
+_pack_ has appeared in a previous packmol command or appears in the same packmol command, either
+before or after the keyword _action_. If the parameter _retry_ is currently equal to 1.0 (its
 default value), then Packmol will do only one packing attempt with the specified _tolerance_ and
 produce a warning message in case such attempt fails. If _retry_ is smaller than 1.0, then Packmol
 will keep trying until a successful attempt is achieved, with _tolerance_ being iteratively
-multiplied by the _retry_ value at each new attempt. IMPORTANT: if packing succeeds, then the
+multiplied by the _retry_ value at each new attempt. IMPORTANT: if the packing succeeds, then the
 current list of atomic coordinates is replaced by the new coordinates generated by Packmol. After
 that, the command [write] can be used to create a LAMMPS configuration file with the attained
 packing.
 
-* __setup__: this option generates an input file named _packmol.inp_ and coordinate files
-_molecule-x.inp_, where _x_ is the index of each involved molecule. These files are prepared for
-running Packmol externally in order to generate a file _packmol-output.xyz_ containing the final
-packing if the algorithm succeeds with the given tolerance. For illustration, one may notice that a
-successful use of the packmol command with options _retry 1.0 action execute_ would have exactly the
-same result as the following sequence of commands:
+	action setup
+
+This option generates an input file named _packmol.inp_ and coordinate files _molecule-x.inp_, where
+_x_ is an index for each involved molecule. These files are prepared for running Packmol externally
+in order to generate a file _packmol-output.xyz_ containing the final packing if the algorithm
+succeeds with the given tolerance. For illustration, one may notice that a successful use of the
+packmol command with options _retry 1.0 action execute_ would have exactly the same result as the
+following sequence of commands:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 packmol 	action setup
@@ -1282,10 +1320,10 @@ tolerance in 90% until the packing is successful. Finally, a [LAMMPS data file] 
 
 **See also**:
 
-[box], [build], [write], [bond_type], [angle_type]
+[reset], [diameter], [box], [build], [write], [bond_type], [angle_type]
 
 ----------------------------------------------------------------------------------------------------
-<a name="write"/>
+<a name="write"></a>
 write
 ----------------------------------------------------------------------------------------------------
 
@@ -1333,7 +1371,7 @@ write	lammps water.data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ----------------------------------------------------------------------------------------------------
-<a name="include"/>
+<a name="include"></a>
 include
 ----------------------------------------------------------------------------------------------------
 
@@ -1358,7 +1396,7 @@ include		H2O.mol
 [atom_type], [atom]
 
 ----------------------------------------------------------------------------------------------------
-<a name="reset"/>
+<a name="reset"></a>
 reset
 ----------------------------------------------------------------------------------------------------
 
@@ -1393,7 +1431,7 @@ coordinates, and Packmol definitions.
 [packmol]
 
 ----------------------------------------------------------------------------------------------------
-<a name="shell"/>
+<a name="shell"></a>
 shell
 ----------------------------------------------------------------------------------------------------
 
@@ -1422,7 +1460,7 @@ then executes Packmol using it as input.
 [packmol]
 
 ----------------------------------------------------------------------------------------------------
-<a name="quit"/>
+<a name="quit"></a>
 quit
 ----------------------------------------------------------------------------------------------------
 
@@ -1480,7 +1518,7 @@ The example above writes a summary of the current molecular system and then quit
 [shell]:		#shell
 [quit]:			#quit
 
-[basics]:			basics.html
+[Playmol Basics]:		basics.html
 [LAMMPS real units]:		http://lammps.sandia.gov/doc/units.html
 [LAMMPS data file]:		http://lammps.sandia.gov/doc/read_data.html
 [LAMMPS pair style]:		http://lammps.sandia.gov/doc/pair_style.html
@@ -1490,6 +1528,7 @@ The example above writes a summary of the current molecular system and then quit
 [LAMMPS improper style]:	http://lammps.sandia.gov/doc/improper_style.html
 [read_data]:			http://lammps.sandia.gov/doc/read_data.html
 [xyz file format]:		http://openbabel.org/wiki/XYZ_(format)
+[Packmol package]:		http://www.ime.unicamp.br/~martinez/packmol
 [Packmol User's Guide]:		http://www.ime.unicamp.br/~martinez/packmol/quickguide
 [VMD]:				http://www.ks.uiuc.edu/Research/vmd
 [Avogadro]:			http://avogadro.cc/wiki/Main_Page

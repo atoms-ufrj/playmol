@@ -43,7 +43,7 @@ function(hljs) {
       'nloops fix copy pack diameter',
     built_in:
       'not abs exp log ln sqrt sinh cosh tanh sin cos tan asin acos atan ' +
-      'int nint ceil floor'
+      'int nint ceil floor mol'
   };
 
   var SPECIAL_KEYWORDS = {

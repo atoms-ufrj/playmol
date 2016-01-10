@@ -264,9 +264,8 @@ contains
   elemental function real2str( a ) result( str )
     real(rb), intent(in) :: a
     character(sl)        :: str
-    real(4) :: b
-    b = a
-    write(str,*) b
+!    write(str,*) a
+    write(str,*) real(a,4)
     str = adjustl(str)
   end function real2str
 

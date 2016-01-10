@@ -44,6 +44,8 @@ integer, parameter, private :: is = 1 ! Data type of bytecode
 
 real(rb), parameter, private :: zero = 0.0_rb, one = 1.0_rb
 
+real(rb), parameter, private :: rbtol = 1.0e-8_rb
+
 integer(is), parameter, private :: cImmed   = 1_is,  &
                                    cNeg     = 2_is,  &
                                    cAdd     = 3_is,  &
@@ -320,11 +322,11 @@ contains
           SP = SP - 1
 
         case (cEQ)
-          Comp%Stack(SP-1) = merge(one,zero,Comp%Stack(SP-1) == Comp%Stack(SP))
+          Comp%Stack(SP-1) = merge(one,zero,abs(Comp%Stack(SP-1) - Comp%Stack(SP)) <= rbtol)
           SP = SP - 1
 
         case (cNE)
-          Comp%Stack(SP-1) = merge(one,zero,Comp%Stack(SP-1) /= Comp%Stack(SP))
+          Comp%Stack(SP-1) = merge(one,zero,abs(Comp%Stack(SP-1) - Comp%Stack(SP)) > rbtol)
           SP = SP - 1
 
         case (cAnd)
@@ -620,10 +622,10 @@ contains
     integer     :: k
     character(len(Funcs)) :: fun
     !--- -------- --------- --------- --------- --------- --------- --------- -------
-    n = 0
-    j = cNot - 1
+    n = 0_is
+    j = cNot - 1_is
     do while (j < VarBegin)                             ! Check all math functions
-       j = j + 1
+       j = j + 1_is
        k = min(len_trim(Funcs(j)), len(str))   
        call LowCase (str(1:k), fun)
        if (fun == Funcs(j)) then                        ! Compare lower case letters
@@ -643,9 +645,9 @@ contains
                                       inext     ! Position of character after name
     integer(is)                    :: n         ! index of variable
     !--- -------- --------- --------- --------- --------- --------- --------- -------
-    integer :: j,ib,in,lstr
+    integer :: j, ib, in, lstr
     !--- -------- --------- --------- --------- --------- --------- --------- -------
-    n = 0
+    n = 0_is
     lstr = len_trim(str)
     if (lstr > 0) then
        do ib = 1, lstr                          ! Search for first character in str
@@ -656,7 +658,7 @@ contains
        end do
        do j = 1, size(Var)
           if (str(ib:in-1) == Var(j)) then                     
-             n = j                              ! Variable name found
+             n = int(j,is)                      ! Variable name found
              exit
           end if
        end do
@@ -766,7 +768,7 @@ contains
       n = cImmed
     else                                                ! Check for a variable
       n = VariableIndex(F, Var)
-      if (n > 0) n = VarBegin + n - 1
+      if (n > 0) n = VarBegin + n - 1_is
     end if
   end function tParser_MathItemIndex
 

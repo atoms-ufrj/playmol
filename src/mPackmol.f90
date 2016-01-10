@@ -20,6 +20,7 @@
 module mPackmol
 
 use mGlobal
+use mMolecule
 use mStruc
 use mBox
 
@@ -28,13 +29,15 @@ implicit none
 character(sl), parameter :: stdout_name = "/proc/self/fd/1"
 character(sl), parameter :: logfile = "packmol.log"
 
+real(rb), parameter, private :: rbtol = 1.e-6_rb
+
 type tPackmol
   integer  :: seed = 1234
   integer  :: nloops = 50
-  real(rb) :: change = 1.0_rb
-  real(rb) :: tolerance = 2.0_rb
+  real(rb) :: retry = 1.0_rb
+  real(rb) :: diameter = 2.5_rb
   logical  :: setup
-  type(StrucList) :: list = StrucList( name = "packmol", number = 1 )
+  type(StrucList) :: list = StrucList( name = "packmol option", number = 1 )
   contains
     procedure :: run => tPackmol_run
     procedure :: file_names => tPackmol_file_names
@@ -75,9 +78,10 @@ contains
 
   !=================================================================================================
 
-  function tPackmol_total_mass( me, molmass ) result( mass )
+  function tPackmol_total_mass( me, molmass, mol ) result( mass )
     class(tPackmol), intent(in) :: me
     real(rb),        intent(in) :: molmass(:)
+    type(tMolecule), intent(in) :: mol
     real(rb)                    :: mass
 
     type(Struc), pointer :: ptr
@@ -88,7 +92,7 @@ contains
     ptr => me % list % first
     do while (associated(ptr))
       call split( ptr % params, narg, arg )
-      imol = str2int( arg(1) )
+      imol = mol % index( arg(1) )
       select case (ptr % id(1))
         case ("move","fix")
           mass = mass + molmass(imol)
@@ -103,17 +107,17 @@ contains
 
   !=================================================================================================
 
-  subroutine tPackmol_run( me, lmol, lcoord, latom, ldiam, nmol, Lbox )
+  subroutine tPackmol_run( me, mol, lcoord, latom, ldiam, Lbox )
     use iso_fortran_env, only : screen => output_unit
     class(tPackmol), intent(inout) :: me
-    type(StrucList), intent(inout) :: lmol, lcoord, latom, ldiam
-    integer,         intent(inout) :: nmol
+    type(tMolecule), intent(inout) :: mol
+    type(StrucList), intent(inout) :: lcoord, latom, ldiam
     real(rb),        intent(in)    :: Lbox(3)
 
-    integer       :: stat, unit, imol, ifile, iatom, nfiles, file(nmol)
+    integer       :: stat, unit, imol, ifile, iatom, nfiles, file(mol%N), narg
     real(rb)      :: scaling
     logical       :: redirect
-    character(sl) :: mixfile, inputfile, ctype
+    character(sl) :: mixfile, inputfile, ctype, arg(1)
 
     type(Struc),   pointer     :: ptr, pmol
     integer,       allocatable :: aux(:), molecule(:), natoms(:), first_atom(:)
@@ -128,7 +132,8 @@ contains
     allocate( aux(me % list % count()) )
     ptr => me % list % first
     do while (associated(ptr))
-      imol = str2int(ptr % params)
+      call split( ptr % params, narg, arg )
+      imol = mol % index( arg(1) )
       if (all(aux(1:nfiles) /= imol)) then
         nfiles = nfiles + 1
         aux(nfiles) = imol
@@ -143,7 +148,7 @@ contains
     ! Find out the number of atoms of each considered molecule:
     allocate( natoms(nfiles) )
     natoms = 0
-    ptr => lmol % first
+    ptr => mol % list % first
     do while (associated(ptr))
       ifile = file(str2int(ptr%params))
       if (ifile > 0) natoms(ifile) = natoms(ifile) + 1
@@ -157,7 +162,7 @@ contains
     iatom = 0
     do while (associated(ptr) .and. any(first_atom == 0))
       iatom = iatom + 1
-      call lmol % search( ptr % id, pmol )
+      call mol % list % search( ptr % id, pmol )
       ifile = file(str2int(pmol % params))
       if (ifile > 0) then
         if (first_atom(ifile) == 0) first_atom(ifile) = iatom
@@ -172,7 +177,7 @@ contains
 
     ! Write down xyz files and determine atom diameters:
     allocate( diameter(nfiles,maxval(natoms)) )
-    diameter = me%tolerance
+    diameter = me%diameter
     do ifile = 1, nfiles
       if (me%setup) call writeln( "Saving coordinate file", molfile(ifile) )
       open( newunit = unit, file = molfile(ifile), status = "replace" )
@@ -204,13 +209,13 @@ contains
       call writeln( "Saving packmol input file", inputfile )
       call save_input_file
 
-    else if (me%change == 1.0_rb) then
+    else if (abs(me%retry - 1.0_rb) < rbtol) then
 
       call execute_packmol( stat )
       if (stat == 0) then
         call retrieve_coordinates( mixfile )
         call delete_files( [inputfile, mixfile, molfile, logfile] )
-        call writeln( "Packmol converged with tolerance =", real2str(me%tolerance) )
+        call writeln( "Packmol converged with scaling factor", real2str(scaling) )
       else
         call delete_files( [inputfile, mixfile, trim(mixfile)//"_FORCED", molfile] )
         call error( "Packmol did not converge! See file packmol.log for additional info.")
@@ -221,7 +226,7 @@ contains
       stat = 1
       do while (stat /= 0)
         call execute_packmol( stat )
-        if (stat /= 0) scaling = me%change * scaling
+        if (stat /= 0) scaling = me%retry * scaling
       end do
       call retrieve_coordinates( mixfile )
       call delete_files( [inputfile, mixfile, trim(mixfile)//"_FORCED", molfile, logfile] )
@@ -248,16 +253,13 @@ contains
       end subroutine execute_packmol
       !---------------------------------------------------------------------------------------------
       subroutine save_input_file
-
         integer :: unit, imol, ifile, iatom, narg
         real(rb) :: D
         character(sl) :: box_limits, arg(4)
         type(Struc), pointer :: ptr
-
-        ! Create packmol input script:
         open( newunit = unit, file = inputfile, status = "replace" )
         write(unit,'("# Generated by Playmol on ",A,/)') trim(now())
-        write(unit,'("tolerance ",A)') trim(real2str(scaling*me%tolerance))
+        write(unit,'("tolerance ",A)') trim(real2str(scaling*me%diameter))
         write(unit,'("filetype xyz")')
         write(unit,'("seed ",A)') trim(int2str(me%seed))
         write(unit,'("nloop ",A)') trim(int2str(me%nloops))
@@ -265,28 +267,28 @@ contains
         ptr => me % list % first
         do while (associated(ptr))
           call split( ptr % params, narg, arg )
-          imol = str2int(arg(1))
+          imol = mol % index( arg(1) )
           ifile = file(imol)
           write(unit,'(/,"structure ",A)') trim(molfile(ifile))
           select case (ptr % id(1))
-            case ("move","fix")
-              write(unit,'("  number 1")')
-              if (ptr % id(1) == "fix") write(unit,'("  center")')
-              write(unit,'("  fixed ",A," 0.0 0.0 0.0")') trim(join(arg(2:4)))
-            case ("copy","pack")
-              write(unit,'("  number ",A)') trim(arg(2))
-              D = scaling*maxval(diameter(ifile,1:natoms(ifile)))
-              box_limits = join(real2str([-0.5_rb*(Lbox - D), +0.5_rb*(Lbox - D)]))
-              write(unit,'("  inside box ",A)') trim(box_limits)
-              if (ptr % id(1) == "copy") then
-                write(unit,'("  constrain_rotation x 0.0 0.0")')
-                write(unit,'("  constrain_rotation y 0.0 0.0")')
-                write(unit,'("  constrain_rotation z 0.0 0.0")')
-              end if
+          case ("move","fix")
+            write(unit,'("  number 1")')
+            if (ptr % id(1) == "fix") write(unit,'("  center")')
+            write(unit,'("  fixed ",A," 0.0 0.0 0.0")') trim(join(arg(2:4)))
+          case ("copy","pack")
+            write(unit,'("  number ",A)') trim(arg(2))
+            D = scaling*maxval(diameter(ifile,1:natoms(ifile)))
+            box_limits = join(real2str([-0.5_rb*(Lbox - D), +0.5_rb*(Lbox - D)]))
+            write(unit,'("  inside box ",A)') trim(box_limits)
+            if (ptr % id(1) == "copy") then
+              write(unit,'("  constrain_rotation x 0.0 0.0")')
+              write(unit,'("  constrain_rotation y 0.0 0.0")')
+              write(unit,'("  constrain_rotation z 0.0 0.0")')
+            end if
           end select
           do iatom = 1, natoms(ifile)
             D = diameter(ifile,iatom)
-            if (D /= me%tolerance) then
+            if (abs((D - me%diameter)/me%diameter) < rbtol) then
               write(unit,'("  atom ",A)') trim(int2str(iatom))
               write(unit,'("    radius ",A)') trim(real2str(0.5_rb*scaling*D))
               write(unit,'("  end atom ")')
@@ -296,7 +298,6 @@ contains
           ptr => ptr % next
         end do
         close(unit)
-
       end subroutine save_input_file
       !---------------------------------------------------------------------------------------------
       subroutine retrieve_coordinates( mixfile )

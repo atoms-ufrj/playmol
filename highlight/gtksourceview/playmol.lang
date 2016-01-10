@@ -31,6 +31,7 @@
     <style id="comment" _name="Comment" map-to="def:comment"/>
     <style id="floating-point" _name="Floating Point" map-to="def:floating-point"/>
     <style id="keyword" _name="Keyword" map-to="def:keyword"/>
+    <style id="intrinsic" _name="Intrinsic function" map-to="def:builtin"/>
     <style id="variable" _name="Variable" map-to="def:type"/>
     <style id="decimal" _name="Decimal" map-to="def:decimal"/>
     <style id="string" _name="String" map-to="def:string"/>
@@ -120,6 +121,32 @@
       </include>
     </context>
 
+    <context id="intrinsics" style-ref="intrinsic">
+      <keyword>abs</keyword>
+      <keyword>achar</keyword>
+      <keyword>acos</keyword>
+      <keyword>not</keyword>
+      <keyword>abs</keyword>
+      <keyword>exp</keyword>
+      <keyword>log</keyword>
+      <keyword>ln</keyword>
+      <keyword>sqrt</keyword>
+      <keyword>sinh</keyword>
+      <keyword>cosh</keyword>
+      <keyword>tanh</keyword>
+      <keyword>sin</keyword>
+      <keyword>cos</keyword>
+      <keyword>tan</keyword>
+      <keyword>asin</keyword>
+      <keyword>acos</keyword>
+      <keyword>atan</keyword>
+      <keyword>int</keyword>
+      <keyword>nint</keyword>
+      <keyword>ceil</keyword>
+      <keyword>floor</keyword>
+      <keyword>mol</keyword>
+    </context>
+
     <context id="floating-point-number" style-ref="floating-point">
       <match extended="true">
         (?&lt;![\w\.])
@@ -165,6 +192,7 @@
         <context ref="commands"/>
         <context ref="for-command"/>
         <context ref="define-command"/>
+        <context ref="intrinsics"/>
         <context ref="default-files"/>
       </include>
     </context>
