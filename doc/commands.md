@@ -1228,12 +1228,14 @@ ways:
 
 1. By directly employing the numerical index of the compound. The command [write], with its option
 _summary_, can be helpful for checking the indexes of the existing ones. One may note, however,
-that these indexes are dynamical (please see the [bond] command)
+that these indexes can possibly change during the execution of a script (please see the [bond]
+command description). Thus, the specification must refer to the index which the desired compound
+will have at the moment of a `packmol action` command (see below).
 
-, but packmol index
-specifications do not update accordingly.
-
-2. 
+2. By using the function `mol(atom)`, where _atom_ is the identifier of an existing [atom]. Such
+identifier must be tightly placed inside the parentheses (that is, without any spaces and/or tabs).
+At the moment of a `packmol action` command, the function will return the index of the compound that
+contains the specified atom.
 
 The usage of each keyword _fix_, _copy_, or _pack_ is:
 

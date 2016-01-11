@@ -38,8 +38,6 @@ align		1 x y
 
 write		xyz $compound.xyz
 
-quit
-
 packmol		tolerance $tol seed $seed retry 0.95
 packmol		copy 1 $Nmol
 packmol		action execute

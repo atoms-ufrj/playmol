@@ -30,6 +30,11 @@ type tMolecule
   type(StrucList) :: xyz = StrucList( name = "coordinate", number = 1 )
   contains
     procedure :: index => tMolecule_index
+    procedure :: fuse => tMolecule_fuse
+    procedure :: number_of_atoms => tMolecule_number_of_atoms
+    procedure :: count => tMolecule_count
+    procedure :: per_molecule => tMolecule_per_molecule
+    procedure :: set_geometry => tMolecule_set_geometry
     procedure :: coordinates => tMolecule_coordinates
     procedure :: align => tMolecule_align
 end type tMolecule
@@ -60,6 +65,210 @@ contains
       call error( "molecule definition as", string, "is invalid" )
     end if
   end function tMolecule_index
+
+  !=================================================================================================
+
+  subroutine tMolecule_fuse( me, atom )
+    class(tMolecule), intent(inout) :: me
+    character(sl),    intent(in)    :: atom(2)
+    integer :: i, mol(2), imin, imax
+    type(Struc), pointer :: ptr
+    do i = 1, 2
+      call me % list % search( atom(i:i), ptr )
+      mol(i) = str2int( ptr % params )
+    end do
+    imin = minval(mol)
+    imax = maxval(mol)
+    if (imin == imax) then
+      call writeln( "Closing cycle(s) in molecule", int2str(imin) )
+    else
+      call writeln( "Fusing molecule", int2str(imax), "to molecule", int2str(imin) )
+      call rename_molecule( trim(int2str(imax)), trim(int2str(imin)) )
+      call writeln( "Lowering indices of molecules", int2str(imax+1), "to", int2str(me%N) )
+      do i = imax+1, me%N
+        call rename_molecule( trim(int2str(i)), trim(int2str(i-1)) )
+      end do
+      me%N = me%N - 1
+    end if
+    contains
+      !---------------------------------------------------------------------------------------------
+      subroutine rename_molecule( old, new )
+        character(*), intent(in) :: old, new
+        ptr => me % list % first
+        do while (associated(ptr))
+          if (ptr % params == old) ptr % params = new
+          ptr => ptr % next
+        end do
+      end subroutine rename_molecule
+      !---------------------------------------------------------------------------------------------
+  end subroutine tMolecule_fuse
+
+  !=================================================================================================
+
+  function tMolecule_number_of_atoms( me ) result( natoms )
+    class(tMolecule), intent(in) :: me
+    integer                      :: natoms(me%N)
+    type(Struc), pointer :: atom
+    integer :: i
+    natoms = 0
+    atom => me % list % first
+    do while (associated(atom))
+      i = str2int(atom%params)
+      natoms(i) = natoms(i) + 1
+      atom => atom % next
+    end do
+  end function tMolecule_number_of_atoms
+
+  !=================================================================================================
+
+  function tMolecule_count( me ) result( count )
+    class(tMolecule), intent(in) :: me
+    integer                      :: count(me%N)
+    integer  :: imol, iatom, natoms(me%N)
+    type(Struc), pointer :: ptr
+    natoms = me % number_of_atoms()
+    count = 0
+    ptr => me % xyz % first
+    do while (associated(ptr))
+      imol = str2int(me % list % parameters( ptr%id ) )
+      count(imol) = count(imol) + 1
+      do iatom = 1, natoms(imol)
+        ptr => ptr % next
+      end do
+    end do
+  end function tMolecule_count
+
+  !=================================================================================================
+
+  function tMolecule_per_molecule( me, val_list ) result( total )
+    class(tMolecule), intent(in) :: me
+    type(StrucList),  intent(in) :: val_list
+    real(rb)                     :: total(me%N)
+    integer :: imol
+    type(Struc), pointer :: ptr, pval
+    total = 0.0_rb
+    pval => val_list % first
+    do while (associated(pval))
+      ptr => me % list % first
+      do while (associated(ptr))
+        if (ptr % match_id(pval % id,.false.)) then
+          imol = str2int( ptr % params )
+          total(imol) = total(imol) + str2real( pval % params )
+        end if
+        ptr => ptr % next
+      end do
+      pval => pval % next
+    end do
+  end function tMolecule_per_molecule
+
+  !=================================================================================================
+
+  subroutine tMolecule_set_geometry( me, data, ndata )
+    class(tMolecule), intent(inout) :: me
+    character(sl),    intent(in)    :: data(:,:)
+    integer,          intent(in)    :: ndata(size(data,1))
+    integer       :: N, i, j, narg, imol, iatom, ind(3)
+    character(sl) :: arg(size(data,2)), catom
+    integer :: natoms(me%N)
+    logical :: new_molecule
+    type(Struc), pointer :: atom
+    character(sl), allocatable :: prev(:)
+    character(sl), allocatable :: name(:)
+    real(rb), allocatable :: R(:,:)
+    real(rb) :: L, theta, phi, R1(3), R2(3), R3(3), x(3), y(3), z(3)
+    natoms = me % number_of_atoms()
+    allocate( prev(maxval(natoms)) )
+    N = size(data,1)
+    call writeln( "Number of provided geometric data: ", int2str(N) )
+    allocate( name(N), R(3,N) )
+    new_molecule = .true.
+    do i = 1, N
+      narg = ndata(i)
+      arg = data(i,:)
+      if ((narg < 3).or.(narg > 7).or.(narg == 6)) call error( "invalid geometric info format" )
+      catom = trim(me % list % prefix)//trim(arg(1))//trim(me % list % suffix)
+      call me % list % search( [catom], atom )
+      if (associated(atom)) then
+        if (new_molecule) then
+          imol = str2int(atom%params)
+          iatom = 1
+          call writeln( "Reading", int2str(natoms(imol)), &
+                        "geometric data for molecule", trim(int2str(imol))//":" )
+        else if (trim(atom%params) /= trim(int2str(imol))) then
+          call error( "atom", catom, "does not belong to molecule", int2str(imol) )
+        else if (any(str_find([catom],prev(1:iatom)) > 0)) then
+          call error( "geometric info of atom", catom, "has already been given" )
+        else
+          iatom = iatom + 1
+        end if
+      end if
+      call writeln( "Data provided for atom", catom, ":", join(arg(2:narg)) )
+      name(i) = catom
+      select case (narg)
+        case (3) ! Bond
+          call check_atoms( arg(2:2), ind(1:1) )
+          L = str2real(arg(3))
+          x = real([1,0,0],rb)
+          R(:,i) = R(:,ind(1)) + L*x
+        case (4) ! Coordinates
+          do j = 1, 3
+            R(j,i) = str2real(arg(j+1))
+          end do
+        case (5) ! Bond and angle
+          call check_atoms( arg(2:3), ind(1:2) )
+          L = str2real(arg(4))
+          theta = str2real(arg(5))
+          R1 = R(:,ind(1))
+          R2 = R(:,ind(2))
+          x = (R1 - R2)/norm(R1 - R2)
+          y = real([0,1,0],rb)
+          if (abs(x(2)-1.0_rb) < 0.01_rb) y = real([1,0,0],rb)
+          y = y - scalar(y,x)*x
+          y = y / norm(y)
+          R(:,i) = R1 + L*(cosine(180-theta)*x + sine(180-theta)*y)
+        case (7) ! Bond, angle, and dihedral
+          call check_atoms( arg(2:4), ind(1:3) )
+          L = str2real(arg(5))
+          theta = str2real(arg(6))
+          phi = str2real(arg(7))
+          R1 = R(:,ind(1))
+          R2 = R(:,ind(2))
+          R3 = R(:,ind(3))
+          x = (R1 - R2)/norm(R1 - R2)
+          y = R3 - R2 - scalar(R3 - R2,x)*x
+          y = y / norm(y)
+          z = cross(x,y)
+          R(:,i) = R1 + L*(cosine(180-theta)*x + sine(180-theta)*(cosine(phi)*y + sine(phi)*z))
+        case default
+          call error( "bad geometric info" )
+      end select
+      arg(2:4) = real2str(R(:,i))
+      call me % xyz % add( 4, arg(1:4), me % list, repeatable = .true. )
+      prev(iatom) = catom
+      new_molecule = iatom == natoms(imol)
+    end do
+    if (.not.new_molecule) then
+      call error( "geometric info for molecule", int2str(imol), "is incomplete" )
+    end if
+    contains
+      subroutine check_atoms( atom, ind )
+        character(sl), intent(in) :: atom(:)
+        integer,       intent(inout) :: ind(size(atom))
+        integer :: j, k
+        do j = 1, size(atom)
+          if (.not. me % list % find( [atom(j)])) call error( atom(j), "is not a valid atom" )
+          if (any(name(1:i-1) == atom(j))) then
+            k = 1
+            do while (name(k) /= atom(j))
+              k = k + 1
+            end do
+            ind(j) = k
+          else
+            call error( "atom", atom(j), "has not been defined")
+          end if
+        end do
+      end subroutine
+  end subroutine tMolecule_set_geometry
 
   !=================================================================================================
 

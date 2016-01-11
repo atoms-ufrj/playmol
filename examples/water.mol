@@ -19,19 +19,21 @@ charge		H?	 0.415
 charge		O	-0.830
 
 bond		H1 O
-#bond		O H2
+bond		O H2
 
-#build
-#3
-## Water molecule coordinates:
-#H1	0.0	0.0	0.0
-#O	0.9572	0.0 	0.0
-#H2	1.19719	0.92663	0.0
+build
+3
+# Water molecule coordinates:
+H1	0.0	0.0	0.0
+O	0.9572	0.0 	0.0
+H2	1.19719	0.92663	0.0
 
-align		mol(W_H2) x y
-quit
+#align		mol(W_H1) x y
+#align		mol(W_H2) x y
+#write summary
+#quit
 box		density 0.0602214
-packmol		tolerance 2.5 retry 1.0 pack 2 200 pack mol(W_H1) 200 action execute
+packmol		tolerance 2.5 retry 1.0 pack mol(W_H2) 200 action execute
 quit
 write		lammps water.lmp
 write		lammpstrj water.lammpstrj

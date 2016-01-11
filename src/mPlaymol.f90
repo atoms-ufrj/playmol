@@ -17,6 +17,9 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
+! TO DO: all defined atoms should be marked as used. When an atom is defined, mark predefined
+!        charges as used. When a charge is defined, check if any atom already uses it.
+
 module mPlaymol
 
 use mGlobal
@@ -32,7 +35,7 @@ type tPlaymol
   type(tBox)      :: box
   type(tPackmol)  :: packmol
   type(tCodeFlow) :: code_flow
-  type(tMolecule) :: molecule
+  type(tMolecule) :: molecules
 
   type(StrucList) :: atom_type_list = StrucList( name = "atom type", number = 1 )
   type(StrucList) :: bond_type_list = StrucList( name = "bond type", number = 2 )
@@ -41,6 +44,7 @@ type tPlaymol
   type(StrucList) :: improper_type_list = StrucList( name = "improper type", number = 4, & 
                                                      two_way = .false. )
   type(StrucList) :: mass_list = StrucList( name = "mass", number = 1 )
+  type(StrucList) :: atom_masses = StrucList( name = "atom mass", number = 1 )
   type(StrucList) :: diameter_list = StrucList( name = "diameter", number = 1 )
   type(StrucList) :: atom_list = StrucList( name = "atom", number = 1 )
   type(StrucList) :: charge_list = StrucList( name = "charge", number = 1 )
@@ -61,12 +65,9 @@ type tPlaymol
     procedure :: read_geometry => tPlaymol_read_geometry
     procedure :: write_xyz => tPlaymol_write_xyz
     procedure :: summarize => tPlaymol_summarize
-    procedure :: fuse_molecules => tPlaymol_fuse_molecules
-    procedure :: count_molecules => tPlaymol_count_molecules
     procedure :: update_structure => tPlaymol_update_structure
     procedure :: search_impropers => tPlaymol_search_impropers
     procedure :: get_types => tPlaymol_get_types
-    procedure :: atoms_in_molecules => tPlaymol_atoms_in_molecules
     procedure :: check_coordinates => tPlaymol_check_coordinates
 end type tPlaymol
 
@@ -128,9 +129,13 @@ contains
         call writeln( "Defining new prefix for ", arg(2), ":", arg(3) )
         if (arg(3) == "none") arg(3) = ""
         select case (arg(2))
-          case ("types"); me % atom_type_list % prefix = arg(3)
-          case ("atoms"); me % atom_list % prefix = arg(3)
-          case default; call error( "prefix keyword must be 'types' or 'atoms'" )
+          case ("types")
+            me % atom_type_list % prefix = arg(3)
+          case ("atoms")
+            me % atom_list % prefix = arg(3)
+            me % molecules % list % prefix = arg(3)
+          case default
+            call error( "prefix keyword must be 'types' or 'atoms'" )
         end select
         if (has_macros(arg(3))) call error( "invalid prefix", arg(3) )
       end subroutine prefix_command
@@ -140,9 +145,13 @@ contains
         call writeln( "Defining new suffix for ", arg(2), ":", arg(3) )
         if (arg(3) == "none") arg(3) = ""
         select case (arg(2))
-          case ("types"); me % atom_type_list % suffix = arg(3)
-          case ("atoms"); me % atom_list % suffix = arg(3)
-          case default; call error( "suffix keyword must be 'types' or 'atoms'" )
+          case ("types")
+            me % atom_type_list % suffix = arg(3)
+          case ("atoms")
+            me % atom_list % suffix = arg(3)
+            me % molecules % list % suffix = arg(3)
+          case default
+            call error( "suffix keyword must be 'types' or 'atoms'" )
         end select
         if (has_macros(arg(3))) call error( "invalid suffix", arg(3) )
       end subroutine suffix_command
@@ -222,34 +231,46 @@ contains
       end subroutine diameter_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_command
-        type(Struc), pointer :: type_ptr
+        type(Struc), pointer :: ptr
+        character(sl) :: atom
+
         if ((narg < 3).or.(narg > 4)) call error( "invalid atom command" )
         arg(3) = trim(me % atom_type_list % prefix) // trim(arg(3)) // me % atom_type_list % suffix
+        atom = arg(2)
         call me % atom_list % add( 2, arg(2:3) )
         if (has_macros(arg(2))) call error( "invalid atom name" )
         if (has_macros(arg(3))) call error( "invalid atom type name" )
-        call me % atom_type_list % search( arg(3:3), type_ptr )
-        if (associated(type_ptr)) then
-          type_ptr % used = .true.
-        else
-          call error( "atom type", arg(3), "required, but not found")
-        end if
-        if (.not.me % mass_list % find(arg(3:3))) then
-          call error( "mass of atom type",arg(3), "has not been defined" )
-        end if
-        me%molecule%N = me%molecule%N + 1
-        arg(3) = int2str( me%molecule%N )
-        call me % molecule % list % add( 2, arg(2:3) )
+
+        call me % atom_type_list % search( arg(3:3), ptr )
+        if (.not.associated(ptr)) call error( "atom type", arg(3), "required, but not found")
+        ptr % used = .true.
+
+        call me % mass_list % search( arg(3:3), ptr )
+        if (.not.associated(ptr)) call error( "mass of atom type",arg(3), "has not been defined" )
+        ptr % used = .true.
+        arg(3) = ptr % params
+        call me % atom_masses % add( 2, arg(2:3) )
+
+        call me % charge_list % search( arg(2:2), ptr )
+        if (associated(ptr)) ptr % used = .true.
         if (narg == 4) then
+          if (associated(ptr)) call error( "an applicable charge has already been defined" )
           arg(3) = arg(4)
           call me % charge_list % add( 2, arg(2:3) )
+          ptr => me % charge_list % last
         end if
+
+        me%molecules%N = me%molecules%N + 1
+        arg(1:2) = [atom,int2str( me%molecules%N )]
+        call me % molecules % list % add( 2, arg(1:2) )
       end subroutine atom_command
       !---------------------------------------------------------------------------------------------
       subroutine charge_command
         if (narg /= 3) call error( "invalid charge command" )
+        arg(2) = trim(me%atom_list%prefix)//trim(arg(2))//trim(me%atom_list%suffix)
         call me % charge_list % add( narg-1, arg(2:3) )
         if (.not.is_real(arg(3))) call error( "invalid charge value" )
+        if (me % atom_list % find( arg(2:2) )) me % charge_list % last % used = .true.
       end subroutine charge_command
       !---------------------------------------------------------------------------------------------
       subroutine add_bond( atom )
@@ -257,7 +278,7 @@ contains
         call me % bond_list % add( 2, atom, me % atom_list )
         call me % bond_list % handle( atom, me % atom_list, me % bond_type_list, 2 )
         if (atom(1) == atom(2)) call error( "atom", atom(1), "cannot bind to itself" )
-        call me % fuse_molecules( atom )
+        call me % molecules % fuse( atom )
         call me % update_structure()
       end subroutine add_bond
       !---------------------------------------------------------------------------------------------
@@ -278,10 +299,10 @@ contains
         if (narg /= 3) call error( "invalid link command" )
         call me % virtual_link_list % add( 2, arg(2:3), me % atom_list )
         if (arg(2) == arg(3)) call error( "atom", arg(2), "cannot be linked to itself" )
-        imol = str2int(me % molecule % list % parameters( arg(2:2) ))
-        jmol = str2int(me % molecule % list % parameters( arg(3:3) ))
+        imol = str2int(me % molecules % list % parameters( arg(2:2) ))
+        jmol = str2int(me % molecules % list % parameters( arg(3:3) ))
         if (imol == jmol) call error( "atoms", join(arg(2:3)), "must belong to distinc molecules" )
-        call me % fuse_molecules( arg(2:3) )
+        call me % molecules % fuse( arg(2:3) )
       end subroutine link_command
       !---------------------------------------------------------------------------------------------
       subroutine extra_command
@@ -297,9 +318,9 @@ contains
           case ("dihedral"); call extra_dihedral_command
           case default; call error( "invalid extra command" )
         end select
-        imol = str2int(me % molecule % list % parameters( arg(2:2) ))
+        imol = str2int(me % molecules % list % parameters( arg(2:2) ))
         do i = 2, narg
-          jmol = str2int(me % molecule % list % parameters( arg(i:i) ))
+          jmol = str2int(me % molecules % list % parameters( arg(i:i) ))
           if (jmol /= imol) call error( "atoms", join(arg(2:narg)), "are not in the same molecule" )
         end do
       end subroutine extra_command
@@ -331,9 +352,9 @@ contains
           call me % improper_list % add( narg-1, arg(2:narg), me % atom_list )
           if (narg /= 5) call error( "invalid improper command")
           call me % improper_list % handle( arg(2:5), me%atom_list, me%improper_type_list, 2 )
-          imol = str2int(me % molecule % list % parameters( arg(2:2) ))
+          imol = str2int(me % molecules % list % parameters( arg(2:2) ))
           do i = 3, 5
-            jmol = str2int(me % molecule % list % parameters( arg(i:i) ))
+            jmol = str2int(me % molecules % list % parameters( arg(i:i) ))
             if (jmol /= imol) call error( "atoms", join(arg(2:5)), "are not in the same molecule" )
           end do
         else
@@ -374,13 +395,13 @@ contains
       end subroutine build_command
       !---------------------------------------------------------------------------------------------
       subroutine align_command
-        integer :: i, imol, natoms(me%molecule%N), N
+        integer :: i, imol, natoms(me%molecules%N), N
         real(rb), allocatable :: Mass(:), Coord(:,:)
         integer :: axis(3)
         character :: dir(3) = ["x","y","z"]
         real(rb) :: lb(3), ub(3)
         if (narg /= 4) call error( "invalid align command" )
-        imol = me % molecule % index(arg(2))
+        imol = me % molecules % index(arg(2))
         do i = 3, 4
           if (len_trim(arg(i)) /= 1) call error( "invalid align command" )
           select case (trim(arg(i)))
@@ -394,19 +415,19 @@ contains
         axis(3) = 6 - axis(1) - axis(2)
         call me % check_coordinates( imol )
         call writeln( "Aligning molecule", arg(2), "with axes", arg(3), "and", arg(4) )
-        natoms = me % atoms_in_molecules()
+        natoms = me % molecules % number_of_atoms()
         N = natoms(imol)
         allocate( Mass(N), Coord(3,N) )
         Mass = 1.0_rb
-        call me % molecule % coordinates( imol, N, Coord, me % molecule % xyz, 1 )
+        call me % molecules % coordinates( imol, N, Coord, me % molecules % xyz, 1 )
         lb = minval(Coord,dim=2)
         ub = maxval(Coord,dim=2)
         do i = 1, 3
           call writeln( "Bounds in direction", dir(i)//":", join(real2str([lb(i),ub(i)])) )
         end do
         call writeln( "Bounding box lengths: ", join(real2str(ub-lb)) )
-        call me % molecule % align( N, Mass, Coord, axis )
-        call me % molecule % coordinates( imol, N, Coord, me % molecule % xyz, 2 )
+        call me % molecules % align( N, Mass, Coord, axis )
+        call me % molecules % coordinates( imol, N, Coord, me % molecules % xyz, 2 )
         lb = minval(Coord,dim=2)
         ub = maxval(Coord,dim=2)
         do i = 1, 3
@@ -463,8 +484,8 @@ contains
         if (any(lists == 10)) call me % angle_list % destroy
         if (any(lists == 11)) call me % dihedral_list % destroy
         if (any(lists == 12)) call me % improper_list % destroy
-        if (any(lists == 13)) call me % molecule % list % destroy
-        if (any(lists == 14)) call me % molecule % xyz % destroy
+        if (any(lists == 13)) call me % molecules % list % destroy
+        if (any(lists == 14)) call me % molecules % xyz % destroy
         if (any(lists == 15)) call me % packmol % list % destroy
       end subroutine reset_lists
       !---------------------------------------------------------------------------------------------
@@ -480,7 +501,7 @@ contains
           case ("dihedral_types"); call me % dihedral_type_list % destroy
           case ("improper_types"); call me % improper_type_list % destroy
           case ("impropers"); call me % improper_list % destroy
-          case ("xyz"); call me % molecule % xyz % destroy
+          case ("xyz"); call me % molecules % xyz % destroy
           case ("packmol"); call me % packmol % list % destroy
           case default; call error( "invalid reset command" )
         end select
@@ -495,7 +516,7 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine packmol_command
         integer :: iarg, imol, nopts, i, n
-        real(rb) :: pos(3), mass(me%molecule%N)
+        real(rb) :: pos(3), mass(me%molecules%N)
         character(sl) :: action
         type(Struc), pointer :: ptr
         action = ""
@@ -540,7 +561,7 @@ contains
               end select
               if (narg < iarg+nopts+1) call error( "invalid packmol command" )
               call me % packmol % list % add( nopts+2, arg(iarg:iarg+1+nopts), repeatable = .true. )
-              imol = me % molecule % index( arg(iarg+1) )
+              imol = me % molecules % index( arg(iarg+1) )
               select case (arg(iarg+1))
                 case ("move","fix")
                   pos = [(str2real(arg(iarg+1+i)),i=1,3)]
@@ -572,15 +593,15 @@ contains
           ptr => me % packmol % list % first
           do while (associated(ptr))
             call split( ptr%params, narg, arg(1:1) )
-            imol = me % molecule % index( arg(1) )
+            imol = me % molecules % index( arg(1) )
             call me % check_coordinates( imol )
             ptr => ptr % next
           end do
-          call me % count_molecules( mass = mass )
-          call me % box % compute( me % packmol % total_mass( mass, me % molecule ) )
+          mass = me % molecules % per_molecule( me % atom_masses )
+          call me % box % compute( me % packmol % total_mass( mass, me % molecules ) )
           call writeln( "Box lengths are ", join(real2str(me % box % length)))
-          call me % packmol % run( me % molecule, me % molecule % xyz, &
-                                   me % atom_list, me % diameter_list,  &
+          call me % packmol % run( me % molecules, me % molecules % xyz, &
+                                   me % atom_list, me % diameter_list,   &
                                    me % box % length )
         end if
       end subroutine packmol_command
@@ -594,11 +615,11 @@ contains
     integer,      intent(in)    :: unit
     integer       :: N, i, narg, imol, iatom
     character(sl) :: arg(5), line, catom
-    integer :: natoms(me%molecule%N)
+    integer :: natoms(me%molecules%N)
     logical :: new_molecule
     type(Struc), pointer :: atom
     character(sl), allocatable :: prev(:)
-    natoms = me % atoms_in_molecules()
+    natoms = me % molecules % number_of_atoms()
     allocate( prev(maxval(natoms)) )
     call me % code_flow % next_command( unit, narg, arg )
     if (narg > 0) then
@@ -611,7 +632,7 @@ contains
         call split( line, narg, arg )
         if (narg /= 4) call error( "invalid xyz file format" )
         catom = trim(me % atom_list % prefix)//trim(arg(1))//trim(me % atom_list % suffix)
-        call me % molecule % list % search( [catom], atom )
+        call me % molecules % list % search( [catom], atom )
         if (associated(atom)) then
           if (new_molecule) then
             imol = str2int(atom%params)
@@ -626,7 +647,7 @@ contains
             iatom = iatom + 1
           end if
         end if
-        call me % molecule % xyz % add( narg, arg, me % atom_list, repeatable = .true. )
+        call me % molecules % xyz % add( narg, arg, me % atom_list, repeatable = .true. )
         if (.not.all(is_real(arg(2:4)))) call error( "invalid coordinate" )
         prev(iatom) = arg(1)
         new_molecule = iatom == natoms(imol)
@@ -642,109 +663,21 @@ contains
   subroutine tPlaymol_read_geometry( me, unit )
     class(tPlaymol), intent(inout) :: me
     integer,      intent(in)    :: unit
-    integer       :: N, i, j, narg, imol, iatom, ind(3)
-    character(sl) :: arg(7), catom
-    integer :: natoms(me%molecule%N)
-    logical :: new_molecule
-    type(Struc), pointer :: atom
-    character(sl), allocatable :: prev(:)
-    character(sl), allocatable :: name(:)
-    real(rb), allocatable :: R(:,:)
-    real(rb) :: L, theta, phi, R1(3), R2(3), R3(3), x(3), y(3), z(3)
-    natoms = me % atoms_in_molecules()
-    allocate( prev(maxval(natoms)) )
+    integer       :: N, i, narg
+    character(sl) :: arg(7)
+    integer,       allocatable :: ndata(:)
+    character(sl), allocatable :: data(:,:)
     call me % code_flow % next_command( unit, narg, arg )
-    if (narg > 0) then
-      call writeln( "Number of provided geometric data: ", arg(1) )
-      N = str2int( arg(1) )
-      allocate( name(N), R(3,N) )
-      new_molecule = .true.
-      do i = 1, N
-        call me % code_flow % next_command( unit, narg, arg )
-        if ((narg < 3).or.(narg > 7).or.(narg == 6)) call error( "invalid geometric info format" )
-        catom = trim(me % atom_list % prefix)//trim(arg(1))//trim(me % atom_list % suffix)
-        call me % molecule % list % search( [catom], atom )
-        if (associated(atom)) then
-          if (new_molecule) then
-            imol = str2int(atom%params)
-            iatom = 1
-            call writeln( "Reading", int2str(natoms(imol)), &
-                          "geometric data for molecule", trim(int2str(imol))//":" )
-          else if (trim(atom%params) /= trim(int2str(imol))) then
-            call error( "atom", catom, "does not belong to molecule", int2str(imol) )
-          else if (any(str_find([catom],prev(1:iatom)) > 0)) then
-            call error( "geometric info of atom", catom, "has already been given" )
-          else
-            iatom = iatom + 1
-          end if
-        end if
-        call writeln( "Data provided for atom", catom, ":", join(arg(2:narg)) )
-        name(i) = catom
-        select case (narg)
-          case (3) ! Bond
-            call check_atoms( arg(2:2), ind(1:1) )
-            L = str2real(arg(3))
-            x = real([1,0,0],rb)
-            R(:,i) = R(:,ind(1)) + L*x
-          case (4) ! Coordinates
-            do j = 1, 3
-              R(j,i) = str2real(arg(j+1))
-            end do
-          case (5) ! Bond and angle
-            call check_atoms( arg(2:3), ind(1:2) )
-            L = str2real(arg(4))
-            theta = str2real(arg(5))
-            R1 = R(:,ind(1))
-            R2 = R(:,ind(2))
-            x = (R1 - R2)/norm(R1 - R2)
-            y = real([0,1,0],rb)
-            if (abs(x(2)-1.0_rb) < 0.01_rb) y = real([1,0,0],rb)
-            y = y - scalar(y,x)*x
-            y = y / norm(y)
-            R(:,i) = R1 + L*(cosine(180-theta)*x + sine(180-theta)*y)
-          case (7) ! Bond, angle, and dihedral
-            call check_atoms( arg(2:4), ind(1:3) )
-            L = str2real(arg(5))
-            theta = str2real(arg(6))
-            phi = str2real(arg(7))
-            R1 = R(:,ind(1))
-            R2 = R(:,ind(2))
-            R3 = R(:,ind(3))
-            x = (R1 - R2)/norm(R1 - R2)
-            y = R3 - R2 - scalar(R3 - R2,x)*x
-            y = y / norm(y)
-            z = cross(x,y)
-            R(:,i) = R1 + L*(cosine(180-theta)*x + sine(180-theta)*(cosine(phi)*y + sine(phi)*z))
-          case default
-            call error( "bad geometric info" )
-        end select
-        arg(2:4) = real2str(R(:,i))
-        call me % molecule % xyz % add( 4, arg(1:4), me % atom_list, repeatable = .true. )
-        prev(iatom) = catom
-        new_molecule = iatom == natoms(imol)
-      end do
-      if (.not.new_molecule) then
-        call error( "geometric info for molecule", int2str(imol), "is incomplete" )
-      end if
-    end if
-    contains
-      subroutine check_atoms( atom, ind )
-        character(sl), intent(in) :: atom(:)
-        integer,       intent(inout) :: ind(size(atom))
-        integer :: j, k
-        do j = 1, size(atom)
-          if (.not. me % atom_list % find( [atom(j)])) call error( atom(j), "is not a valid atom" )
-          if (any(name(1:i-1) == atom(j))) then
-            k = 1
-            do while (name(k) /= atom(j))
-              k = k + 1
-            end do
-            ind(j) = k
-          else
-            call error( "atom", atom(j), "has not been defined")
-          end if
-        end do
-      end subroutine
+    if (narg == 0) call error( "expected geometric data not provided" )
+    N = str2int( arg(1) )
+    allocate( data(N,7), ndata(N) )
+    do i = 1, N
+      call me % code_flow % next_command( unit, narg, arg )
+      if (narg == 0) call error( "expected geometric data not completed" )
+      ndata(i) = narg
+      data(i,1:narg) = arg(1:narg)
+    end do
+    call me % molecules % set_geometry( data, ndata )
   end subroutine tPlaymol_read_geometry
 
   !=================================================================================================
@@ -753,98 +686,14 @@ contains
     class(tPlaymol), intent(inout) :: me
     integer,      intent(in)    :: unit
     type(Struc), pointer :: ptr
-    write(unit,'(A)') trim(int2str(me % molecule % xyz % count()))
+    write(unit,'(A)') trim(int2str(me % molecules % xyz % count()))
     write(unit,'("# Generated by Playmol on ",A)') trim(now())
-    ptr => me % molecule % xyz % first
+    ptr => me % molecules % xyz % first
     do while (associated(ptr))
       write(unit,'(A)') trim(ptr % id(1))//" "//trim(ptr % params)
       ptr => ptr % next
     end do
   end subroutine tPlaymol_write_xyz
-
-  !=================================================================================================
-
-  subroutine tPlaymol_fuse_molecules( me, atom )
-    class(tPlaymol),    intent(inout) :: me
-    character(sl),   intent(in)    :: atom(2)
-    integer :: i, mol(2), imin, imax
-    type(Struc), pointer :: ptr
-    do i = 1, 2
-      call me % molecule % list % search( atom(i:i), ptr )
-      mol(i) = str2int( ptr % params )
-    end do
-    imin = minval(mol)
-    imax = maxval(mol)
-    if (imin == imax) then
-      call writeln( "Closing cycle(s) in molecule", int2str(imin) )
-    else
-      call writeln( "Fusing molecule", int2str(imax), "to molecule", int2str(imin) )
-      call rename_molecule( trim(int2str(imax)), trim(int2str(imin)) )
-      call writeln( "Lowering indices of molecules", int2str(imax+1), "to", int2str(me%molecule%N) )
-      do i = imax+1, me%molecule%N
-        call rename_molecule( trim(int2str(i)), trim(int2str(i-1)) )
-      end do
-      me%molecule%N = me%molecule%N - 1
-    end if
-    contains
-      !---------------------------------------------------------------------------------------------
-      subroutine rename_molecule( old, new )
-        character(*), intent(in) :: old, new
-        ptr => me % molecule % list % first
-        do while (associated(ptr))
-          if (ptr % params == old) ptr % params = new
-          ptr => ptr % next
-        end do
-      end subroutine rename_molecule
-      !---------------------------------------------------------------------------------------------
-  end subroutine tPlaymol_fuse_molecules
-
-  !=================================================================================================
-
-  subroutine tPlaymol_count_molecules( me, number, mass, charge )
-    class(tPlaymol),  intent(in)            :: me
-    integer,       intent(out), optional :: number(me%molecule%N)
-    real(rb),      intent(out), optional :: mass(me%molecule%N), charge(me%molecule%N)
-    integer  :: imol, iatom, natoms(me%molecule%N)
-    character(sl) :: atom(1), atom_type(1)
-    type(Struc), pointer :: ptr
-    natoms = me % atoms_in_molecules()
-    if (present(number)) then
-      number = 0
-      ptr => me % molecule % xyz % first
-      do while (associated(ptr))
-        imol = str2int(me % molecule % list % parameters( ptr%id ) )
-        number(imol) = number(imol) + 1
-        do iatom = 1, natoms(imol)
-          ptr => ptr % next
-        end do
-      end do
-    end if
-    if (present(mass)) then
-      mass = 0.0_rb
-      ptr => me % molecule % list % first
-      do while (associated(ptr))
-        atom = ptr % id
-        imol = str2int( ptr % params )
-        call me % get_types( atom, atom_type )
-        mass(imol) = mass(imol) + str2real( me % mass_list % parameters( atom_type ) )
-        ptr => ptr % next
-      end do
-    end if
-    if (present(charge)) then
-      charge = 0.0_rb
-      if (associated(me % charge_list % first)) then
-        ptr => me % molecule % list % first
-        do while (associated(ptr))
-          atom = ptr % id
-          imol = str2int( ptr % params )
-          call me % get_types( atom, atom_type )
-          charge(imol) = charge(imol) + str2real( me % charge_list % parameters( atom ) )
-          ptr => ptr % next
-        end do
-      end if
-    end if
-  end subroutine tPlaymol_count_molecules
 
   !=================================================================================================
 
@@ -979,22 +828,6 @@ contains
 
   !=================================================================================================
 
-  function tPlaymol_atoms_in_molecules( me ) result( natoms )
-    class(tPlaymol), intent(in) :: me
-    integer                  :: natoms(me%molecule%N)
-    type(Struc), pointer :: atom
-    integer :: i
-    natoms = 0
-    atom => me % molecule % list % first
-    do while (associated(atom))
-      i = str2int(atom%params)
-      natoms(i) = natoms(i) + 1
-      atom => atom % next
-    end do
-  end function tPlaymol_atoms_in_molecules
-
-  !=================================================================================================
-
   subroutine tPlaymol_write( me, unit )
     class(tPlaymol), intent(in) :: me
     integer,      intent(in) :: unit
@@ -1007,7 +840,7 @@ contains
     call me % angle_type_list % print( unit, used_only = .true. )
     call me % dihedral_type_list % print( unit, used_only = .true. )
     call me % improper_type_list % print( unit, used_only = .true. )
-    call me % atom_list % print( unit, used_only = .true. )
+    call me % atom_list % print( unit )
     call me % charge_list % print( unit, used_only = .true. )
     call me % bond_list % print( unit )
     call me % angle_list % print( unit, comment = .true. )
@@ -1016,11 +849,11 @@ contains
     call me % extra_angle_list % print( unit )
     call me % extra_dihedral_list % print( unit )
     call me % improper_list % print( unit )
-    N = me % molecule % xyz % count()
+    N = me % molecules % xyz % count()
     if (N > 0) then
       write(CN,*) N
-      write(unit,'("xyz"/,A,/,"# atom x y z")') trim(adjustl(CN))
-      current => me % molecule % xyz % first
+      write(unit,'("build"/,A,/,"# atom x y z")') trim(adjustl(CN))
+      current => me % molecules % xyz % first
       do while (associated(current))
         write(unit,'(A,X,A)') trim(current % id(1)), trim(current % params)
         current => current % next
@@ -1033,15 +866,12 @@ contains
   subroutine tPlaymol_summarize( me, unit )
     class(tPlaymol), intent(inout) :: me
     integer,      intent(in)    :: unit
-    integer :: imol, molcount(me%molecule%N), natoms(me%molecule%N)
-    real(rb) :: mass(me%molecule%N), charge(me%molecule%N)
+    integer :: imol, molcount(me%molecules%N), natoms(me%molecules%N)
+    real(rb) :: mass(me%molecules%N), charge(me%molecules%N)
     type(Struc), pointer :: ptr
     character(sl) :: atoms
-    natoms = me % atoms_in_molecules()
-    write(unit,'(A)') repeat("-",80)
-    write(unit,'(A)') "SUMMARY"
-    write(unit,'(A)') repeat("-",80)
-    write(unit,'(A)') "Specified:"
+    natoms = me % molecules % number_of_atoms()
+    write(unit,'(A,/,"SUMMARY",/,A,/,"Specified:")') repeat("-",80), repeat("-",80)
     call flush_data( "atom type", me % atom_type_list % count() )
     call flush_data( "bond type", me % bond_type_list % count() )
     call flush_data( "angle type", me % angle_type_list % count() )
@@ -1057,29 +887,31 @@ contains
     write(unit,'(/,A)') "Detected:"
     call flush_data( "angle", me % angle_list % count() )
     call flush_data( "dihedral", me % dihedral_list % count() )
-    call flush_data( "molecule", me%molecule%N )
+    call flush_data( "molecule", me%molecules%N )
     write(unit,'(/,A)') "Effectively used:"
     call flush_data( "atom type", me % atom_type_list % count_used() )
     call flush_data( "bond type", me % bond_type_list % count_used() )
     call flush_data( "angle type", me % angle_type_list % count_used() )
     call flush_data( "dihedral type", me % dihedral_type_list % count_used() )
     call flush_data( "improper type", me % improper_type_list % count_used() )
-    call me % count_molecules( molcount, mass, charge )
-    do imol = 1, me%molecule%N
+    molcount = me % molecules % count()
+    charge = me % molecules % per_molecule( me % charge_list )
+    mass = me % molecules % per_molecule( me % atom_masses )
+    do imol = 1, me%molecules%N
       write(unit,'(/,"Molecule[",A,"]:")') trim(int2str(imol))
       write(unit,'("- Amount: ",A)') trim(int2str(molcount(imol)))
       write(unit,'("- Mass: ",A)') trim(real2str(mass(imol)))
       write(unit,'("- Charge: ",A)') trim(real2str(charge(imol)))
       write(unit,'("- Number of atoms: ",A)') trim(int2str(natoms(imol)))
       atoms = "- Atoms:"
-      ptr => me % molecule % list % first
+      ptr => me % molecules % list % first
       do while (associated(ptr))
         if (str2int(ptr % params) == imol) then
           if (len_trim(atoms) + len_trim(ptr % id(1)) > 79) then
             write(unit,'(A)') trim(atoms)
             atoms = ""
           end if
-          atoms = trim(atoms)//" "//ptr % id(1)
+          atoms = trim(atoms)//" "//ptr%id(1)
         end if
         ptr => ptr % next
       end do
@@ -1115,9 +947,9 @@ contains
   subroutine tPlaymol_write_lammps( me, unit )
     class(tPlaymol),  intent(inout) :: me
     integer,          intent(in)    :: unit
-    integer :: nb, na, nd, ni, natoms(me%molecule%N)
+    integer :: nb, na, nd, ni, natoms(me%molecules%N)
     logical :: bond_exists, angle_exists, dihedral_exists
-    natoms = me % atoms_in_molecules()
+    natoms = me % molecules % number_of_atoms()
     call link_extra( bond_exists, me % bond_list, me % extra_bond_list )
     call link_extra( angle_exists, me % angle_list, me % extra_angle_list )
     call link_extra( dihedral_exists, me % dihedral_list, me % extra_dihedral_list )
@@ -1128,7 +960,7 @@ contains
     call write_count( me % dihedral_type_list % count_used(), "dihedral types" )
     call write_count( me % improper_type_list % count_used(), "improper types" )
     write(unit,'()')
-    call write_count( me % molecule % xyz % count(), "atoms" )
+    call write_count( me % molecules % xyz % count(), "atoms" )
     call handle_struc( "bonds", me % bond_list, me % bond_type_list, nb )
     call write_count( nb, "bonds" )
     call handle_struc( "angles", me % angle_list, me % angle_type_list, na )
@@ -1185,13 +1017,14 @@ contains
       end subroutine write_count
       !---------------------------------------------------------------------------------------------
       subroutine write_box_limits
-        integer :: i, molcount(me%molecule%N)
-        real(rb) :: mass(me%molecule%N)
+        integer :: i, molcount(me%molecules%N)
+        real(rb) :: mass(me%molecules%N)
         real(rb), parameter :: Deg2Rad = 0.01745329251994329577_rb
         character :: dir(3) = ["x","y","z"]
         character(sl) :: limits
         real(rb) :: a, b, c, alpha, beta, gamma, lx, ly, lz, xy, xz, yz, L(3)
-        call me % count_molecules( molcount, mass )
+        molcount = me % molecules % count()
+        mass = me % molecules % per_molecule( me % atom_masses )
         call me % box % compute( sum(molcount*mass) )
         write(unit,'()')
         if (me % box % def_type /= 4) then
@@ -1269,12 +1102,12 @@ contains
         character(sl) :: arg(1), charge
         logical :: found
         write(unit,'(/,"Atoms",/)')
-        current => me % molecule % xyz % first
+        current => me % molecules % xyz % first
         iatom = 0
         jmol = 0
         do while (associated(current))
           jmol = jmol + 1
-          imol = str2int(me % molecule % list % parameters( current % id ) )
+          imol = str2int(me % molecules % list % parameters( current % id ) )
           do i = 1, natoms(imol)
             iatom = iatom + 1
             call split( me % atom_list % parameters( current % id ), narg, arg )
@@ -1306,7 +1139,7 @@ contains
         character(sl) :: line, types(list%number), atoms(list%number)
         character(sl), allocatable :: atom_id(:)
         istruc = 0
-        coord => me % molecule % xyz % first
+        coord => me % molecules % xyz % first
         if (.not.present(count)) then
           call writeln( "Writing down structures:", name )
           write(unit,'(/,A,/)') name
@@ -1314,14 +1147,14 @@ contains
         allocate(atom_id(maxval(natoms)))
         last_atom = 0
         do while (associated(coord))
-          imol = str2int(me % molecule % list % parameters( coord%id ) )
+          imol = str2int(me % molecules % list % parameters( coord%id ) )
           do i = 1, natoms(imol)
             atom_id(i) = coord % id(1)
             coord => coord % next
           end do
           struct => list % first
           do while (associated(struct))
-            jmol = str2int(me % molecule % list % parameters(struct%id(1:1)))
+            jmol = str2int(me % molecules % list % parameters(struct%id(1:1)))
             if (jmol == imol) then
               call me % get_types( struct%id, types )
               itype = 1
@@ -1363,17 +1196,18 @@ contains
   subroutine tPlaymol_write_lammpstrj( me, unit )
     class(tPlaymol), intent(inout) :: me
     integer,         intent(in)    :: unit
-    integer :: molcount(me%molecule%N), iatom, itype, i, imol, jmol, narg, natoms(me%molecule%N)
-    real(rb) :: mass(me%molecule%N)
+    integer :: molcount(me%molecules%N), iatom, itype, i, imol, jmol, narg, natoms(me%molecules%N)
+    real(rb) :: mass(me%molecules%N)
     character(sl) :: limits, arg(1)
     type(Struc), pointer :: current, atom_type
     logical :: found
     if (.not.me % box % exists()) call error( "simulation box has not been defined" )
     write(unit,'("ITEM: TIMESTEP",/,"0")')
     write(unit,'("ITEM: NUMBER OF ATOMS")')
-    write(unit,'(A)') trim(int2str(me % molecule % xyz % count()))
+    write(unit,'(A)') trim(int2str(me % molecules % xyz % count()))
     write(unit,'("ITEM: BOX BOUNDS pp pp pp")')
-    call me % count_molecules( molcount, mass )
+    molcount = me % molecules % count()
+    mass = me % molecules % per_molecule( me % atom_masses )
     call me % box % compute( sum(molcount*mass) )
     do i = 1, 3
       limits = join(real2str( me%box%length(i)*[-0.5_rb,+0.5_rb] ))
@@ -1381,13 +1215,13 @@ contains
     end do
 !    write(unit,'("ITEM: ATOMS id mol type x y z ix iy iz ")')
     write(unit,'("ITEM: ATOMS id mol type x y z")')
-    natoms = me % atoms_in_molecules()
-    current => me % molecule % xyz % first
+    natoms = me % molecules % number_of_atoms()
+    current => me % molecules % xyz % first
     iatom = 0
     jmol = 0
     do while (associated(current))
       jmol = jmol + 1
-      imol = str2int(me % molecule % list % parameters( current % id ) )
+      imol = str2int(me % molecules % list % parameters( current % id ) )
       do i = 1, natoms(imol)
         iatom = iatom + 1
         call split( me % atom_list % parameters( current % id ), narg, arg )
@@ -1409,21 +1243,22 @@ contains
   end subroutine tPlaymol_write_lammpstrj
 
   !=================================================================================================
+
   subroutine tPlaymol_check_coordinates( me, imol )
     class(tPlaymol), intent(inout) :: me
     integer,         intent(in)    :: imol
     type(Struc), pointer :: coord, atom, first, current
     logical :: found
     integer :: natoms
-    coord => me % molecule % xyz % first
+    coord => me % molecules % xyz % first
     found = .false.
     do while (associated(coord).and.(.not.found))
-      found = str2int(me % molecule % list % parameters( coord%id ) ) == imol
+      found = str2int(me % molecules % list % parameters( coord%id ) ) == imol
       coord => coord % next
     end do
     if (.not.found) then
       call warning( "No predefined coordinates for molecule", int2str(imol) )
-      atom => me % molecule % list % first
+      atom => me % molecules % list % first
       natoms = 0
       do while (associated(atom))
         if (str2int(atom%params) == imol) then
@@ -1452,7 +1287,7 @@ contains
         character(sl) :: arg(4)
         call warning( "  Ok: molecule", int2str(imol), "is monoatomic" )
         arg = [first%params, "0.0", "0.0", "0.0"]
-        call me % molecule % xyz % add( 4, arg )
+        call me % molecules % xyz % add( 4, arg )
       end subroutine build_monoatomic_molecule
       !-------------------------------------------------------------------------
       subroutine build_diatomic_molecule
@@ -1468,9 +1303,9 @@ contains
         call warning( "  considering harmonic potential (if wrong, please provide coordinates)" )
         call writeln( "R0 = ", R0 )
         arg(1:4) = [atoms(1), "0.0", "0.0", "0.0"]
-        call me % molecule % xyz % add( 4, arg )
+        call me % molecules % xyz % add( 4, arg )
         arg(1:4) = [atoms(2), R0, "0.0", "0.0"]
-        call me % molecule % xyz % add( 4, arg )
+        call me % molecules % xyz % add( 4, arg )
       end subroutine build_diatomic_molecule
       !-------------------------------------------------------------------------
       subroutine build_triatomic_molecule
@@ -1505,15 +1340,17 @@ contains
           call error( "cannot guess coordinates" )
         end if
         arg(1:4) = [atoms(1), "0.0", "0.0", "0.0"]
-        call me % molecule % xyz % add( 4, arg )
+        call me % molecules % xyz % add( 4, arg )
         arg(1:4) = [atoms(2), R0A, "0.0", "0.0"]
-        call me % molecule % xyz % add( 4, arg )
+        call me % molecules % xyz % add( 4, arg )
         X3 = str2real(R0A) - str2real(R0B)*cos(0.0174532925_rb*str2real(Theta0))
         Y3 = str2real(R0B)*sin(0.0174532925_rb*str2real(Theta0))
         arg(1:4) = [atoms(3), real2str(X3), real2str(Y3), "0.0"]
-        call me % molecule % xyz % add( 4, arg )
+        call me % molecules % xyz % add( 4, arg )
       end subroutine build_triatomic_molecule
       !-------------------------------------------------------------------------
   end subroutine tPlaymol_check_coordinates
+
   !=================================================================================================
+
 end module mPlaymol
