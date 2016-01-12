@@ -167,6 +167,7 @@ contains
     end do
     ! If the removed bond used to define two separate regions, there will now be two molecules:
     if (any(mol == 2)) then
+      me%N = me%N + 1
       newmol = int2str(me%N)
       call writeln( "Breaking molecule", cmol, "into molecules", cmol, "and", newmol )
       ptr => me % list % first
@@ -174,39 +175,37 @@ contains
         if (any((atom == ptr%id(1)).and.(mol == 2))) ptr%params = newmol
         ptr => ptr % next
       end do
-      me%N = me%N + 1
       ! Sort the arrays in accordance with the order in mol:
+      call writeln( "Reorganizing coordinates...", advance = .false. )
       allocate( sort(natoms) )
       sort = sorted( mol )
-      if (any(sort /= [(i,i=1,natoms)])) then
-        call writeln( "Reorganizing coordinates..." )
-        atom = atom(sort)
-        allocate( id(natoms), params(natoms) )
-        ptr => me % xyz % first
-        do while (associated(ptr))
-          if (any(atom == ptr%id(1))) then
-            pcoords => ptr
-            ! Get the current order of atoms:
-            do i = 1, natoms
-              id(i) = ptr % id(1)
-              params(i) = ptr % params
-              ptr => ptr % next
-            end do
-            ! Reset the atoms in the new order:
-            do i = 1, natoms
-              pcoords % id(1) = atom(i)
-              j = 1
-              do while (id(j) /= atom(i))
-                j = j + 1
-              end do
-              pcoords % params = params(j)
-              pcoords => pcoords % next
-            end do
-          else
+      atom = atom(sort)
+      allocate( id(natoms), params(natoms) )
+      ptr => me % xyz % first
+      do while (associated(ptr))
+        if (any(atom == ptr%id(1))) then
+          pcoords => ptr
+          ! Get the current order of atoms:
+          do i = 1, natoms
+            id(i) = ptr % id(1)
+            params(i) = ptr % params
             ptr => ptr % next
-          end if
-        end do
-      end if
+          end do
+          ! Reset the atoms in the new order:
+          do i = 1, natoms
+            pcoords % id(1) = atom(i)
+            j = 1
+            do while (id(j) /= atom(i))
+              j = j + 1
+            end do
+            pcoords % params = params(j)
+            pcoords => pcoords % next
+          end do
+        else
+          ptr => ptr % next
+        end if
+      end do
+      call writeln( " done." )
     else
       call writeln( "Opening cycle(s) in molecule", cmol )
     end if
@@ -295,7 +294,7 @@ contains
       narg = ndata(i)
       arg = data(i,:)
       if ((narg < 3).or.(narg > 7).or.(narg == 6)) call error( "invalid geometric info format" )
-      catom = trim(me % list % prefix)//trim(arg(1))//trim(me % list % suffix)
+      catom = arg(1)
       call me % list % search( [catom], atom )
       if (associated(atom)) then
         if (new_molecule) then

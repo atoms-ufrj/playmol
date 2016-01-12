@@ -38,8 +38,6 @@ type StrucList
   character(sl)        :: name = ""
   integer              :: number = 0
   integer              :: count = 0
-  character(sl)        :: prefix = ""
-  character(sl)        :: suffix = ""
   logical              :: two_way = .true.
   type(Struc), pointer :: first => null()
   type(Struc), pointer :: last  => null()
@@ -90,7 +88,7 @@ contains
   subroutine StrucList_add( me, narg, arg, list, repeatable, silent )
     class(StrucList),           intent(inout) :: me
     integer,                    intent(in)    :: narg
-    character(*),               intent(inout) :: arg(:)
+    character(*),               intent(in)    :: arg(:)
     class(StrucList), optional, intent(in)    :: list
     logical,          optional, intent(in)    :: repeatable, silent
     integer :: i, n
@@ -100,16 +98,12 @@ contains
     if (narg < n) call error( "invalid", me%name, "definition" )
 
     if (present(list)) then
-      forall (i=1:n) arg(i) = trim(list % prefix) // trim(arg(i)) // trim(list % suffix)
       do i = 1, n
         if (.not. list % find(arg(i:i))) then
           call error( "undefined", list%name, arg(i), "in", me%name, "definition" )
         end if
       end do
-    else
-      forall (i=1:n) arg(i) = trim(me % prefix) // trim(arg(i)) // trim(me % suffix) 
     end if
-    forall (i=n+1:narg) arg(i) = arg(i)
 
     call me % search( arg(1:n), ptr )
     if (associated(ptr)) then

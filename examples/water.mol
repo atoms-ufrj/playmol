@@ -1,4 +1,5 @@
 # TIP3P water model:
+prefix types T
 atom_type	HW	0.000 0.000
 atom_type	OW	0.102 3.188
 

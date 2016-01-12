@@ -17,8 +17,6 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
-! TO DO: change how prefixes and suffixes are added to charge_list and atom_masses,
-!        and try to make tStruct_add not change arg due to prefix/suffix
 ! TO DO: implement the correct update of molecules % list when bonds and links are reset.
 
 module mPlaymol
@@ -32,11 +30,21 @@ use mCodeFlow
 
 implicit none
 
+type tFix
+  character(sl) :: prefix = ""
+  character(sl) :: suffix = ""
+  contains
+    procedure :: change => tFix_change
+    procedure :: apply => tFix_apply
+end type tFix
+
 type tPlaymol
   type(tBox)      :: box
   type(tPackmol)  :: packmol
   type(tCodeFlow) :: code_flow
   type(tMolecule) :: molecules
+
+  type(tFix) :: atomfix, typefix
 
   type(StrucList) :: atom_type_list = StrucList( name = "atom type", number = 1 )
   type(StrucList) :: bond_type_list = StrucList( name = "bond type", number = 2 )
@@ -62,7 +70,6 @@ type tPlaymol
     procedure :: write => tPlaymol_write
     procedure :: write_lammps => tPlaymol_write_lammps
     procedure :: write_lammpstrj => tPlaymol_write_lammpstrj
-    procedure :: read_xyz => tPlaymol_read_xyz
     procedure :: read_geometry => tPlaymol_read_geometry
     procedure :: write_xyz => tPlaymol_write_xyz
     procedure :: summarize => tPlaymol_summarize
@@ -76,6 +83,28 @@ contains
 
   !=================================================================================================
 
+  subroutine tFix_change( me, string, kind )
+    class(tFix),   intent(out) :: me
+    character(sl), intent(in)  :: string, kind
+    character(sl) :: empty
+    empty = ""
+    select case (kind)
+      case ("prefix"); me % prefix = merge(string,empty,string /= "none")
+      case ("suffix"); me % prefix = merge(string,empty,string /= "none")
+      case default; call error( "kind must be 'prefix' or 'suffix'" )
+    end select
+  end subroutine tFix_change
+
+  !=================================================================================================
+
+  elemental subroutine tFix_apply( me, string )
+    class(tFix),   intent(in)    :: me
+    character(sl), intent(inout) :: string
+    string = trim(me % prefix) // trim(string) // trim(me % suffix)
+  end subroutine tFix_apply
+
+  !=================================================================================================
+
   recursive subroutine tPlaymol_Read( me, unit, filename )
     class(tPlaymol), intent(inout) :: me
     integer,         intent(in)    :: unit
@@ -85,8 +114,7 @@ contains
     call me % code_flow % next_command( unit, narg, arg )
     do while (narg > 0)
       select case (trim(arg(1)))
-        case ("prefix"); call prefix_command
-        case ("suffix"); call suffix_command
+        case ("prefix","suffix"); call prefix_suffix_command
         case ("box"); call box_command
         case ("atom_type"); call atom_type_command
         case ("bond_type"); call bond_type_command
@@ -102,8 +130,7 @@ contains
         case ("unlink"); call unlink_command
         case ("extra"); call extra_command
         case ("improper"); call improper_command
-        case ("xyz"); call xyz_command
-        case ("build"); call build_command
+        case ("xyz","build"); call build_command
         case ("align"); call align_command
         case ("write"); call write_command
         case ("include"); call include_command
@@ -126,37 +153,16 @@ contains
     end do
     contains
       !---------------------------------------------------------------------------------------------
-      subroutine prefix_command
-        if (narg < 3) call error( "invalid prefix command" )
-        call writeln( "Defining new prefix for ", arg(2), ":", arg(3) )
-        if (arg(3) == "none") arg(3) = ""
+      subroutine prefix_suffix_command
+        if (narg < 3) call error( "invalid", arg(1), "command" )
+        call writeln( "Defining new", arg(1), "for ", arg(2), "as", arg(3) )
         select case (arg(2))
-          case ("types")
-            me % atom_type_list % prefix = arg(3)
-          case ("atoms")
-            me % atom_list % prefix = arg(3)
-            me % molecules % list % prefix = arg(3)
-          case default
-            call error( "prefix keyword must be 'types' or 'atoms'" )
+          case ("types"); call me % typefix % change( string = arg(3), kind = arg(1) )
+          case ("atoms"); call me % atomfix % change( string = arg(3), kind = arg(1) )
+          case default; call error( arg(1), "keyword must be 'types' or 'atoms'" )
         end select
-        if (has_macros(arg(3))) call error( "invalid prefix", arg(3) )
-      end subroutine prefix_command
-      !---------------------------------------------------------------------------------------------
-      subroutine suffix_command
-        if (narg < 3) call error( "invalid suffix command" )
-        call writeln( "Defining new suffix for ", arg(2), ":", arg(3) )
-        if (arg(3) == "none") arg(3) = ""
-        select case (arg(2))
-          case ("types")
-            me % atom_type_list % suffix = arg(3)
-          case ("atoms")
-            me % atom_list % suffix = arg(3)
-            me % molecules % list % suffix = arg(3)
-          case default
-            call error( "suffix keyword must be 'types' or 'atoms'" )
-        end select
-        if (has_macros(arg(3))) call error( "invalid suffix", arg(3) )
-      end subroutine suffix_command
+        if (has_macros(arg(3))) call error( "invalid", arg(1), arg(3) )
+      end subroutine prefix_suffix_command
       !---------------------------------------------------------------------------------------------
       subroutine box_command
         integer :: i
@@ -200,45 +206,50 @@ contains
       end subroutine box_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_type_command
+        call me % typefix % apply( arg(2) )
         call me % atom_type_list % add( narg-1, arg(2:narg) )
         if (has_macros(arg(2))) call error( "invalid atom_type name" )
       end subroutine atom_type_command
       !---------------------------------------------------------------------------------------------
       subroutine bond_type_command
+        call me % typefix % apply( arg(2:3) )
         call me % bond_type_list % add( narg-1, arg(2:narg), me % atom_type_list, .true. )
       end subroutine bond_type_command
       !---------------------------------------------------------------------------------------------
       subroutine angle_type_command
+        call me % typefix % apply( arg(2:4) )
         call me % angle_type_list % add( narg-1, arg(2:narg), me % atom_type_list, .true. )
       end subroutine angle_type_command
       !---------------------------------------------------------------------------------------------
       subroutine dihedral_type_command
+        call me % typefix % apply( arg(2:5) )
         call me % dihedral_type_list % add( narg-1, arg(2:narg), me % atom_type_list, .true. )
       end subroutine dihedral_type_command
       !---------------------------------------------------------------------------------------------
       subroutine improper_type_command
+        call me % typefix % apply( arg(2:5) )
         call me % improper_type_list % add( narg-1, arg(2:narg), me % atom_type_list, .true. )
       end subroutine improper_type_command
       !---------------------------------------------------------------------------------------------
       subroutine mass_command
         if (narg /= 3) call error( "invalid mass command" )
+        call me % typefix % apply( arg(2) )
         call me % mass_list % add( narg-1, arg(2:narg) )
         if (str2real(arg(3)) < 0.0_rb) call error( "invalid mass value" )
       end subroutine mass_command
       !---------------------------------------------------------------------------------------------
       subroutine diameter_command
         if (narg /= 3) call error( "invalid diameter command" )
+        call me % typefix % apply( arg(2) )
         call me % diameter_list % add( narg-1, arg(2:narg) )
         if (str2real(arg(3)) < 0.0_rb) call error( "invalid diameter value" )
       end subroutine diameter_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_command
         type(Struc), pointer :: ptr
-        character(sl) :: atom
-
         if ((narg < 3).or.(narg > 4)) call error( "invalid atom command" )
-        arg(3) = trim(me % atom_type_list % prefix) // trim(arg(3)) // me % atom_type_list % suffix
-        atom = arg(2)
+        call me % atomfix % apply( arg(2) )
+        call me % typefix % apply( arg(3) )
         call me % atom_list % add( 2, arg(2:3) )
         if (has_macros(arg(2))) call error( "invalid atom name" )
         if (has_macros(arg(3))) call error( "invalid atom type name" )
@@ -262,12 +273,12 @@ contains
           ptr => me % charge_list % last
         end if
 
-        call me % molecules % add_atom( atom )
+        call me % molecules % add_atom( arg(2) )
       end subroutine atom_command
       !---------------------------------------------------------------------------------------------
       subroutine charge_command
         if (narg /= 3) call error( "invalid charge command" )
-        arg(2) = trim(me%atom_list%prefix)//trim(arg(2))//trim(me%atom_list%suffix)
+        call me % atomfix % apply( arg(2) )
         call me % charge_list % add( narg-1, arg(2:3) )
         if (.not.is_real(arg(3))) call error( "invalid charge value" )
         if (me % atom_list % find( arg(2:2) )) me % charge_list % last % used = .true.
@@ -285,6 +296,7 @@ contains
         integer :: i
         character(sl) :: central
         if (narg < 3) call error( "invalid bond command" )
+        call me % atomfix % apply( arg(2:narg) )
         central = arg(2)
         do i = 3, narg
           arg(2) = central
@@ -295,14 +307,14 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine link_command
         if (narg /= 3) call error( "invalid link command" )
+        call me % atomfix % apply( arg(2:3) )
         call me % link_list % add( 2, arg(2:3), me % atom_list )
         call me % molecules % fuse( arg(2:3) )
       end subroutine link_command
       !---------------------------------------------------------------------------------------------
       subroutine unlink_command
-        integer :: i
         if (narg /= 3) call error( "invalid unlink command" )
-        forall (i=2:3) arg(i) = trim(me%atom_list%prefix)//trim(arg(i))//trim(me%atom_list%suffix)
+        call me % atomfix % apply( arg(2:3) )
         call me % link_list % remove( arg(2:3) )
         call me % molecules % break( arg(2:3) )
       end subroutine unlink_command
@@ -328,18 +340,21 @@ contains
       end subroutine extra_command
       !---------------------------------------------------------------------------------------------
       subroutine extra_bond_command
+        call me % atomfix % apply( arg(2:3) )
         call me % extra_bond_list % add( narg-1, arg(2:narg), me % atom_list )
         if (narg /= 3) call error( "invalid extra bond command")
         call me % extra_bond_list % handle( arg(2:3), me%atom_list, me%bond_type_list, 2 )
       end subroutine extra_bond_command
       !---------------------------------------------------------------------------------------------
       subroutine extra_angle_command
+        call me % atomfix % apply( arg(2:4) )
         call me % extra_angle_list % add( narg-1, arg(2:narg), me % atom_list )
         if (narg /= 4) call error( "invalid extra angle command")
         call me % extra_angle_list % handle( arg(2:4), me%atom_list, me%angle_type_list, 2 )
       end subroutine extra_angle_command
       !---------------------------------------------------------------------------------------------
       subroutine extra_dihedral_command
+        call me % atomfix % apply( arg(2:5) )
         call me % extra_dihedral_list % add( narg-1, arg(2:narg), me % atom_list )
         if (narg /= 5) call error( "invalid extra dihedral command")
         call me % extra_dihedral_list % handle( arg(2:5), me%atom_list, me%dihedral_type_list, 2 )
@@ -351,6 +366,7 @@ contains
           if (arg(2) /= "search") call error( "invalid improper command" )
           call me % search_impropers()
         else if (narg == 5) then
+          call me % atomfix % apply( arg(2:5) )
           call me % improper_list % add( narg-1, arg(2:narg), me % atom_list )
           if (narg /= 5) call error( "invalid improper command")
           call me % improper_list % handle( arg(2:5), me%atom_list, me%improper_type_list, 2 )
@@ -363,22 +379,6 @@ contains
           call error( "invalid improper command" )
         end if
       end subroutine improper_command
-      !---------------------------------------------------------------------------------------------
-      subroutine xyz_command
-        logical :: file_exists
-        integer :: xyz
-        if (narg == 1) then
-          call writeln("Reading xyz data...")
-          call me % read_xyz( unit )
-        else
-          inquire( file = arg(2), exist = file_exists )
-          if (.not.file_exists) call error( "file", arg(2), "not found" )
-          open( newunit = xyz, file = arg(2), status = "old" )
-          call writeln("Reading xyz data from file", trim(arg(2))//"..." )
-          call me % read_xyz( xyz )
-          close( xyz )
-        end if
-      end subroutine xyz_command
       !---------------------------------------------------------------------------------------------
       subroutine build_command
         logical :: file_exists
@@ -614,60 +614,10 @@ contains
 
   !=================================================================================================
 
-  subroutine tPlaymol_read_xyz( me, unit )
-    class(tPlaymol), intent(inout) :: me
-    integer,      intent(in)    :: unit
-    integer       :: N, i, narg, imol, iatom
-    character(sl) :: arg(5), line, catom
-    integer :: natoms(me%molecules%N)
-    logical :: new_molecule
-    type(Struc), pointer :: atom
-    character(sl), allocatable :: prev(:)
-    natoms = me % molecules % number_of_atoms()
-    allocate( prev(maxval(natoms)) )
-    call me % code_flow % next_command( unit, narg, arg )
-    if (narg > 0) then
-      call writeln( "Number of coordinates: ", arg(1) )
-      N = str2int( arg(1) )
-      read(unit,'(A'//csl//')') line
-      new_molecule = .true.
-      do i = 1, N
-        read(unit,'(A'//csl//')') line
-        call split( line, narg, arg )
-        if (narg /= 4) call error( "invalid xyz file format" )
-        catom = trim(me % atom_list % prefix)//trim(arg(1))//trim(me % atom_list % suffix)
-        call me % molecules % list % search( [catom], atom )
-        if (associated(atom)) then
-          if (new_molecule) then
-            imol = str2int(atom%params)
-            iatom = 1
-            call writeln( "Reading", int2str(natoms(imol)), &
-                          "atom coordinates of molecule", trim(int2str(imol))//":" )
-          else if (trim(atom%params) /= trim(int2str(imol))) then
-            call error( "atom", catom, "does not belong to molecule", int2str(imol) )
-          else if (any(str_find([catom],prev(1:iatom)) > 0)) then
-            call error( "coordinates of atom", catom, "have already been defined" )
-          else
-            iatom = iatom + 1
-          end if
-        end if
-        call me % molecules % xyz % add( narg, arg, me % atom_list, repeatable = .true. )
-        if (.not.all(is_real(arg(2:4)))) call error( "invalid coordinate" )
-        prev(iatom) = arg(1)
-        new_molecule = iatom == natoms(imol)
-      end do
-      if (.not.new_molecule) then
-        call error( "coordinates of molecule", int2str(imol), "are incomplete" )
-      end if
-    end if
-  end subroutine tPlaymol_read_xyz
-
-  !=================================================================================================
-
   subroutine tPlaymol_read_geometry( me, unit )
     class(tPlaymol), intent(inout) :: me
     integer,      intent(in)    :: unit
-    integer       :: N, i, narg
+    integer       :: N, i, narg, natoms
     character(sl) :: arg(7)
     integer,       allocatable :: ndata(:)
     character(sl), allocatable :: data(:,:)
@@ -678,6 +628,14 @@ contains
     do i = 1, N
       call me % code_flow % next_command( unit, narg, arg )
       if (narg == 0) call error( "expected geometric data not completed" )
+      select case (narg)
+        case (3); natoms = 2 ! Bond
+        case (4); natoms = 1 ! Coordinates
+        case (5); natoms = 3 ! Bond and angle
+        case (7); natoms = 4 ! Bond, angle, and dihedral
+        case default; natoms = 0
+      end select
+      call me % atomfix % apply( arg(1:natoms) )
       ndata(i) = narg
       data(i,1:narg) = arg(1:narg)
     end do
