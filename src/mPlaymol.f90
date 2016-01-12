@@ -17,8 +17,9 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
-! TO DO: all defined atoms should be marked as used. When an atom is defined, mark predefined
-!        charges as used. When a charge is defined, check if any atom already uses it.
+! TO DO: change how prefixes and suffixes are added to charge_list and atom_masses,
+!        and try to make tStruct_add not change arg due to prefix/suffix
+! TO DO: implement the correct update of molecules % list when bonds and links are reset.
 
 module mPlaymol
 
@@ -49,7 +50,7 @@ type tPlaymol
   type(StrucList) :: atom_list = StrucList( name = "atom", number = 1 )
   type(StrucList) :: charge_list = StrucList( name = "charge", number = 1 )
   type(StrucList) :: bond_list = StrucList( name = "bond", number = 2 )
-  type(StrucList) :: virtual_link_list = StrucList( name = "virtual link", number = 2 )
+  type(StrucList) :: link_list = StrucList( name = "virtual link", number = 2 )
   type(StrucList) :: angle_list = StrucList( name = "angle", number = 3 )
   type(StrucList) :: dihedral_list = StrucList( name = "dihedral", number = 4 )
   type(StrucList) :: extra_bond_list = StrucList( name = "extra bond", number = 2 )
@@ -98,6 +99,7 @@ contains
         case ("charge"); call charge_command
         case ("bond"); call bond_command
         case ("link"); call link_command
+        case ("unlink"); call unlink_command
         case ("extra"); call extra_command
         case ("improper"); call improper_command
         case ("xyz"); call xyz_command
@@ -110,10 +112,10 @@ contains
         case ("shell"); call shell_command
         case ("quit")
           if ((narg == 2).and.(arg(2) == "all")) then
-            call writeln( "Script", filename, "interrupted by 'quit all' command" )
+            call writeln( "Script", filename, "interrupted by a 'quit all' command" )
             stop
           else if (narg == 1) then
-            call writeln( "Script", filename, "interrupted by 'quit' command" )
+            call writeln( "Script", filename, "interrupted by a 'quit' command" )
             return
           else
             call error( "invalid quit command" )
@@ -260,9 +262,7 @@ contains
           ptr => me % charge_list % last
         end if
 
-        me%molecules%N = me%molecules%N + 1
-        arg(1:2) = [atom,int2str( me%molecules%N )]
-        call me % molecules % list % add( 2, arg(1:2) )
+        call me % molecules % add_atom( atom )
       end subroutine atom_command
       !---------------------------------------------------------------------------------------------
       subroutine charge_command
@@ -277,7 +277,6 @@ contains
         character(sl), intent(inout) :: atom(2)
         call me % bond_list % add( 2, atom, me % atom_list )
         call me % bond_list % handle( atom, me % atom_list, me % bond_type_list, 2 )
-        if (atom(1) == atom(2)) call error( "atom", atom(1), "cannot bind to itself" )
         call me % molecules % fuse( atom )
         call me % update_structure()
       end subroutine add_bond
@@ -295,15 +294,18 @@ contains
       end subroutine bond_command
       !---------------------------------------------------------------------------------------------
       subroutine link_command
-        integer :: imol, jmol
         if (narg /= 3) call error( "invalid link command" )
-        call me % virtual_link_list % add( 2, arg(2:3), me % atom_list )
-        if (arg(2) == arg(3)) call error( "atom", arg(2), "cannot be linked to itself" )
-        imol = str2int(me % molecules % list % parameters( arg(2:2) ))
-        jmol = str2int(me % molecules % list % parameters( arg(3:3) ))
-        if (imol == jmol) call error( "atoms", join(arg(2:3)), "must belong to distinc molecules" )
+        call me % link_list % add( 2, arg(2:3), me % atom_list )
         call me % molecules % fuse( arg(2:3) )
       end subroutine link_command
+      !---------------------------------------------------------------------------------------------
+      subroutine unlink_command
+        integer :: i
+        if (narg /= 3) call error( "invalid unlink command" )
+        forall (i=2:3) arg(i) = trim(me%atom_list%prefix)//trim(arg(i))//trim(me%atom_list%suffix)
+        call me % link_list % remove( arg(2:3) )
+        call me % molecules % break( arg(2:3) )
+      end subroutine unlink_command
       !---------------------------------------------------------------------------------------------
       subroutine extra_command
         character(sl) :: choice
@@ -487,14 +489,15 @@ contains
         if (any(lists == 13)) call me % molecules % list % destroy
         if (any(lists == 14)) call me % molecules % xyz % destroy
         if (any(lists == 15)) call me % packmol % list % destroy
+        if (any(lists == 16)) call me % link_list % destroy
       end subroutine reset_lists
       !---------------------------------------------------------------------------------------------
       subroutine reset_command
         integer :: i
         if (narg /= 2) call error( "invalid reset command" )
         select case (arg(2))
-          case ("all"); call reset_lists( [(i,i=1,15)] )
-          case ("atoms"); call reset_lists( [(i,i=7,15)] )
+          case ("all"); call reset_lists( [(i,i=1,16)] )
+          case ("atoms"); call reset_lists( [(i,i=7,16)] )
           case ("bonds"); call reset_lists( [9,10,11,13,14,15] )
           case ("bond_types"); call me % bond_type_list % destroy
           case ("angle_types"); call me % angle_type_list % destroy
@@ -503,6 +506,7 @@ contains
           case ("impropers"); call me % improper_list % destroy
           case ("xyz"); call me % molecules % xyz % destroy
           case ("packmol"); call me % packmol % list % destroy
+          case ("links"); call me % link_list % destroy
           case default; call error( "invalid reset command" )
         end select
       end subroutine reset_command
@@ -686,7 +690,7 @@ contains
     class(tPlaymol), intent(inout) :: me
     integer,      intent(in)    :: unit
     type(Struc), pointer :: ptr
-    write(unit,'(A)') trim(int2str(me % molecules % xyz % count()))
+    write(unit,'(A)') trim(int2str(me % molecules % xyz % count))
     write(unit,'("# Generated by Playmol on ",A)') trim(now())
     ptr => me % molecules % xyz % first
     do while (associated(ptr))
@@ -849,7 +853,7 @@ contains
     call me % extra_angle_list % print( unit )
     call me % extra_dihedral_list % print( unit )
     call me % improper_list % print( unit )
-    N = me % molecules % xyz % count()
+    N = me % molecules % xyz % count
     if (N > 0) then
       write(CN,*) N
       write(unit,'("build"/,A,/,"# atom x y z")') trim(adjustl(CN))
@@ -872,21 +876,21 @@ contains
     character(sl) :: atoms
     natoms = me % molecules % number_of_atoms()
     write(unit,'(A,/,"SUMMARY",/,A,/,"Specified:")') repeat("-",80), repeat("-",80)
-    call flush_data( "atom type", me % atom_type_list % count() )
-    call flush_data( "bond type", me % bond_type_list % count() )
-    call flush_data( "angle type", me % angle_type_list % count() )
-    call flush_data( "dihedral type", me % dihedral_type_list % count() )
-    call flush_data( "improper type", me % improper_type_list % count() )
-    call flush_data( "atom", me % atom_list % count() )
-    call flush_data( "bond", me % bond_list % count() )
-    call flush_data( "virtual link", me % virtual_link_list % count() )
-    call flush_data( "extra bond", me % extra_bond_list % count() )
-    call flush_data( "extra angle", me % extra_angle_list % count() )
-    call flush_data( "extra dihedral", me % extra_dihedral_list % count() )
-    call flush_data( "improper", me % improper_list % count() )
+    call flush_data( "atom type", me % atom_type_list % count )
+    call flush_data( "bond type", me % bond_type_list % count )
+    call flush_data( "angle type", me % angle_type_list % count )
+    call flush_data( "dihedral type", me % dihedral_type_list % count )
+    call flush_data( "improper type", me % improper_type_list % count )
+    call flush_data( "atom", me % atom_list % count )
+    call flush_data( "bond", me % bond_list % count )
+    call flush_data( "virtual link", me % link_list % count )
+    call flush_data( "extra bond", me % extra_bond_list % count )
+    call flush_data( "extra angle", me % extra_angle_list % count )
+    call flush_data( "extra dihedral", me % extra_dihedral_list % count )
+    call flush_data( "improper", me % improper_list % count )
     write(unit,'(/,A)') "Detected:"
-    call flush_data( "angle", me % angle_list % count() )
-    call flush_data( "dihedral", me % dihedral_list % count() )
+    call flush_data( "angle", me % angle_list % count )
+    call flush_data( "dihedral", me % dihedral_list % count )
     call flush_data( "molecule", me%molecules%N )
     write(unit,'(/,A)') "Effectively used:"
     call flush_data( "atom type", me % atom_type_list % count_used() )
@@ -960,7 +964,7 @@ contains
     call write_count( me % dihedral_type_list % count_used(), "dihedral types" )
     call write_count( me % improper_type_list % count_used(), "improper types" )
     write(unit,'()')
-    call write_count( me % molecules % xyz % count(), "atoms" )
+    call write_count( me % molecules % xyz % count, "atoms" )
     call handle_struc( "bonds", me % bond_list, me % bond_type_list, nb )
     call write_count( nb, "bonds" )
     call handle_struc( "angles", me % angle_list, me % angle_type_list, na )
@@ -1204,7 +1208,7 @@ contains
     if (.not.me % box % exists()) call error( "simulation box has not been defined" )
     write(unit,'("ITEM: TIMESTEP",/,"0")')
     write(unit,'("ITEM: NUMBER OF ATOMS")')
-    write(unit,'(A)') trim(int2str(me % molecules % xyz % count()))
+    write(unit,'(A)') trim(int2str(me % molecules % xyz % count))
     write(unit,'("ITEM: BOX BOUNDS pp pp pp")')
     molcount = me % molecules % count()
     mass = me % molecules % per_molecule( me % atom_masses )

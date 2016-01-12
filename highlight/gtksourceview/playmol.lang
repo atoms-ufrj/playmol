@@ -68,6 +68,7 @@
       <keyword>charge</keyword>
       <keyword>bond</keyword>
       <keyword>link</keyword>
+      <keyword>unlink</keyword>
       <keyword>extra\s+(bond|angle|dihedral)</keyword>
       <keyword>improper\s+search</keyword>
       <keyword>improper</keyword>
@@ -94,7 +95,6 @@
       <keyword>shell</keyword>
       <keyword>quit all</keyword>
       <keyword>quit</keyword>
-      <keyword>tolerance</keyword>
       <keyword>seed</keyword>
       <keyword>retry</keyword>
       <keyword>nloops</keyword>

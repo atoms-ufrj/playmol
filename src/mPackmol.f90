@@ -129,7 +129,7 @@ contains
     ! Determine the files associated with each molecule and vice-versa:
     nfiles = 0
     file = 0
-    allocate( aux(me % list % count()) )
+    allocate( aux(me % list % count) )
     ptr => me % list % first
     do while (associated(ptr))
       call split( ptr % params, narg, arg )

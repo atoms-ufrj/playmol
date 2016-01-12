@@ -37,6 +37,7 @@ end type Struc
 type StrucList
   character(sl)        :: name = ""
   integer              :: number = 0
+  integer              :: count = 0
   character(sl)        :: prefix = ""
   character(sl)        :: suffix = ""
   logical              :: two_way = .true.
@@ -49,9 +50,9 @@ type StrucList
     procedure :: parameters => StrucList_parameters
     procedure :: index => StrucList_index
     procedure :: find => StrucList_find
-    procedure :: count => StrucList_count
     procedure :: count_used => StrucList_count_used
     procedure :: print => StrucList_print
+    procedure :: remove => StrucList_remove
     procedure :: destroy => StrucList_destroy
 end type StrucList
 
@@ -86,14 +87,14 @@ contains
 
   !=================================================================================================
 
-  subroutine StrucList_add( me, narg, arg, list, repeatable )
+  subroutine StrucList_add( me, narg, arg, list, repeatable, silent )
     class(StrucList),           intent(inout) :: me
     integer,                    intent(in)    :: narg
     character(*),               intent(inout) :: arg(:)
     class(StrucList), optional, intent(in)    :: list
-    logical,          optional, intent(in)    :: repeatable
+    logical,          optional, intent(in)    :: repeatable, silent
     integer :: i, n
-    logical :: repeat
+    logical :: repeat, print
     type(Struc), pointer :: ptr
     n = me % number
     if (narg < n) call error( "invalid", me%name, "definition" )
@@ -128,13 +129,23 @@ contains
       allocate( me % last )
       me % first => me % last
     end if
-    call writeln( "Adding ", me%name, join(arg(1:n)), advance = .false. )
-    call me % last % init( narg, arg, me % number )
-    if (me % last % params /= "") then
-      call writeln( " with parameters", me % last % params )
+    if (present(silent)) then
+      print = .not.silent
     else
-      call end_line
+      print = .true.
     end if
+    if (print) then
+      call writeln( "Adding ", me%name, join(arg(1:n)), advance = .false. )
+      call me % last % init( narg, arg, me % number )
+      if (me % last % params /= "") then
+        call writeln( " with parameters", me % last % params )
+      else
+        call end_line
+      end if
+    else
+      call me % last % init( narg, arg, me % number )
+    end if
+    me % count = me % count + 1
   end subroutine StrucList_add
 
   !=================================================================================================
@@ -299,6 +310,36 @@ contains
 
   !=================================================================================================
 
+  subroutine StrucList_remove( me, arg, silent )
+    class(StrucList), intent(inout)        :: me
+    character(sl),    intent(in)           :: arg(me%number)
+    logical,          intent(in), optional :: silent
+    integer :: i, index
+    type(Struc), pointer :: current, aux
+    if (present(silent)) then
+      if (.not.silent) call writeln( "Removing", me%name, join(arg) )
+    else
+      call writeln( "Removing", me%name, join(arg) )
+    end if
+    call me % search( arg, index = index )
+    if (index == 0) call error( me%name, join(arg), "does not exist" )
+    current => me % first
+    if (index == 1) then
+      me % first => me % first % next
+      deallocate( current )
+    else
+      do i = 1, index-2
+        current => current % next
+      end do
+      aux => current % next
+      current % next => aux % next
+      deallocate( aux )
+    end if
+    me % count = me % count - 1
+  end subroutine StrucList_remove
+
+  !=================================================================================================
+
   subroutine StrucList_destroy( me )
     class(StrucList), intent(inout) :: me
     type(Struc), pointer :: current, aux
@@ -312,6 +353,7 @@ contains
     end do
     me % first => null()
     me % last => null()
+    me % count = 0
   end subroutine StrucList_destroy
 
   !=================================================================================================

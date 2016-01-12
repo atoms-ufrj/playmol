@@ -248,4 +248,36 @@ contains
 
   !=================================================================================================
 
+  function sorted( x ) result( ind )
+    integer, intent(in) :: x(:)
+    integer             :: ind(size(x))
+    integer :: a(size(x)), N, i, j
+    logical :: swapped
+    N = size(x)
+    a = x
+    ind = [(i,i=1,N)]
+    do j = N-1, 1, -1
+      swapped = .false.
+      do i = 1, j
+        if (a(i) > a(i+1)) then ! increasing order
+!        if (a(i) < a(i+1)) then ! decreasing order
+          call swap( a(i), a(i+1) )
+          call swap( ind(i), ind(i+1) )
+          swapped = .true.
+        end if
+      end do
+      if (.not. swapped) exit
+    end do
+    contains
+      subroutine swap( a, b )
+        integer, intent(inout) :: a, b
+        integer :: temp
+        temp = a
+        a = b
+        b = temp
+      end subroutine swap
+  end function sorted
+
+  !=================================================================================================
+
 end module mGlobal

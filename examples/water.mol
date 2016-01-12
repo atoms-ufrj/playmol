@@ -18,8 +18,8 @@ atom		H2	HW
 charge		H?	 0.415
 charge		O	-0.830
 
-bond		H1 O
-bond		O H2
+link		H1 O
+link		O H2
 
 build
 3
@@ -34,6 +34,8 @@ H2	1.19719	0.92663	0.0
 #quit
 box		density 0.0602214
 packmol		tolerance 2.5 retry 1.0 pack mol(W_H2) 200 action execute
+unlink H2 O
+
 quit
 write		lammps water.lmp
 write		lammpstrj water.lammpstrj

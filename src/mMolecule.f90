@@ -27,10 +27,13 @@ implicit none
 type tMolecule
   integer :: N = 0
   type(StrucList) :: list = StrucList( name = "molecule", number = 1 )
+  type(StrucList) :: bonds = StrucList( name = "bond", number = 2 )
   type(StrucList) :: xyz = StrucList( name = "coordinate", number = 1 )
   contains
+    procedure :: add_atom => tMolecule_add_atom
     procedure :: index => tMolecule_index
     procedure :: fuse => tMolecule_fuse
+    procedure :: break => tMolecule_break
     procedure :: number_of_atoms => tMolecule_number_of_atoms
     procedure :: count => tMolecule_count
     procedure :: per_molecule => tMolecule_per_molecule
@@ -40,6 +43,17 @@ type tMolecule
 end type tMolecule
 
 contains
+
+  !=================================================================================================
+
+  subroutine tMolecule_add_atom( me, atom )
+    class(tMolecule), intent(inout) :: me
+    character(sl),    intent(in)    :: atom
+    character(sl) :: arg(2)
+    me%N = me%N + 1
+    arg = [atom,int2str(me%N)]
+    call me % list % add( 2, arg )
+  end subroutine tMolecule_add_atom
 
   !=================================================================================================
 
@@ -68,13 +82,14 @@ contains
 
   !=================================================================================================
 
-  subroutine tMolecule_fuse( me, atom )
-    class(tMolecule), intent(inout) :: me
-    character(sl),    intent(in)    :: atom(2)
+  subroutine tMolecule_fuse( me, atoms )
+    class(tMolecule), intent(inout)        :: me
+    character(sl),    intent(inout)        :: atoms(2)
     integer :: i, mol(2), imin, imax
     type(Struc), pointer :: ptr
+    if (atoms(1) == atoms(2)) call error( "atom", atoms(1), "cannot bind to itself" )
     do i = 1, 2
-      call me % list % search( atom(i:i), ptr )
+      call me % list % search( atoms(i:i), ptr )
       mol(i) = str2int( ptr % params )
     end do
     imin = minval(mol)
@@ -90,6 +105,7 @@ contains
       end do
       me%N = me%N - 1
     end if
+    call me % bonds % add( 2, atoms, silent = .true. )
     contains
       !---------------------------------------------------------------------------------------------
       subroutine rename_molecule( old, new )
@@ -102,6 +118,99 @@ contains
       end subroutine rename_molecule
       !---------------------------------------------------------------------------------------------
   end subroutine tMolecule_fuse
+
+  !=================================================================================================
+
+  subroutine tMolecule_break( me, arg )
+    class(tMolecule), intent(inout) :: me
+    character(sl),    intent(in)    :: arg(2)
+    integer :: i, j, k, imin, imax, natoms
+    character(sl) :: cmol, newmol
+    type(Struc), pointer :: ptr, pcoords
+    integer, allocatable :: mol(:), sort(:)
+    character(sl), allocatable :: atom(:), id(:), params(:)
+    ! Remove the bond between these atoms (if any) from the list:
+    call me % bonds % remove( arg, silent = .true. )
+    ! Determine the molecule two which these atoms belong:
+    call me % list % search( arg(1:1), ptr )
+    cmol = me % list % parameters( arg(1:1) )
+    ! Determine the number of atoms of this molecule:
+    natoms = 0
+    ptr => me % list % first
+    do while (associated(ptr))
+      if (ptr%params == cmol) natoms = natoms + 1
+      ptr => ptr % next
+    end do
+    ! Save the atoms as if they were monoatomic molecules:
+    allocate( mol(natoms), atom(natoms) )
+    ptr => me % list % first
+    do i = 1, natoms
+      mol(i) = i
+      do while (ptr%params /= cmol)
+        ptr => ptr % next
+      end do
+      atom(i) = ptr%id(1)
+      ptr => ptr % next
+    end do
+    ! Search for non-deleted bonds and reunite the atoms as molecules:
+    do i = 1, natoms-1
+      do j = i+1, natoms
+        if (me % bonds % find([atom(i),atom(j)])) then
+          if (mol(i) /= mol(j)) then
+            imin = min(mol(i),mol(j))
+            imax = max(mol(i),mol(j))
+            forall (k=1:natoms,mol(k) == imax) mol(k) = imin
+            forall (k=1:natoms,mol(k) > imax) mol(k) = mol(k) - 1
+          end if
+        end if
+      end do
+    end do
+    ! If the removed bond used to define two separate regions, there will now be two molecules:
+    if (any(mol == 2)) then
+      newmol = int2str(me%N)
+      call writeln( "Breaking molecule", cmol, "into molecules", cmol, "and", newmol )
+      ptr => me % list % first
+      do while (associated(ptr))
+        if (any((atom == ptr%id(1)).and.(mol == 2))) ptr%params = newmol
+        ptr => ptr % next
+      end do
+      me%N = me%N + 1
+      ! Sort the arrays in accordance with the order in mol:
+      allocate( sort(natoms) )
+      sort = sorted( mol )
+      if (any(sort /= [(i,i=1,natoms)])) then
+        call writeln( "Reorganizing coordinates..." )
+        atom = atom(sort)
+        allocate( id(natoms), params(natoms) )
+        ptr => me % xyz % first
+        do while (associated(ptr))
+          if (any(atom == ptr%id(1))) then
+            pcoords => ptr
+            ! Get the current order of atoms:
+            do i = 1, natoms
+              id(i) = ptr % id(1)
+              params(i) = ptr % params
+              ptr => ptr % next
+            end do
+            ! Reset the atoms in the new order:
+            do i = 1, natoms
+              pcoords % id(1) = atom(i)
+              j = 1
+              do while (id(j) /= atom(i))
+                j = j + 1
+              end do
+              pcoords % params = params(j)
+              pcoords => pcoords % next
+            end do
+          else
+            ptr => ptr % next
+          end if
+        end do
+      end if
+    else
+      call writeln( "Opening cycle(s) in molecule", cmol )
+    end if
+  end subroutine tMolecule_break
 
   !=================================================================================================
 

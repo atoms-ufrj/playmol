@@ -20,7 +20,7 @@ atom		C$N	CH3
 
 # Bond definitions:
 for i from 1 to {$N-1}
-  bond		C$i C{$i+1}
+  link		C$i C{$i+1}
 next
 
 build
@@ -31,6 +31,10 @@ C3 C2 C1 $L $theta
 for i from 4 to $N
   C$i C{$i-1} C{$i-2} C{$i-3} $L $theta $phi
 next
+
+unlink C12 C13
+#write summary
+quit
 
 box		density $density
 

@@ -22,7 +22,8 @@ physically meaningful values are those corresponding to [LAMMPS real units].
 | [bond]          | creates chemical bonds and automatically detects angles and dihedrals     |
 | [improper]      | creates an improper involving four given atoms or search for impropers    |
 | [extra]         | creates an extra bond, angle, or dihedral involving given atoms           |
-| [link]          | links two atoms and fuse their molecules without actually bonding them    |
+| [link]          | links two atoms (and fuses their molecules) without actually bonding them |
+| [unlink]        | removes an existing link (and breaks the corresponding molecule)          |
 | [build]         | guesses atom positions from provided geometric information                |
 | [prefix/suffix] | defines default prefixes or suffixes for atom types and atoms             |
 | [box]           | defines the properties of a simulation box                                |
@@ -805,9 +806,9 @@ link
 
 **Description**:
 
-This command creates a virtual link between the specified atoms of originally different molecules
-and then fuse these molecules together without actually creating a chemical bond between the linked
-atoms.
+This command creates a virtual link between the specified atoms. If these atoms belong to distinct
+molecules, then such molecules will be fused together, but without actually creating a chemical bond
+between the linked atoms.
 
 The parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be
 provided, with no use of wildcard characters (* or ?). If an atom-related [prefix/suffix] has been
@@ -816,17 +817,58 @@ to _atom-x_.
 
 NOTE: sometimes, it is useful to consider two molecules as if they were a single one. For instance,
 when ions are present, one might want to consider an anion/cation pair as a single rigid structure,
-so that they can be packed together using the [packmol] command.
+so that they can be packed together using the [packmol] command. After that, one can remove the
+link using the [unlink] command before writing down the produced configuration as, for instance, a
+[LAMMPS data file].
 
 **Examples**:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-link	C1 C2
+link	Na+ Cl-
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **See also**:
 
-[atom], [packmol]
+[atom], [packmol], [unlink]
+
+----------------------------------------------------------------------------------------------------
+<a name="unlink"></a>
+unlink
+----------------------------------------------------------------------------------------------------
+
+**Syntax**:
+
+	unlink	<atom-1> <atom-2>
+
+* _atom-x_ = name of a previously defined atom
+
+**Description**:
+
+This command removes a previously defined link between the specified atoms. If such link is the only
+connection between two otherwise independent parts of a molecule, then such molecule will be
+disassembled accordingly. If necessary, the list of atomic coordinates of instantiated molecules
+will be rearranged in order to keep contiguousness for the atoms of each molecule.
+
+The parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be
+provided, with no use of wildcard characters (* or ?). If an atom-related [prefix/suffix] has been
+previously activated, then the actual atom identifier will contain such prefix and/or suffix added
+to _atom-x_. The two identifiers must correspond to a previously created [link].
+
+NOTE: sometimes, it is useful to consider two molecules as if they were a single one. For instance,
+when ions are present, one might want to consider an anion/cation pair as a single rigid structure,
+so that they can be packed together using the [packmol] command. After that, one can remove the
+link using the [unlink] command before writing down the produced configuration as, for instance, a
+[LAMMPS data file].
+
+**Examples**:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+unlink	Na+ Cl-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**See also**:
+
+[atom], [packmol], [link]
 
 ----------------------------------------------------------------------------------------------------
 <a name="build"></a>
@@ -1117,13 +1159,23 @@ align
 This command aligns the principal axes of a given molecule with the system's Cartesian axes. The
 principal axes are defined geometrically, as if the masses of all atoms were equal.
 
-The parameter _molecule_ specifies the index of the molecule to be aligned with the Cartesian axes.
-Such molecule must have predefined atomic coordinates. Exceptions are monoatomic, diatomic, and
-triatomic molecules, whose atomic coordinates can be automatically generated in some cases, as
-explained in the description of the [packmol] command.
+The parameter _molecule_ specifies the molecule to be aligned with the Cartesian axes. This
+specification can be done in either of the following ways:
 
-**IMPORTANT**: the command `write summary` can be very useful for checking out the indexes of the
-molecules.
+1. By directly employing the numerical index of the compound. The command [write], with its option
+_summary_, can be helpful for checking the indexes of the existing ones.
+
+2. By using the function `mol(atom)`, where _atom_ is the identifier of an existing [atom]. Such
+identifier must be tightly placed inside the parentheses (that is, without any spaces and/or tabs).
+
+Except in a few special cases, the specified molecule must have already been instantiated (see the
+[Playmol Basics] section). In this case, the first set of atomic coordinates previously provided
+for such molecule will be employed. The special cases, which might not require previous
+instantiation, are: (1) monoatomic molecules, (2) diatomic molecules whose involved [bond_type]
+describes a harmonic potential, and (3) triatomic molecules whose involved [bond_type] and
+[angle_type] both describe harmonic potentials. In these cases, Playmol will consider the second
+[bond_type]'s attribute as an equilibrium distance and the second [angle_type]'s attribute as an
+equilibrium angle (in degrees).
 
 The parameter _axis-1_ must be equal to _x_, _y_, or _z_, and specifies the Cartesian axis with
 which the molecule will be aligned considering its most elongated principal axis.
@@ -1407,14 +1459,14 @@ reset
 	reset		<list>
 
 * _list_ = *bond_types* or *angle_types* or *dihedral_types* or *improper_types* or *atoms* or
-*charges* or *bonds* or *impropers* or *xyz* or *packmol* or *all*
+*charges* or *bonds* or *impropers* or *links* or *xyz* or *packmol* or *all*
 
 **Description**:
 
 This command resets one or more lists of predefined entities.
 
 The options __bond_types__, __angle_types__, __dihedral_types__, __improper_types__, __charges__,
- and __impropers__ are self-explanatory. The remaining options are:
+__impropers__, and __links__ are self-explanatory. The remaining options are:
 
 * __atoms__: resets the list of atoms and its dependent lists: charges, bonds, angles, dihedrals,
 impropers, molecules, coordinates, and Packmol definitions.
@@ -1508,6 +1560,7 @@ The example above writes a summary of the current molecular system and then quit
 [bond]:			#bond
 [extra]:		#extra
 [link]:			#link
+[unlink]:		#unlink
 [improper]:		#improper
 [build]:		#build
 [box]:			#box
