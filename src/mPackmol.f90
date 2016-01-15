@@ -37,7 +37,7 @@ type tPackmol
   real(rb) :: retry = 1.0_rb
   real(rb) :: diameter = 2.5_rb
   logical  :: setup
-  type(StrucList) :: list = StrucList( name = "packmol option", number = 1 )
+  type(StrucList) :: list = StrucList( "packmol option" )
   contains
     procedure :: run => tPackmol_run
     procedure :: file_names => tPackmol_file_names
@@ -310,7 +310,7 @@ contains
         do iatom = 1, natoms
           read(mix,'(A'//csl//')') line
           call split( line, narg, arg )
-          call lcoord % add( narg, arg, repeatable = .true. )
+          call lcoord % add( narg, arg, repeatable = .true., silent = .true. )
         end do
         close( mix, status = "delete" )
       end subroutine retrieve_coordinates

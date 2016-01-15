@@ -10,7 +10,9 @@ GTKDIR  = ./highlight
 PACKMOL = ./lib
 
 exec = playmol
-src  = ./src
+
+SRC  = $(wildcard $(SRCDIR)/*.f90)
+OBJ  = $(patsubst $(SRCDIR)/%.f90,$(OBJDIR)/%.o,$(SRC))
 
 all: $(BINDIR)/$(exec)
 
@@ -23,7 +25,6 @@ clean:
 	rm -rf $(OBJDIR)
 	rm -rf $(BINDIR)
 	rm -rf $(DOCDIR)/html/
-	rm -rf $(DOCDIR)/latex/
 	cd $(PACKMOL) && make clean
 
 install:
@@ -31,10 +32,7 @@ install:
 	cp -f $(PACKMOL)/packmol/packmol /usr/local/bin
 	sh $(GTKDIR)/install.sh
 
-$(BINDIR)/$(exec): $(OBJDIR)/playmol.o $(OBJDIR)/mPlaymol.o $(OBJDIR)/mCodeFlow.o  \
-                   $(OBJDIR)/mStruc.o $(OBJDIR)/mPackmol.o $(OBJDIR)/mMolecule.o   \
-                   $(OBJDIR)/mBox.o $(OBJDIR)/mString.o $(OBJDIR)/mParser.o        \
-                   $(OBJDIR)/mGlobal.o $(PACKMOL)/libpackmol.a
+$(BINDIR)/$(exec): $(OBJ) $(PACKMOL)/libpackmol.a
 	mkdir -p $(BINDIR)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -o $@ $^
 
@@ -45,29 +43,32 @@ $(OBJDIR)/playmol.o: $(SRCDIR)/playmol.f90 $(OBJDIR)/mPlaymol.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mPlaymol.o: $(SRCDIR)/mPlaymol.f90 $(OBJDIR)/mCodeFlow.o $(OBJDIR)/mPackmol.o \
-                      $(OBJDIR)/mBox.o $(OBJDIR)/mMolecule.o
+                      $(OBJDIR)/mFix.o $(OBJDIR)/mBox.o $(OBJDIR)/mMolecule.o
+	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
+
+$(OBJDIR)/mMolecule.o: $(SRCDIR)/mMolecule.f90 $(OBJDIR)/mStruc.o $(OBJDIR)/mGlobal.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mCodeFlow.o: $(SRCDIR)/mCodeFlow.f90 $(OBJDIR)/mParser.o $(OBJDIR)/mStruc.o
+	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
+
+$(OBJDIR)/mFix.o: $(SRCDIR)/mFix.f90 $(OBJDIR)/mGlobal.o
+	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
+
+$(OBJDIR)/mParser.o: $(SRCDIR)/mParser.f90 $(OBJDIR)/mGlobal.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mPackmol.o: $(SRCDIR)/mPackmol.f90 $(OBJDIR)/mMolecule.o \
                       $(OBJDIR)/mStruc.o $(OBJDIR)/mBox.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/mStruc.o: $(SRCDIR)/mStruc.f90 $(OBJDIR)/mString.o
-	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
-
 $(OBJDIR)/mBox.o: $(SRCDIR)/mBox.f90 $(OBJDIR)/mGlobal.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/mParser.o: $(SRCDIR)/mParser.f90 $(OBJDIR)/mGlobal.o
+$(OBJDIR)/mStruc.o: $(SRCDIR)/mStruc.f90 $(OBJDIR)/mString.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mString.o: $(SRCDIR)/mString.f90 $(OBJDIR)/mGlobal.o
-	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
-
-$(OBJDIR)/mMolecule.o: $(SRCDIR)/mMolecule.f90 $(OBJDIR)/mStruc.o $(OBJDIR)/mGlobal.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mGlobal.o: $(SRCDIR)/mGlobal.f90

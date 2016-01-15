@@ -29,16 +29,10 @@ H1	0.0	0.0	0.0
 O	0.9572	0.0 	0.0
 H2	1.19719	0.92663	0.0
 
-#align		mol(W_H1) x y
-#align		mol(W_H2) x y
-#write summary
-#quit
 box		density 0.0602214
-packmol		tolerance 2.5 retry 1.0 pack mol(W_H2) 200 action execute
-unlink H2 O
+packmol		tolerance 2.5 retry 1.0 pack mol(W_H2) 20000 action execute
 
-quit
 write		lammps water.lmp
-write		lammpstrj water.lammpstrj
-write		xyz water.xyz
+#write		lammpstrj water.lammpstrj
+#write		xyz water.xyz
 write		summary

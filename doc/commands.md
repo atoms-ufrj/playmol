@@ -23,7 +23,7 @@ physically meaningful values are those corresponding to [LAMMPS real units].
 | [improper]      | creates an improper involving four given atoms or search for impropers    |
 | [extra]         | creates an extra bond, angle, or dihedral involving given atoms           |
 | [link]          | links two atoms (and fuses their molecules) without actually bonding them |
-| [unlink]        | removes an existing link (and breaks the corresponding molecule)          |
+| [unlink]        | removes an existing link (and splits the corresponding molecule)          |
 | [build]         | guesses atom positions from provided geometric information                |
 | [prefix/suffix] | defines default prefixes or suffixes for atom types and atoms             |
 | [box]           | defines the properties of a simulation box                                |
@@ -1010,7 +1010,7 @@ or
 
 **Description**:
 
-This commands activate/deactivate a prefix or a suffix to be added to every [atom_type] identifier
+This commands activates/deactivates a prefix or a suffix to be added to every [atom_type] identifier
 or to every [atom] identifier in subsequent commands.
 
 The parameter _target_ indicates which type of identifier will be modified by the activated prefix
@@ -1028,11 +1028,16 @@ Prefixes and suffixes can be simultaneously active.
 
 The following commands are affected by the `prefix types` and `suffix types` commands:
 
-* [atom_type], [mass], [bond_type], [angle_type], [dihedral_type], [improper_type], and [atom].
+* [atom_type], [mass], [diameter], [bond_type], [angle_type], [dihedral_type], [improper_type], and
+[atom].
 
 The following commands are affected by the `prefix atoms` and `suffix atoms` commands:
 
 * [atom], [bond], [charge], [improper], [extra], [link], and [build].
+
+__Note__: an active, atom-related prefix/suffix will NOT be automatically applied to arguments of
+the `mol()` function. Therefore, molecule specifications within the commands [align] and [packmol]
+require manual inclusion of prefixes and/or suffixes.
 
 **Examples**:
 
@@ -1167,6 +1172,7 @@ _summary_, can be helpful for checking the indexes of the existing ones.
 
 2. By using the function `mol(atom)`, where _atom_ is the identifier of an existing [atom]. Such
 identifier must be tightly placed inside the parentheses (that is, without any spaces and/or tabs).
+Note that an active, atom-related [prefix/suffix] will NOT be applied automatically to _atom_.
 
 Except in a few special cases, the specified molecule must have already been instantiated (see the
 [Playmol Basics] section). In this case, the first set of atomic coordinates previously provided
@@ -1287,7 +1293,8 @@ will have at the moment of a `packmol action` command (see below).
 2. By using the function `mol(atom)`, where _atom_ is the identifier of an existing [atom]. Such
 identifier must be tightly placed inside the parentheses (that is, without any spaces and/or tabs).
 At the moment of a `packmol action` command, the function will return the index of the compound that
-contains the specified atom.
+contains the specified atom. Note that an active, atom-related [prefix/suffix] will NOT be applied
+automatically to _atom_.
 
 The usage of each keyword _fix_, _copy_, or _pack_ is:
 
@@ -1306,15 +1313,15 @@ facilitating the packing of elongated molecules.
 
 This makes _N_ copies of a molecule in random positions and with random orientations.
 
-The keyword _action_ is used to create Packmol input files or to invoke Packmol. The following
+The keyword _action_ is used to create Packmol input files or to execute Packmol. The following
 options are available:
 
 	action execute
 
-This option calls Packmol to build the desired molecular packing. It requires the previous
-definition of a simulation [box]. Moreover, it requires that at least one keyword _fix_, _copy_, or
-_pack_ has appeared in a previous packmol command or appears in the same packmol command, either
-before or after the keyword _action_. If the parameter _retry_ is currently equal to 1.0 (its
+This option executes Packmol in order to build the desired molecular packing. It requires the
+previous definition of a simulation [box]. Moreover, it requires that at least one keyword _fix_
+_copy_, or _pack_ has appeared in a previous packmol command or appears in the same packmol command,
+either before or after the keyword _action_. If the parameter _retry_ is currently equal to 1.0 (its
 default value), then Packmol will do only one packing attempt with the specified _tolerance_ and
 produce a warning message in case such attempt fails. If _retry_ is smaller than 1.0, then Packmol
 will keep trying until a successful attempt is achieved, with _tolerance_ being iteratively
@@ -1458,31 +1465,57 @@ reset
 
 	reset		<list>
 
-* _list_ = *bond_types* or *angle_types* or *dihedral_types* or *improper_types* or *atoms* or
-*charges* or *bonds* or *impropers* or *links* or *xyz* or *packmol* or *all*
+* _list_ = *all* or *atom* or *charge* or *bond* or *link* or *angle* or *dihedral* or *improper* or
+*extra_bond* or *extra_angle* or *extra_dihedral* or *xyz* or *packmol*
 
 **Description**:
 
-This command resets one or more lists of predefined entities.
+This command resets one or more lists of entities previously created. The resettable lists are those
+in the table below.
 
-The options __bond_types__, __angle_types__, __dihedral_types__, __improper_types__, __charges__,
-__impropers__, and __links__ are self-explanatory. The remaining options are:
+| Index | List                                 |
+|------:|:-------------------------------------|
+|     1 | atom types                           |
+|     2 | masses                               |
+|     3 | diameters                            |
+|     4 | bond types                           |
+|     5 | angle types                          |
+|     6 | dihedral types                       |
+|     7 | improper types                       |
+|     8 | atoms                                |
+|     9 | charges                              |
+|    10 | bonds                                |
+|    11 | angles                               |
+|    12 | dihedrals                            |
+|    13 | extra bonds                          |
+|    14 | extra angles                         |
+|    15 | extra dihedrals                      |
+|    16 | impropers                            |
+|    17 | links                                |
+|    18 | atomic coordinates                   |
+|    19 | packmol fix/copy/pack specifications |
 
-* __atoms__: resets the list of atoms and its dependent lists: charges, bonds, angles, dihedrals,
-impropers, molecules, coordinates, and Packmol definitions.
+The parameter _list_ must be one of the following options:
 
-* __bonds__: resets the list of bonds and all its dependent lists: angles, dihedrals, molecules,
-coordinates, and Packmol definitions.
-
-* __xyz__: resets the list of coordinates.
-
-* __packmol__: resets the list of Packmol definitions.
-
-* __all__: resets all lists, including atom types and masses.
+* __all__: deletes all lists previously created (_1_ to _19_).
+* __atom__: deletes the list of atoms and all its dependent lists (_8_ to _19_).
+* __charge__: deletes the list of atomic charges (_9_).
+* __bond__: deletes the lists from _10_ to _17_ in the table above and resets all atoms as
+monoatomic molecules. The lists of coordinates and packmol specifications remain unchanged.
+* __angle__: deletes the lists of angles and extra angles (_11_ and _14_).
+* __dihedral__: deletes the lists of dihedrals and extra dihedrals (_12_ and _15_).
+* __extra_bond__: deletes the list of extra bonds (_13_).
+* __extra_angle__: deletes the list of extra angles (_14_).
+* __extra_dihedral__: deletes the list of extra dihedrals (_15_).
+* __improper__: deletes the list of impropers (_16_).
+* __link__: deletes the list of virtual links (_17_) and splits all molecules accordingly, as if
+the [unlink] command was issued individually for every link present in the list.
+* __xyz__: deletes the list of atomic coordinates (_18_).
+* __packmol__: deletes the list of [packmol fix/copy/pack specifications (_19_).
 
 **See also**:
 
-[packmol]
+[packmol], [unlink]
 
 ----------------------------------------------------------------------------------------------------
 <a name="shell"></a>

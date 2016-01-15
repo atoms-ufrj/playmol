@@ -36,16 +36,17 @@ end type Struc
 
 type StrucList
   character(sl)        :: name = ""
-  integer              :: number = 0
+  integer              :: number = 1
+  logical              :: two_way = .false.
   integer              :: count = 0
-  logical              :: two_way = .true.
   type(Struc), pointer :: first => null()
   type(Struc), pointer :: last  => null()
   contains
     procedure :: add => StrucList_add
     procedure :: handle => StrucList_handle
     procedure :: search => StrucList_search
-    procedure :: parameters => StrucList_parameters
+    procedure :: parameters => StrucList_params_from_id
+    procedure :: point_to => StrucList_point_to
     procedure :: index => StrucList_index
     procedure :: find => StrucList_find
     procedure :: count_used => StrucList_count_used
@@ -212,18 +213,40 @@ contains
 
   !=================================================================================================
 
-  function StrucList_parameters( me, id ) result( params )
-    class(StrucList), intent(in) :: me
-    character(*),     intent(in) :: id(:)
-    character(sl)                :: params
+  function StrucList_params_from_id( me, id, default ) result( params )
+    class(StrucList), intent(in)           :: me
+    character(*),     intent(in)           :: id(:)
+    character(*),     intent(in), optional :: default
+    character(sl)                          :: params
     type(Struc), pointer :: ptr
     call me % search( id, ptr )
     if (associated(ptr)) then
       params = ptr % params
     else
-      params = ""
+      if (present(default)) then
+        params = default
+      else
+        params = ""
+      end if
     end if
-  end function StrucList_parameters
+  end function StrucList_params_from_id
+
+  !=================================================================================================
+
+  function StrucList_point_to( me, index ) result( ptr )
+    class(StrucList), intent(in) :: me
+    integer,          intent(in) :: index
+    type(Struc), pointer         :: ptr
+    integer :: i
+    if ((index < 1).or.(index > me%count)) then
+      ptr => null()
+    else
+      ptr => me % first
+      do i = 2, index
+        ptr => ptr % next
+      end do
+    end if
+  end function StrucList_point_to
 
   !=================================================================================================
 

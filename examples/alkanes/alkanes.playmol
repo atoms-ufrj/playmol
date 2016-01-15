@@ -1,6 +1,6 @@
 # Simulation of liquid normal alkanes with a united-atom force field
-define	N		as 20	# Number of carbon atoms
-define	Nmol		as 200	# Number of molecules
+define	N		as 22	# Number of carbon atoms
+define	Nmol		as 2000	# Number of molecules
 define	seed		as 5348	# Seed for random numbers
 define	force_field	as nerd	# United-atom force field
 define	compound	as C$N	# Base for file name
@@ -13,15 +13,29 @@ include		$force_field.playmol
 
 # Atom definitions:
 atom		C1	CH3
-for i from 2 to {$N-1}
+for i from {$N-1} downto 2
   atom		C$i	CH2
 next
-atom		C$N	CH3
+atom		C$N	CH3-C2
 
 # Bond definitions:
-for i from 1 to {$N-1}
-  link		C$i C{$i+1}
+for i from 1 to 10
+  bond		C$i C{$i+1}
 next
+
+# Bond definitions:
+for i from 12 to 19
+  bond		C$i C{$i+1}
+next
+
+bond C21 C22
+
+build	alkanes.xyz
+box	density $density
+write	lammps	$compound.lmp
+write summary
+#shell   cat $compound.lmp
+quit
 
 build
 $N
@@ -31,10 +45,6 @@ C3 C2 C1 $L $theta
 for i from 4 to $N
   C$i C{$i-1} C{$i-2} C{$i-3} $L $theta $phi
 next
-
-unlink C12 C13
-#write summary
-quit
 
 box		density $density
 
@@ -46,7 +56,9 @@ packmol		tolerance $tol seed $seed retry 0.95
 packmol		copy 1 $Nmol
 packmol		action execute
 
-write		lammpstrj $compound.lammpstrj
+write		xyz alkanes.xyz
+
+#write		lammpstrj $compound.lammpstrj
 write		lammps    $compound.lmp
 write		summary
 

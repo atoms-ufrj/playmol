@@ -26,14 +26,14 @@ implicit none
 
 type tMolecule
   integer :: N = 0
-  type(StrucList) :: list = StrucList( name = "molecule", number = 1 )
-  type(StrucList) :: bonds = StrucList( name = "bond", number = 2 )
-  type(StrucList) :: xyz = StrucList( name = "coordinate", number = 1 )
+  type(StrucList) :: list = StrucList( "molecule" )
+  type(StrucList) :: bonds = StrucList( "bond", 2, .true. )
+  type(StrucList) :: xyz = StrucList( "coordinate" )
   contains
     procedure :: add_atom => tMolecule_add_atom
     procedure :: index => tMolecule_index
     procedure :: fuse => tMolecule_fuse
-    procedure :: break => tMolecule_break
+    procedure :: split => tMolecule_split
     procedure :: number_of_atoms => tMolecule_number_of_atoms
     procedure :: count => tMolecule_count
     procedure :: per_molecule => tMolecule_per_molecule
@@ -121,7 +121,7 @@ contains
 
   !=================================================================================================
 
-  subroutine tMolecule_break( me, arg )
+  subroutine tMolecule_split( me, arg )
     class(tMolecule), intent(inout) :: me
     character(sl),    intent(in)    :: arg(2)
     integer :: i, j, k, imin, imax, natoms
@@ -169,7 +169,7 @@ contains
     if (any(mol == 2)) then
       me%N = me%N + 1
       newmol = int2str(me%N)
-      call writeln( "Breaking molecule", cmol, "into molecules", cmol, "and", newmol )
+      call writeln( "Splitting molecule", cmol, "into molecules", cmol, "and", newmol )
       ptr => me % list % first
       do while (associated(ptr))
         if (any((atom == ptr%id(1)).and.(mol == 2))) ptr%params = newmol
@@ -209,7 +209,7 @@ contains
     else
       call writeln( "Opening cycle(s) in molecule", cmol )
     end if
-  end subroutine tMolecule_break
+  end subroutine tMolecule_split
 
   !=================================================================================================
 
@@ -229,17 +229,17 @@ contains
 
   !=================================================================================================
 
-  function tMolecule_count( me ) result( count )
+  function tMolecule_count( me ) result( nmols )
     class(tMolecule), intent(in) :: me
-    integer                      :: count(me%N)
+    integer                      :: nmols(me%N)
     integer  :: imol, iatom, natoms(me%N)
     type(Struc), pointer :: ptr
     natoms = me % number_of_atoms()
-    count = 0
+    nmols = 0
     ptr => me % xyz % first
     do while (associated(ptr))
       imol = str2int(me % list % parameters( ptr%id ) )
-      count(imol) = count(imol) + 1
+      nmols(imol) = nmols(imol) + 1
       do iatom = 1, natoms(imol)
         ptr => ptr % next
       end do
@@ -300,7 +300,7 @@ contains
         if (new_molecule) then
           imol = str2int(atom%params)
           iatom = 1
-          call writeln( "Reading", int2str(natoms(imol)), &
+          call writeln( "Processing", int2str(natoms(imol)), &
                         "geometric data for molecule", trim(int2str(imol))//":" )
         else if (trim(atom%params) /= trim(int2str(imol))) then
           call error( "atom", catom, "does not belong to molecule", int2str(imol) )
