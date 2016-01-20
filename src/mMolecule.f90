@@ -286,7 +286,7 @@ contains
     real(rb) :: L, theta, phi, R1(3), R2(3), R3(3), x(3), y(3), z(3)
     natoms = me % number_of_atoms()
     allocate( prev(maxval(natoms)) )
-    N = size(data,1)
+    N = size(ndata)
     call writeln( "Number of provided geometric data: ", int2str(N) )
     allocate( name(N), R(3,N) )
     new_molecule = .true.
@@ -296,19 +296,18 @@ contains
       if ((narg < 3).or.(narg > 7).or.(narg == 6)) call error( "invalid geometric info format" )
       catom = arg(1)
       call me % list % search( [catom], atom )
-      if (associated(atom)) then
-        if (new_molecule) then
-          imol = str2int(atom%params)
-          iatom = 1
-          call writeln( "Processing", int2str(natoms(imol)), &
-                        "geometric data for molecule", trim(int2str(imol))//":" )
-        else if (trim(atom%params) /= trim(int2str(imol))) then
-          call error( "atom", catom, "does not belong to molecule", int2str(imol) )
-        else if (any(str_find([catom],prev(1:iatom)) > 0)) then
-          call error( "geometric info of atom", catom, "has already been given" )
-        else
-          iatom = iatom + 1
-        end if
+      if (.not.associated(atom)) call error( "invalid atom", catom )
+      if (new_molecule) then
+        imol = str2int(atom%params)
+        iatom = 1
+        call writeln( "Processing", int2str(natoms(imol)), &
+                      "geometric data for molecule", trim(int2str(imol))//":" )
+      else if (trim(atom%params) /= trim(int2str(imol))) then
+        call error( "atom", catom, "does not belong to molecule", int2str(imol) )
+      else if (any(str_find([catom],prev(1:iatom)) > 0)) then
+        call error( "repeated geometric info for atom", catom )
+      else
+        iatom = iatom + 1
       end if
       call writeln( "Data provided for atom", catom, ":", join(arg(2:narg)) )
       name(i) = catom
@@ -348,7 +347,7 @@ contains
           z = cross(x,y)
           R(:,i) = R1 + L*(cosine(180-theta)*x + sine(180-theta)*(cosine(phi)*y + sine(phi)*z))
         case default
-          call error( "bad geometric info" )
+          call error( "invalid geometric info" )
       end select
       arg(2:4) = real2str(R(:,i))
       call me % xyz % add( 4, arg(1:4), me % list, repeatable = .true. )
@@ -364,7 +363,7 @@ contains
         integer,       intent(inout) :: ind(size(atom))
         integer :: j, k
         do j = 1, size(atom)
-          if (.not. me % list % find( [atom(j)])) call error( atom(j), "is not a valid atom" )
+          if (.not. me % list % find( [atom(j)])) call error( "invalid atom", atom(j) )
           if (any(name(1:i-1) == atom(j))) then
             k = 1
             do while (name(k) /= atom(j))
@@ -372,7 +371,7 @@ contains
             end do
             ind(j) = k
           else
-            call error( "atom", atom(j), "has not been defined")
+            call error( "no coordinates defined for atom", atom(j) )
           end if
         end do
       end subroutine
@@ -380,26 +379,29 @@ contains
 
   !=================================================================================================
 
-  subroutine tMolecule_coordinates( me, imol, N, Coord, lcoord, option )
+  subroutine tMolecule_coordinates( me, imol, N, Coord, atom, option )
     class(tMolecule), intent(inout) :: me
     integer,          intent(in)    :: imol, N, option
     real(rb),         intent(inout) :: Coord(3,N)
-    type(StrucList),  intent(inout) :: lcoord
+    character(sl),    intent(inout) :: atom(N)
     type(Struc), pointer :: current
     logical :: found
     integer :: i, narg
     character(sl) :: arg(3)
-    current => lcoord % first
+    current => me % xyz % first
     found = .false.
     do while (associated(current).and.(.not.found))
       found = str2int(me % list % parameters( current%id )) == imol
       if (.not.found) current => current % next
     end do
+    if (.not.found) call error( "no coordinates for molecule", int2str(imol) )
     do i = 1, N
       if (option == 1) then ! Retrieve coordinates:
+        atom(i) = current % id(1)
         call split( current % params, narg, arg )
         Coord(:,i) = [str2real(arg(1)), str2real(arg(2)), str2real(arg(3))]
       else ! Set coordinates:
+        current % id(1) = atom(i)
         current % params = join(real2str(Coord(:,i)))
       end if
       current => current % next

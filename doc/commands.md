@@ -895,10 +895,10 @@ The geometric information that Playmol expects to receive has the following form
 
 * The first non-empty line must contain the number _N_ of geometric assignments that will be made.
 * The subsequent non-empty lines must contain the _N_ geometric assignments, which can possibly be
-intertwined with [define] commands, [for/next] constructs, and [if/then/else] constructs. No other
-commands are permitted until all _N_ assignments have been made. Each geometric assignments consists
-of an [atom] identifier followed by some fields separated by spaces and/or tabs. Only the following
-formats are valid:
+intertwined with [define] commands, [include] commands, [for/next] constructs, and [if/then/else]
+constructs. No other commands are permitted until all _N_ assignments have been made. Each geometric
+assignments consists of an [atom] identifier followed by some fields separated by spaces and/or
+tabs. Only the following formats are valid:
 
 Coordinates _x_, _y_, and _z_ of _atom-I_:
 

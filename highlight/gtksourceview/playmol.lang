@@ -50,7 +50,7 @@
     </context>
 
     <context id="default-files" style-ref="string">
-      <keyword>[^\$]+\.xyz</keyword>
+      <keyword>[^\$]+\.i?xyz</keyword>
       <keyword>[^\$]+\.(p|play)?mol</keyword>
       <keyword>[^\$]+\.(l(mp|ammps)_)?data</keyword>
       <keyword>[^\$]+\.l(mp|ammps|ammpstrj)</keyword>
@@ -77,7 +77,7 @@
       <keyword>align</keyword>
       <keyword>box\s+(lengths|density|volume|angles)</keyword>
       <keyword>packmol</keyword>
-      <keyword>write\s+(playmol|lammps|summary|xyz|lammpstrj)</keyword>
+      <keyword>write\s+(playmol|lammps|summary|xyz|lammpstrj|internals)</keyword>
       <keyword>prefix\s+(atoms|types)</keyword>
       <keyword>prefix</keyword>
       <keyword>suffix\s+(atoms|types)</keyword>

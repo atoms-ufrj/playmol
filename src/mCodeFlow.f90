@@ -62,21 +62,24 @@ contains
         case ("if")
           call evaluate_if_command
           call me % next_command( unit, narg, arg )
+        case ("include")
+          call evaluate_include_command
+          call me % next_command( unit, narg, arg )
       end select
     end if
     contains
       !---------------------------------------------------------------------------------------------
       subroutine evaluate_define_command
         type(Struc), pointer :: ptr
-        if ((narg /= 4).or.(arg(3) /= "as")) call error( "invalid define command" )
+        if ((narg < 4).or.(arg(3) /= "as")) call error( "invalid define command" )
         if (.not.is_variable(trim(arg(2)))) call error( "invalid variable name", arg(2) )
         call me % variable_list % search( arg(2:2), ptr )
         if (associated(ptr)) then
-          call writeln( "Redefining variable", join(arg(2:4)) )
-          ptr % params = arg(4)
+          call writeln( "Redefining variable", join(arg(2:narg)) )
+          ptr % params = join(arg(4:narg))
         else
-          arg(3) = arg(4)
-          call me % variable_list % add( 2, arg(2:3) )
+          arg(3) = arg(2)
+          call me % variable_list % add( narg-2, arg(3:narg) )
         end if
       end subroutine evaluate_define_command
       !---------------------------------------------------------------------------------------------
@@ -194,6 +197,34 @@ contains
           me % commands => first
         end if
       end subroutine evaluate_if_command
+      !---------------------------------------------------------------------------------------------
+      subroutine evaluate_include_command
+        logical :: file_exists
+        integer :: input
+        character(sl) :: commandline
+        type(tCommand), pointer :: first, curr
+        if (narg < 2) call error( "invalid include command" )
+        inquire( file = arg(2), exist = file_exists )
+        if (.not.file_exists) call error( "file", arg(2), "does not exist" )
+        call writeln( "Including file", arg(2) )
+        open( newunit = input, file = arg(2), status = "old" )
+        call read_command( input, commandline )
+        if (commandline /= "") then
+          allocate( first )
+          curr => first
+          curr % content = commandline
+          call read_command( input, commandline )
+          do while (commandline /= "")
+            allocate( curr % next )
+            curr => curr % next
+            curr % content = commandline
+            call read_command( input, commandline )
+          end do
+          curr % next => me % commands
+          me % commands => first
+        end if
+        close(input)
+      end subroutine evaluate_include_command
       !---------------------------------------------------------------------------------------------
       subroutine replace_variables
         integer :: N, first, last

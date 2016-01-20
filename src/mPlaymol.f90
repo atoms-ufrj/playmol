@@ -39,8 +39,7 @@ type tPlaymol
   type(tPackmol)  :: packmol
   type(tCodeFlow) :: code_flow
   type(tMolecule) :: molecules
-  type(tFix)      :: atomfix, &
-                     typefix
+  type(tFix)      :: atomfix, typefix
 
   type(StrucList) :: atom_type_list      = StrucList( "atom type" )
   type(StrucList) :: bond_type_list      = StrucList( "bond type", 2, .true. )
@@ -63,6 +62,7 @@ type tPlaymol
   contains
     procedure :: read => tPlaymol_Read
     procedure :: write => tPlaymol_write
+    procedure :: write_internals => tPlaymol_write_internals
     procedure :: write_lammps => tPlaymol_write_lammps
     procedure :: write_lammpstrj => tPlaymol_write_lammpstrj
     procedure :: read_geometry => tPlaymol_read_geometry
@@ -106,7 +106,6 @@ contains
         case ("xyz","build"); call build_command
         case ("align"); call align_command
         case ("write"); call write_command
-        case ("include"); call include_command
         case ("packmol"); call packmol_command
         case ("reset"); call reset_command
         case ("shell"); call shell_command
@@ -372,6 +371,7 @@ contains
       subroutine align_command
         integer :: i, imol, natoms(me%molecules%N), N
         real(rb), allocatable :: Mass(:), Coord(:,:)
+        character(sl), allocatable :: atom(:)
         integer :: axis(3)
         character :: dir(3) = ["x","y","z"]
         real(rb) :: lb(3), ub(3)
@@ -392,9 +392,9 @@ contains
         call writeln( "Aligning molecule", arg(2), "with axes", arg(3), "and", arg(4) )
         natoms = me % molecules % number_of_atoms()
         N = natoms(imol)
-        allocate( Mass(N), Coord(3,N) )
+        allocate( Mass(N), Coord(3,N), atom(N) )
         Mass = 1.0_rb
-        call me % molecules % coordinates( imol, N, Coord, me % molecules % xyz, 1 )
+        call me % molecules % coordinates( imol, N, Coord, atom, 1 )
         lb = minval(Coord,dim=2)
         ub = maxval(Coord,dim=2)
         do i = 1, 3
@@ -402,7 +402,7 @@ contains
         end do
         call writeln( "Bounding box lengths: ", join(real2str(ub-lb)) )
         call me % molecules % align( N, Mass, Coord, axis )
-        call me % molecules % coordinates( imol, N, Coord, me % molecules % xyz, 2 )
+        call me % molecules % coordinates( imol, N, Coord, atom, 2 )
         lb = minval(Coord,dim=2)
         ub = maxval(Coord,dim=2)
         do i = 1, 3
@@ -413,16 +413,23 @@ contains
       end subroutine align_command
       !---------------------------------------------------------------------------------------------
       subroutine write_command
-        integer :: unit
-        if ((narg < 2).or.(narg > 3)) call error( "invalid write command" )
-        if (.not.any(arg(2) == [character(9)::"playmol","lammps","summary","xyz","lammpstrj"]) ) then
-          call error( "invalid write command" )
-        end if
-        if (narg == 3) then
-          open( newunit = unit, file = arg(3), status = "replace" )
-          call writeln( "Writing data to file", arg(3), "in", arg(2), "format..." )
-        else
+        integer :: unit, nspec
+        character(sl) :: formats(6) = ["playmol  ", "lammps   ", "summary  ", &
+                                       "xyz      ", "lammpstrj", "internals"  ]
+        if (narg < 2) call error( "invalid write command" )
+        if (.not.any(formats == arg(2))) call error( "invalid format", arg(2), "in write command" )
+        select case (arg(2))
+          case ("internals"); nspec = 3
+          case default; nspec = 0
+        end select
+        if (narg == nspec+2) then
+          call writeln( "Writing data in", arg(2), "format..." )
           unit = stdout
+        else if (narg == nspec+3) then
+          call writeln( "Writing data to file", arg(narg), "in", arg(2), "format..." )
+          open( newunit = unit, file = arg(narg), status = "replace" )
+        else
+          call error( "invalid write command" )
         end if
         select case (arg(2))
           case ("playmol"); call me % write( unit )
@@ -430,20 +437,10 @@ contains
           case ("summary"); call me % summarize( unit )
           case ("xyz"); call me % write_xyz( unit )
           case ("lammpstrj"); call me % write_lammpstrj( unit )
+          case ("internals"); call me % write_internals( unit, arg(3:2+nspec) )
         end select
         if (unit /= stdout) close(unit)
       end subroutine write_command
-      !---------------------------------------------------------------------------------------------
-      subroutine include_command
-        logical :: file_exists
-        integer :: input
-        if (narg < 2) call error( "invalid include command" )
-        inquire( file = arg(2), exist = file_exists )
-        if (.not.file_exists) call error( "file", arg(2), "does not exist" )
-        open( newunit = input, file = arg(2), status = "old" )
-        call me % Read( input, trim(arg(2)) )
-        close(input)
-      end subroutine include_command
       !---------------------------------------------------------------------------------------------
       subroutine reset_lists( lists )
         integer, intent(in) :: lists(:)
@@ -924,6 +921,149 @@ contains
 
   !=================================================================================================
 
+  subroutine tPlaymol_write_internals( me, unit, three )
+    class(tPlaymol),  intent(inout) :: me
+    integer,          intent(in)    :: unit
+    character(sl),    intent(in)    :: three(3)
+    integer :: i, j, imol, mol(3), natoms(me%molecules%N), N, i3(3), iD(4)
+    logical :: found
+    character(sl) :: rev3(3), D(4)
+    real(rb), allocatable :: coord(:,:)
+    character(sl), allocatable :: atom(:)
+    logical, allocatable :: done(:), tested(:)
+    do i = 1, 3
+      mol(i) = str2int(me % molecules % list % parameters( three(i:i) ))
+    end do
+    if (any(mol == 0)) call error( "invalid atom(s)", join(pack(three,mol==0)) )
+    imol = mol(1)
+    if (any(mol /= imol)) call error( "atoms", join(three), "must all belong to the same molecule" )
+    natoms = me % molecules % number_of_atoms()
+    N = natoms(imol)
+    allocate( coord(3,N), atom(N), done(N), tested(N) )
+    call me % molecules % coordinates( imol, N, coord, atom, option = 1 )
+    if (abs( abs(cos_angle(index(three))) - 1.0_rb ) < 1.0e-2_rb) then
+      call error( "atoms", join(three), "are almost colinear: choose other ones" )
+    end if
+    rev3 = three(3:1:-1)
+    i3 = index(rev3)
+    write(unit,'(A)') trim(int2str(N))
+    write(unit,'("# Generated by Playmol on ",A)') trim(now())
+    write(unit,'(A)') trim(join([rev3(3),"0.0","0.0","0.0"]))
+    write(unit,'(A)') trim(join([rev3(2:3), length(i3(2:3))]))
+    write(unit,'(A)') trim(join([rev3(1:3), length(i3(1:2)), angle(i3)]))
+    done = .false.
+    done(i3) = .true.
+    do while (.not.all(done))
+      found = .false.
+      tested = done
+      do while (.not.found .and. any(.not.tested))
+        i = first_false(tested)
+        call search( me % dihedral_list, atom(i), found, D )
+        tested(i) = .true.
+      end do
+      tested = done
+      do while (.not.found .and. any(.not.tested))
+        i = first_false(tested)
+        call search( me % angle_list, atom(i), found, D(1:3) )
+        if (found) D(4) = rev3(first_false([(any(D(1:3) == rev3(j)),j=1,3)]))
+        tested(i) = .true.
+      end do
+      if (.not.found) then
+        i = first_false( done )
+        D = [atom(i),rev3]
+      end if
+      iD = index(D)
+      done(i) = .true.
+      write(unit,'(A)') trim(join([D, length(iD(1:2)), angle(iD(1:3)), tortion(iD)]))
+    end do
+    contains
+      !---------------------------------------------------------------------------------------------
+      function first_false( a ) result( i )
+        logical, intent(in) :: a(:)
+        integer             :: i
+        i = 1
+        do while (a(i))
+          i = i + 1
+        end do
+      end function first_false
+      !---------------------------------------------------------------------------------------------
+      subroutine search( list, iatom, found, D )
+        type(StrucList), intent(in) :: list
+        character(sl),   intent(in)  :: iatom
+        logical,         intent(out) :: found
+        character(sl),   intent(out) :: D(list%number)
+        integer :: m
+        character(sl) :: C(size(D))
+        type(Struc), pointer :: ptr
+        m = size(D)
+        C(1) = iatom
+        C(2:m) = "*"
+        found = .false.
+        ptr => list % first
+        do while (.not.found .and. associated(ptr))
+          D = ptr%id
+          if (ptr % match_id(C, two_way = .true.)) found = count(done(index(D))) == m-1
+          ptr => ptr % next
+        end do
+        if (found .and. (D(m) == iatom)) D = D(m:1:-1)
+      end subroutine search
+      !---------------------------------------------------------------------------------------------
+      elemental function index( iatom ) result( i )
+        character(sl), intent(in) :: iatom
+        integer                   :: i
+        i = 1
+        do while (iatom /= atom(i))
+          i = i + 1
+        end do
+      end function index
+      !---------------------------------------------------------------------------------------------
+      function length( iD ) result( L )
+        integer, intent(in) :: iD(2)
+        character(sl)       :: L
+        L = real2str(norm(coord(:,iD(2)) - coord(:,iD(1))))
+      end function length
+      !---------------------------------------------------------------------------------------------
+      function cos_angle( iD ) result( cos_theta )
+        integer, intent(in) :: iD(3)
+        real(rb)            :: cos_theta
+        real(rb) :: x(3), y(3)
+        x = coord(:,iD(1)) - coord(:,iD(2))
+        x = x/norm(x)
+        y = coord(:,iD(3)) - coord(:,iD(2))
+        y = y/norm(y)
+        cos_theta = scalar(x,y)
+      end function cos_angle
+      !---------------------------------------------------------------------------------------------
+      function angle( iD ) result( theta )
+        integer, intent(in) :: iD(3)
+        character(sl)       :: theta
+        theta = real2str( 57.2957795130823_rb*acos(cos_angle( iD )) )
+      end function angle
+      !---------------------------------------------------------------------------------------------
+      function tortion( iD ) result( phi )
+        integer, intent(in) :: iD(4)
+        character(sl)       :: phi
+        real(rb) :: x(3), y(3), z(3), ab(3)
+        x = coord(:,iD(2)) - coord(:,iD(3))
+        x = x/norm(x)
+        y = coord(:,iD(4)) - coord(:,iD(3))
+        y = y - scalar(y,x)*x
+        y = y/norm(y)
+        z = cross(x,y)
+        ab = coord(:,iD(1)) - coord(:,iD(2))
+        ab = ab - scalar(ab,x)*x
+        ab = ab/norm(ab)
+        if (scalar(ab,z) >= 0.0_rb) then
+          phi = real2str( +57.2957795130823_rb*acos(scalar(ab,y)) )
+        else
+          phi = real2str( -57.2957795130823_rb*acos(scalar(ab,y)) )
+        end if
+      end function tortion
+      !---------------------------------------------------------------------------------------------
+  end subroutine tPlaymol_write_internals
+
+  !=================================================================================================
+
   subroutine tPlaymol_write_lammps( me, unit )
     class(tPlaymol),  intent(inout) :: me
     integer,          intent(in)    :: unit
@@ -1145,9 +1285,9 @@ contains
       end subroutine write_count
       !---------------------------------------------------------------------------------------------
       subroutine write_box_limits
-        real(rb), parameter :: Deg2Rad = 0.01745329252_rb, tol = 1.0e-10_rb
+        real(rb), parameter :: tol = 1.0e-10_rb
         real(rb) :: lim(2) = [-0.5_rb, 0.5_rb]
-        real(rb) :: L(3), cosine(3), lx, ly, lz, xy, xz, yz
+        real(rb) :: L(3), cos_theta(3), lx, ly, lz, xy, xz, yz
         call me % box % compute( sum(n%mols*me % molecules % per_molecule( me % atom_masses )) )
         L = me%box%length
         write(unit,'()')
@@ -1156,17 +1296,17 @@ contains
           write(unit,'(A," ylo yhi")') trim(join(real2str(lim*L(2))))
           write(unit,'(A," zlo zhi")') trim(join(real2str(lim*L(3))))
         else ! Triclinic box
-          cosine = cos(Deg2Rad*me%box%angle)
+          cos_theta = cosine(me%box%angle)
           lx = L(1)
-          xy = L(2)*cosine(3); if (abs(xy) < tol) xy = 0.0_rb
-          xz = L(3)*cosine(2); if (abs(xz) < tol) xz = 0.0_rb
+          xy = L(2)*cos_theta(3); if (abs(xy) < tol) xy = 0.0_rb
+          xz = L(3)*cos_theta(2); if (abs(xz) < tol) xz = 0.0_rb
           ly = sqrt(L(2)**2 - xy**2)
-          yz = (L(2)*L(3)*cosine(1) - xy*xz)/ly; if (abs(yz) < tol) yz = 0.0_rb
+          yz = (L(2)*L(3)*cos_theta(1) - xy*xz)/ly; if (abs(yz) < tol) yz = 0.0_rb
           lz = sqrt(L(3)**2 - xz**2 - yz**2)
-          write(unit,'(A," xlo xhi")') trim(join(real2str(lim*lx)))
-          write(unit,'(A," ylo yhi")') trim(join(real2str(lim*ly)))
-          write(unit,'(A," zlo zhi")') trim(join(real2str(lim*lz)))
-          write(unit,'(A," xy xz yz")') trim(join(real2str([xy,xz,yz])))
+          write(unit,'(A,X,"xlo xhi")') trim(join(real2str(lim*lx)))
+          write(unit,'(A,X,"ylo yhi")') trim(join(real2str(lim*ly)))
+          write(unit,'(A,X,"zlo zhi")') trim(join(real2str(lim*lz)))
+          write(unit,'(A,X,"xy xz yz")') trim(join(real2str([xy,xz,yz])))
         end if
       end subroutine write_box_limits
       !---------------------------------------------------------------------------------------------
@@ -1251,255 +1391,6 @@ contains
       end subroutine write_structure
       !---------------------------------------------------------------------------------------------
   end subroutine tPlaymol_write_lammps
-
-  !=================================================================================================
-
-  subroutine tPlaymol_write_lammps_old( me, unit )
-    class(tPlaymol),  intent(inout) :: me
-    integer,          intent(in)    :: unit
-    integer :: nb, na, nd, ni, natoms(me%molecules%N)
-    logical :: bond_exists, angle_exists, dihedral_exists
-    natoms = me % molecules % number_of_atoms()
-    call link_extra( bond_exists, me % bond_list, me % extra_bond_list )
-    call link_extra( angle_exists, me % angle_list, me % extra_angle_list )
-    call link_extra( dihedral_exists, me % dihedral_list, me % extra_dihedral_list )
-    write(unit,'("LAMMPS data file",/,"# Generated by Playmol on ",A,/)') trim(now())
-    call write_count( me % atom_type_list % count_used(), "atom types" )
-    call write_count( me % bond_type_list % count_used(), "bond types" )
-    call write_count( me % angle_type_list % count_used(), "angle types" )
-    call write_count( me % dihedral_type_list % count_used(), "dihedral types" )
-    call write_count( me % improper_type_list % count_used(), "improper types" )
-    write(unit,'()')
-    call write_count( me % molecules % xyz % count, "atoms" )
-    call handle_struc( "bonds", me % bond_list, me % bond_type_list, nb )
-    call write_count( nb, "bonds" )
-    call handle_struc( "angles", me % angle_list, me % angle_type_list, na )
-    call write_count( na, "angles" )
-    call handle_struc( "dihedrals", me % dihedral_list, me % dihedral_type_list, nd )
-    call write_count( nd, "dihedrals" )
-    call handle_struc( "impropers", me % improper_list, me % improper_type_list, ni )
-    call write_count( ni, "impropers" )
-    if (me % box % exists()) call write_box_limits
-    call write_masses
-    call write_type( "Pair Coeffs", me % atom_type_list )
-    call write_type( "Bond Coeffs", me % bond_type_list )
-    call write_type( "Angle Coeffs", me % angle_type_list )
-    call write_type( "Dihedral Coeffs", me % dihedral_type_list )
-    call write_type( "Improper Coeffs", me % improper_type_list )
-    call write_atoms
-    if (nb > 0) call handle_struc( "Bonds", me % bond_list, me % bond_type_list )
-    if (na > 0) call handle_struc( "Angles", me % angle_list, me % angle_type_list )
-    if (nd > 0) call handle_struc( "Dihedrals", me % dihedral_list, me % dihedral_type_list )
-    if (ni > 0) call handle_struc( "Impropers", me % improper_list, me % improper_type_list )
-    call unlink_extra( bond_exists, me % bond_list )
-    call unlink_extra( angle_exists, me % angle_list )
-    call unlink_extra( dihedral_exists, me % dihedral_list )
-    contains
-      !---------------------------------------------------------------------------------------------
-      subroutine link_extra( exists, list, extra_list )
-        logical,         intent(inout) :: exists
-        type(StrucList), intent(inout) :: list, extra_list
-        exists = associated(list % first)
-        if (exists) then
-          list % last % next => extra_list % first
-        else
-          list % first => extra_list % first
-        end if
-      end subroutine link_extra
-      !---------------------------------------------------------------------------------------------
-      subroutine unlink_extra( exists, list )
-        logical,         intent(in)    :: exists
-        type(StrucList), intent(inout) :: list
-        if (exists) then
-          list % last % next => null()
-        else
-          list % first => null()
-        end if
-      end subroutine unlink_extra
-      !---------------------------------------------------------------------------------------------
-      subroutine write_count( n, name )
-        integer,      intent(in) :: n
-        character(*), intent(in) :: name
-        if (n > 0) then
-          write(unit,'(A,X,A)') trim(int2str(n)), name
-          call writeln( int2str(n), name )
-        end if
-      end subroutine write_count
-      !---------------------------------------------------------------------------------------------
-      subroutine write_box_limits
-        integer :: i, molcount(me%molecules%N)
-        real(rb) :: mass(me%molecules%N)
-        real(rb), parameter :: Deg2Rad = 0.01745329251994329577_rb
-        character :: dir(3) = ["x","y","z"]
-        character(sl) :: limits
-        real(rb) :: a, b, c, alpha, beta, gamma, lx, ly, lz, xy, xz, yz, L(3)
-        molcount = me % molecules % count()
-        mass = me % molecules % per_molecule( me % atom_masses )
-        call me % box % compute( sum(molcount*mass) )
-        write(unit,'()')
-        if (me % box % def_type /= 4) then
-          do i = 1, 3
-            limits = join(real2str( me%box%length(i)*[-0.5_rb,+0.5_rb] ))
-            write(unit,'(A," ",A,"lo ",A,"hi")') trim(limits), dir(i), dir(i)
-          end do
-        else ! Triclinic box
-          a = me%box%length(1)
-          b = me%box%length(2)
-          c = me%box%length(3)
-          alpha = Deg2Rad*me%box%angle(1)
-          beta = Deg2Rad*me%box%angle(2)
-          gamma = Deg2Rad*me%box%angle(3)
-          lx = a
-          xy = b*cos(gamma)
-          xz = c*cos(beta)
-          ly = sqrt(b**2 - xy**2)
-          yz = (b*c*cos(alpha) - xy*xz)/ly
-          lz = sqrt(c**2 - xz**2 - yz**2)
-          L = [lx,ly,lz]
-          do i = 1, 3
-            limits = join(real2str( L(i)*[-0.5_rb,+0.5_rb] ))
-            write(unit,'(A," ",A,"lo ",A,"hi")') trim(limits), dir(i), dir(i)
-          end do
-          L = [xy,xz,yz]
-          where (abs(L) < 1.e-10_rb) L = 0.0_rb
-          write(unit,'(A," xy xz yz")') trim(join([real2str(L)]))
-        end if
-      end subroutine write_box_limits
-      !---------------------------------------------------------------------------------------------
-      subroutine write_type( name, list )
-        character(*),     intent(in) :: name
-        class(StrucList), intent(in) :: list
-        type(Struc), pointer :: current
-        integer :: i
-        if (list % count_used() > 0) then
-        current => list % first
-          write(unit,'(/,A,/)') name
-          i = 0
-          do while (associated(current))
-            if (current % used) then
-              i = i + 1
-              write(unit,'(A,X,A," # ",A)') trim(int2str(i)), trim(current % params), &
-                                            trim(join(current % id))
-            end if
-            current => current % next
-          end do
-        end if
-      end subroutine write_type
-      !---------------------------------------------------------------------------------------------
-      subroutine write_masses
-        type(Struc), pointer :: current
-        character(sl) :: mass
-        integer :: i
-        if (associated(me % mass_list % first)) then
-          current => me % atom_type_list % first
-          i = 0
-          write(unit,'(/,"Masses",/)')
-          do while (associated(current))
-            if (current % used) then
-              i = i + 1
-              mass = me % mass_list % parameters( current % id )
-              if (mass == "") call error( "undefined mass for atom type", current%id(1) )
-              write(unit,'(A,X,A," # ",A)') trim(int2str(i)), trim(mass), trim(join(current % id))
-            end if
-            current => current % next
-          end do
-        end if
-      end subroutine write_masses
-      !---------------------------------------------------------------------------------------------
-      subroutine write_atoms
-        type(Struc), pointer :: current, atom_type
-        integer :: iatom, itype, i, imol, jmol, narg
-        character(sl) :: arg(1), charge
-        logical :: found
-        write(unit,'(/,"Atoms",/)')
-        current => me % molecules % xyz % first
-        iatom = 0
-        jmol = 0
-        do while (associated(current))
-          jmol = jmol + 1
-          imol = str2int(me % molecules % list % parameters( current % id ) )
-          do i = 1, natoms(imol)
-            iatom = iatom + 1
-            call split( me % atom_list % parameters( current % id ), narg, arg )
-            atom_type => me % atom_type_list % first
-            itype = 0
-            found = .false.
-            do while (associated(atom_type).and.(.not.found))
-              if (atom_type % used) then
-                itype = itype + 1
-                found = atom_type % match_id( arg, two_way = .false. )
-              end if
-              atom_type => atom_type % next
-            end do
-            charge = me % charge_list % parameters( current % id )
-            if (charge == "") charge = "0.0"
-            write(unit,'(3(A,X),"# ",A)') trim(join(int2str([iatom,jmol,itype]))), trim(charge), &
-                                          trim(current%params), trim(current % id(1))
-            current => current % next
-          end do
-        end do
-      end subroutine write_atoms
-      !---------------------------------------------------------------------------------------------
-      subroutine handle_struc( name, list, type_list, count )
-        character(*),    intent(in)            :: name
-        type(StrucList), intent(in)            :: list, type_list
-        integer,         intent(out), optional :: count
-        integer :: i, imol, jmol, istruc, itype, last_atom
-        type(Struc), pointer :: coord, struct, struc_type
-        character(sl) :: line, types(list%number), atoms(list%number)
-        character(sl), allocatable :: atom_id(:)
-        istruc = 0
-        coord => me % molecules % xyz % first
-        if (.not.present(count)) then
-          call writeln( "Writing down structures:", name )
-          write(unit,'(/,A,/)') name
-        end if
-        allocate(atom_id(maxval(natoms)))
-        last_atom = 0
-        do while (associated(coord))
-          imol = str2int(me % molecules % list % parameters( coord%id ) )
-          do i = 1, natoms(imol)
-            atom_id(i) = coord % id(1)
-            coord => coord % next
-          end do
-          struct => list % first
-          do while (associated(struct))
-            jmol = str2int(me % molecules % list % parameters(struct%id(1:1)))
-            if (jmol == imol) then
-              call me % get_types( struct%id, types )
-              itype = 1
-              struc_type => type_list % first
-              do while (associated(struc_type))
-                if (struc_type % used) then
-                  if (struc_type % match_id( types, type_list % two_way)) then
-                    istruc = istruc + 1
-                    if (.not.present(count)) then
-                      if (type_list % two_way) then
-                        if (struc_type % match_id( types, .false.)) then
-                          atoms = struct%id
-                        else
-                          atoms = struct%id(list%number:1:-1)
-                        end if
-                      else
-                        atoms = struct%id
-                      end if
-                      line = join(int2str([istruc, itype, last_atom + str_find(atoms, atom_id)]))
-                      write(unit,'(A," # ",A)') trim(line), trim(join(atoms))
-                    end if
-                  end if
-                  itype = itype + 1
-                end if
-                struc_type => struc_type % next
-              end do
-            end if
-            struct => struct % next
-          end do
-          last_atom = last_atom + natoms(imol)
-        end do
-        if (present(count)) count = istruc
-      end subroutine handle_struc
-      !---------------------------------------------------------------------------------------------
-  end subroutine tPlaymol_write_lammps_old
 
   !=================================================================================================
 
@@ -1653,8 +1544,8 @@ contains
         call me % molecules % xyz % add( 4, arg )
         arg(1:4) = [atoms(2), R0A, "0.0", "0.0"]
         call me % molecules % xyz % add( 4, arg )
-        X3 = str2real(R0A) - str2real(R0B)*cos(0.0174532925_rb*str2real(Theta0))
-        Y3 = str2real(R0B)*sin(0.0174532925_rb*str2real(Theta0))
+        X3 = str2real(R0A) - str2real(R0B)*cosine(str2real(Theta0))
+        Y3 = str2real(R0B)*sine(str2real(Theta0))
         arg(1:4) = [atoms(3), real2str(X3), real2str(Y3), "0.0"]
         call me % molecules % xyz % add( 4, arg )
       end subroutine build_triatomic_molecule
