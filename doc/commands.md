@@ -911,13 +911,13 @@ The _length_ of a bond formed by atoms _I_ and _J_:
 The _length_ of a bond formed by atoms _I_ and _J_ and the _angle_ (in degrees) between the bonds
 formed by atoms _I_, _J_, and _K_:
 
-	<atom-I>  <atom-J>  <atom-K>  <length>  <angle>
+	<atom-I>  <atom-J>  <length>  <atom-K>  <angle>
 
 The _length_ of a bond formed by atoms _I_ and _J_, the _angle_ (in degrees) between the bonds
 formed by atoms _I_, _J_, and _K_, and the _torsion_ angle (in degrees) of the proper dihedral
 formed by atoms _I_, _J_, _K_, and _L_:
 
-	<atom-I>  <atom-J>  <atom-K>  <atom-L>  <length>  <angle>  <torsion>
+	<atom-I>  <atom-J>  <length>  <atom-K>  <angle>  <atom-L>  <torsion>
 
 An active atom-related [prefix/suffix] will apply to every parameter _atom-x_ present in the
 assignments described above. In all cases, atom _I_ is the one whose coordinates are being assigned,

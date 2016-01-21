@@ -1,0 +1,133 @@
+#!/bin/bash
+
+# Check usage:
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 <file>" && exit
+fi
+
+# Only file names matching one-letter glycam residues (except sialic acids - S) are allowed:
+# See: http://glycam.org/docs/forcefield/glycam-naming-2
+if ! [[ $1 = [0-9][A-RT-Za-rt-z][ABUD].prep ]]; then
+  echo "File $1 does not contain an allowed GLYCAM residue" && exit
+fi
+
+# Check if file is present:
+if [ ! -f "$1" ]; then
+  echo "Error: file '$1' was not found" && exit
+fi
+
+# Read atom identities and compute the number of atoms:
+atoms=$(awk 'NF==11 {print $2}' $1)
+N=$(echo "$atoms" | wc -l)
+
+# Define a name for the xyz file:
+xyzfile=${1%.prep}.xyz
+
+# Function that creates a Playmol script used to compute atomic coordinates:
+function generate_playmol_for_xyz() {
+  echo "$atoms" | awk 'NR<=3 {print "define A"NR" as DU"NR}'
+  echo "$atoms" | awk 'NR>3 {print "define A"NR" as "$1}'
+  echo "atom_type a"
+  echo "mass a 1"
+  echo "$atoms" | awk '{print "atom $A"NR" a"}'
+  echo "build"
+  echo $N
+  awk 'NR==4 {print "$A"$1;exit}' $1
+  awk 'NR==5 {print "$A"$1" $A"$5" "$8;exit}' $1
+  awk 'NR==6 {print "$A"$1" $A"$5" "$8" $A"$6" "$9;exit}' $1
+  awk 'NR>6 && NF==11 {print "$A"$1" $A"$5" "$8" $A"$6" "$9" $A"$7" "$10}' $1
+  echo "write xyz $xyzfile"
+}
+
+# Generate the script and run Playmol to create the xyz file:
+generate_playmol_for_xyz $1 | playmol - > /dev/null
+
+# Remove dummy atoms from the xyz file:
+N=$(expr $N - 3)
+sed -i "/\bDU[1-3]\b/d" $xyzfile && sed -i "1s/.*/$N/" $xyzfile
+
+# Update atoms and run the accompanying script "detect_bonds.py":
+atoms=$(awk 'NR>2 {print $1}' $xyzfile)
+bonds=$(python detect_bonds.py < $xyzfile)
+
+# For glycosidic bonding:
+#   - First atom in $atoms is a "key"
+#   - Last atom in $atoms a "lock", but only if is an oxygen
+key=$(echo "$atoms" | head -n 1)
+key=${key:1:1}
+
+lock=$(echo "$atoms" | tail -n 1)
+if [[ "$lock" = O[0-9] ]]; then
+  lock=${lock:1:1}
+else
+  lock=0
+fi
+
+# Define a name for the internals file:
+ixyzfile=${1%.prep}.ixyz
+
+# Function that creates a Playmol script used to save geometric info:
+function generate_playmol_for_internals() {
+  echo "atom_type a"
+  echo "mass a 1"
+  echo "bond_type a a"
+  echo "angle_type a a a"
+  echo "dihedral_type a a a a"
+  echo "$atoms" | awk '{print "atom "$1" a"}'
+  echo "$bonds" | awk '{print "bond "$1" "$2}'
+  echo "build $xyzfile"
+  if [ $lock == 0 ]; then
+    echo "write xyz $ixyzfile"
+  elif [ $lock == 6 ]; then
+     # Dihedral angle psi will be C1-O-C6'-C5':
+    echo "write internals O6 C6 C5 $ixyzfile"
+  else
+    # Dihedral angle psi will be C1-O-CX'-HX'
+    echo "write internals O$lock C$lock H$lock $ixyzfile"
+  fi
+}
+
+# Generate the script and run Playmol to create the internals file:
+generate_playmol_for_internals $1 | playmol - > /dev/null
+
+# Change the internals file so as to make is as part of a chain:
+
+# 1) Remove the two first lines and append a suffix $i in every atom's identifier:
+sed -i -e '1,2d' -e 's/[COHN][0-9][^ ]*/&\$i/g' $ixyzfile
+
+if [ $lock == 0 ]; then
+  eval "sed -i '1 i\define i as 1' $ixyzfile"
+else
+  eval "sed -i '1 i\define i as \$i+1' $ixyzfile"
+
+# 3) If lock is defined, append the three first lines with additional info:
+
+  p="\{\$key"
+  a="\}\{\$i-1\}"
+
+  # 3.1) Define bond, angle, and dihedral for O(l)-C(k)-C(k+1)-C(k+2):
+  eval "sed -i -e '/^O$lock/ s/$/ C$p$a 1.46 C$p+1$a 111.6 C$p+2$a 180/' $ixyzfile"
+
+  # 3.2) Definition of angle C1-O-CX and glycosidic angle phi (H1-C1-O-CX or C1-C2-O-CX):
+  eval "sed -i -e '/^C$lock/ s/$/ C$p$a 111.6/' $ixyzfile"
+  line=$(eval "grep -e '^C$lock' $ixyzfile")
+  eval "sed -i -e '/^C$lock/i if \{\$key==1\} then' $ixyzfile"
+  eval "sed -i -e '/^C$lock/ s/$/ H$p$a \{-(\$phi)\}/' $ixyzfile"
+  eval "sed -i -e '/^C$lock/a else\n$line C$p-1$a \{-(\$phi)\}\nendif' $ixyzfile"
+
+  # 3.3) Definition of glycosidic angle psi:
+  if [ $lock == 6 ]; then
+    # Dihedral angle psi will be C1-O-C6'-C5':
+    eval "sed -i -e '/^C5/ s/$/ C$p$a \{-(\$psi)\}/' $ixyzfile"
+  else
+    # Dihedral angle psi will be C1-O-CX'-HX'
+    eval "sed -i -e '/^H$lock/ s/$/ C$p$a \{-(\$psi)\}/' $ixyzfile"
+  fi
+
+fi
+
+# 3) Append a variable definition for "key" and default values for dihedral angles phi and psi
+#    in the end of the file:
+eval "sed -i '$ a\define key as $key\ndefine phi as 0\ndefine psi as 0' $ixyzfile"
+
+cat $ixyzfile

@@ -293,7 +293,8 @@ contains
     do i = 1, N
       narg = ndata(i)
       arg = data(i,:)
-      if ((narg < 3).or.(narg > 7).or.(narg == 6)) call error( "invalid geometric info format" )
+      if ((narg < 1).or.(narg == 2).or.(narg == 6).or.(narg > 7)) &
+        call error( "invalid geometric info format" )
       catom = arg(1)
       call me % list % search( [catom], atom )
       if (.not.associated(atom)) call error( "invalid atom", catom )
@@ -312,6 +313,8 @@ contains
       call writeln( "Data provided for atom", catom, ":", join(arg(2:narg)) )
       name(i) = catom
       select case (narg)
+        case (1) ! Atom at origin
+          R(:,i) = 0.0_rb
         case (3) ! Bond
           call check_atoms( arg(2:2), ind(1:1) )
           L = str2real(arg(3))
@@ -322,8 +325,8 @@ contains
             R(j,i) = str2real(arg(j+1))
           end do
         case (5) ! Bond and angle
-          call check_atoms( arg(2:3), ind(1:2) )
-          L = str2real(arg(4))
+          call check_atoms( arg([2,4]), ind(1:2) )
+          L = str2real(arg(3))
           theta = str2real(arg(5))
           R1 = R(:,ind(1))
           R2 = R(:,ind(2))
@@ -334,9 +337,9 @@ contains
           y = y / norm(y)
           R(:,i) = R1 + L*(cosine(180-theta)*x + sine(180-theta)*y)
         case (7) ! Bond, angle, and dihedral
-          call check_atoms( arg(2:4), ind(1:3) )
-          L = str2real(arg(5))
-          theta = str2real(arg(6))
+          call check_atoms( arg([2,4,6]), ind(1:3) )
+          L = str2real(arg(3))
+          theta = str2real(arg(5))
           phi = str2real(arg(7))
           R1 = R(:,ind(1))
           R2 = R(:,ind(2))
