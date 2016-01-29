@@ -26,12 +26,12 @@ The Playmol User's Manual is available online [here](http://atoms.peq.coppe.ufrj
 can also generate a local version if you have [Doxygen](http://www.doxygen.org) (version 1.8 or
 later) installed in your system. If you do not have Doxygen, you can download and install it by:
 
-    wget http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.10.src.tar.gz
-    tar -zxvf doxygen-1.8.10.src.tar.gz
-    cd doxygen-1.8.10/
+    wget http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.11.src.tar.gz
+    tar -zxvf doxygen-1.8.11.src.tar.gz
+    cd doxygen-1.8.11/
     sudo apt-get install cmake flex bison
-    mkdir build && cd build
-    cmake -G "Unix Makefiles" ../
+    mkdir build && cd build/
+    cmake ../
     make
     sudo make install
 

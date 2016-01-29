@@ -16,8 +16,12 @@ if [ ! -f "$1" ]; then
   echo "Error: file '$1' was not found" && exit
 fi
 
-# Read atom identities and compute the number of atoms:
+# Read atom identities, types, and charges:
 atoms=$(awk 'NF==11 {print $2}' $1)
+types=$(awk 'NF==11 {print $3}' $1)
+charges=$(awk 'NF==11 {print $11}' $1)
+
+# Compute the number of atoms:
 N=$(echo "$atoms" | wc -l)
 
 # Define a name for the xyz file:
@@ -46,8 +50,12 @@ generate_playmol_for_xyz $1 | playmol - > /dev/null
 N=$(expr $N - 3)
 sed -i "/\bDU[1-3]\b/d" $xyzfile && sed -i "1s/.*/$N/" $xyzfile
 
-# Update atoms and run the accompanying script "detect_bonds.py":
-atoms=$(awk 'NR>2 {print $1}' $xyzfile)
+# Update atoms, types, and charges by removing dummy atoms:
+atoms=$(echo "$atoms" | sed '1,3d')
+types=$(echo "$types" | sed '1,3d')
+charges=$(echo "$charges" | sed '1,3d')
+
+# Run the accompanying script "detect_bonds.py":
 bonds=$(python detect_bonds.py < $xyzfile)
 
 # For glycosidic bonding:
@@ -126,8 +134,30 @@ else
 
 fi
 
-# 3) Append a variable definition for "key" and default values for dihedral angles phi and psi
+# 4) Append a variable definition for "key" and default values for dihedral angles phi and psi
 #    in the end of the file:
 eval "sed -i '$ a\define key as $key\ndefine phi as 0\ndefine psi as 0' $ixyzfile"
 
-cat $ixyzfile
+# Add a suffix $i to every atom identifier in atoms and bonds:
+atoms=$(echo "$atoms" | sed 's/[COHN][0-9][^ ]*/&\$i/g')
+bonds=$(echo "$bonds" | sed 's/[COHN][0-9][^ ]*/&\$i/g')
+
+# Put atoms and bonds in Playmol format:
+atoms=$(paste -d" " <(echo "$atoms") <(echo "$types") <(echo "$charges") | sed 's/^/atom\t/')
+bonds=$(echo "$bonds" | sed 's/^/bond\t/')
+
+playmolfile=${1%.prep}.mol
+if [ $lock == 0 ]; then
+  echo -e "define\ti as 1" > $playmolfile
+else
+  echo -e "define\ti as \$i+1" > $playmolfile
+fi
+echo "$atoms" >> $playmolfile
+echo "$bonds" >> $playmolfile
+if ! [ $lock == 0 ]; then
+  echo -e "bond\tO$lock\$i C\$key{\$i-1}" >> $playmolfile
+fi
+echo -e "define\tkey as $key" >> $playmolfile
+
+cat $playmolfile
+
