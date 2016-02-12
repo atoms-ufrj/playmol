@@ -1,0 +1,7 @@
+atom_type   HW        0.0          0.0
+atom_type   OW        0.1554253    3.165492
+bond_type   HW OW     {1059.162/2} 1.012
+angle_type  HW OW HW  {75.90/2}    113.24
+charge      OW*      -0.820
+charge HW* 0.410
+

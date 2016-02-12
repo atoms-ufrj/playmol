@@ -65,12 +65,12 @@ function(hljs) {
     aliases: ['playmol', 'pmol', 'mol'],
     keywords: KEYWORDS,
     contains: [
-      hljs.inherit(hljs.APOS_STRING_MODE, {className: 'string', relevance: 0}),
-      hljs.inherit(hljs.QUOTE_STRING_MODE, {className: 'string', relevance: 0}),
-      hljs.COMMENT('#', '$', {relevance: 0}),
+      hljs.inherit(hljs.APOS_STRING_MODE, {className: 'string'}),
+      hljs.inherit(hljs.QUOTE_STRING_MODE, {className: 'string'}),
       hljs.C_NUMBER_MODE,
       VARIABLE,
-      SPECIAL_KEYWORDS
+      SPECIAL_KEYWORDS,
+      hljs.COMMENT('#', '$')
     ]
   };
 }

@@ -1,0 +1,16 @@
+define      model as TIP3P
+include     $model.playmol
+atom_type   HW       $LJ_H
+atom_type   OW       $LJ_O
+mass        HW       1.008
+mass        OW       15.9994
+bond_type   HW OW    $bond_OH
+angle_type  HW OW HW $angle_HOH
+atom        H1 HW    $charge_H
+atom        O  OW    $charge_O
+atom        H2 HW    $charge_H
+#bond        O  H1 H2
+box         density 0.602214 # Daltons per cubic angstrom
+#packmol     diameter 3.0 retry 0.95 pack mol(O) 500 action execute
+#write       lammps water_$model.lmp
+write summary

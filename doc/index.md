@@ -10,8 +10,10 @@ Its main distinguishing features are:
 dihedrals).
 * Multiple copies of a molecule are automatically created when new coordinates are defined for their
 atoms.
-* Integration with [Packmol] provides a way of creating complex molecular systems.
-* Generation of [LAMMPS] configuration files provides a way of performing efficient MD simulations.
+* Integration with [Packmol] \cite Martinez_2009 provides a way of creating complex molecular
+systems.
+* Generation of [LAMMPS] \cite Plimpton_1995 configuration files provides a way of performing
+efficient MD simulations.
 
 The sections of this manual are:
 

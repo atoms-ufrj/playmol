@@ -191,7 +191,7 @@ between _if_ and _else_ if _condition_ = 1 or those between _else_ and _endif_ i
 **Example**:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Nerd force field for normal alkanes:
+# Nerd force field for normal alkanes
 define		factor as 1.987E-3
 atom_type	CH2 {45.8*$factor}  3.930
 if {$N == 2} then
@@ -1348,21 +1348,8 @@ build     	packmol_output.xyz
 
 Nevertheless, the real usefulness of the option _setup_ is to allow the file _packmol.inp_ to be
 manually edited so that some additional constraints can be imposed. The user is referred to
-[Packmol User's Guide] for additional information.
-
-The Packmol algorithm is described in the following paper:
-
-    @article{packmol_paper,
-        author = {Martinez, L. and Andrade, R. and Birgin, E. G. and Martinez, J. M.},
-        title = {PACKMOL: A package for building initial configurations for molecular dynamics
-                 simulations},
-        journal = {J. Comput. Chem.},
-        volume = {30},
-        number = {13},
-        pages = {2157--2164},
-        year = {2009}
-        doi = {10.1002/jcc.21224},
-    }
+[Packmol User's Guide] for additional information. The Packmol algorithm is described in Ref.
+\cite Martinez_2009.
 
 **Examples**:
 
