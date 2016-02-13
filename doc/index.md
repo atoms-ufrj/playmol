@@ -22,6 +22,10 @@ The sections of this manual are:
 * [Commands](commands.html): describes all Playmol commands
 * [Sample Scripts](scripts.html): provides sample Playmol scripts
 
+### Playmol Users Forum:
+
+https://groups.google.com/forum/#!forum/playmol-users
+
 @copyright GNU Public License.
 
 @author Charlles R. A. Abreu (abreu@eq.ufrj.br)<br>
@@ -31,3 +35,4 @@ Federal University of Rio de Janeiro, Brazil
 [Packmol]:	http://www.ime.unicamp.br/~martinez/packmol
 [LAMMPS]:	http://lammps.sandia.gov
 [ATOMS]:	http://atoms.peq.coppe.ufrj.br
+
