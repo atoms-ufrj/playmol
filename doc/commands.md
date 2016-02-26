@@ -1162,7 +1162,8 @@ align
 **Description**:
 
 This command aligns the principal axes of a given molecule with the system's Cartesian axes. The
-principal axes are defined as those for which the molecule's inertia tensor is diagonal.
+principal axes are defined as those for which the molecule's inertia tensor is diagonal. The inertia
+tensor is obtained as if all atoms had the same mass.
 
 The parameter _molecule_ specifies the molecule to be aligned with the Cartesian axes. This
 specification can be done in either of the following ways:

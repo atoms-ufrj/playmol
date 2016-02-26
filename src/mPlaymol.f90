@@ -394,7 +394,7 @@ contains
         natoms = me % molecules % number_of_atoms()
         N = natoms(imol)
         allocate( Mass(N), Coord(3,N), atom(N) )
-        Mass = me % molecules % per_molecule( me % atom_masses )
+        Mass = 1.0
         call me % molecules % coordinates( imol, N, Coord, atom, 1 )
         lb = minval(Coord,dim=2)
         ub = maxval(Coord,dim=2)
