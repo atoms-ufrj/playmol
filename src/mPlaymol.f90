@@ -341,7 +341,7 @@ contains
         else if (narg == 5) then
           call me % atomfix % apply( arg(2:5) )
           call me % improper_list % add( narg-1, arg(2:narg), me % atom_list )
-          if (narg /= 5) call error( "invalid improper command")
+          if (narg /= 5) call error( "invalid improper command" )
           call me % improper_list % handle( arg(2:5), me%atom_list, me%improper_type_list, 2 )
           imol = str2int(me % molecules % list % parameters( arg(2:2) ))
           do i = 3, 5

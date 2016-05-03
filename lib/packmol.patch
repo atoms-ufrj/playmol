@@ -1,6 +1,6 @@
 diff -wrupN original/initial.f90 packmol/initial.f90
 --- original/initial.f90	2015-06-27 14:25:55.000000000 -0300
-+++ packmol/initial.f90	2016-01-05 17:40:24.704862702 -0200
++++ packmol/initial.f90	2016-05-03 13:05:03.393507898 -0300
 @@ -15,7 +15,7 @@
  
  subroutine initial(isem,randini,x,n,ntfix,fix,&
@@ -43,7 +43,7 @@ diff -wrupN original/initial.f90 packmol/initial.f90
    ! Rescaling sizemin and sizemax in order to build the patch of boxes
 diff -wrupN original/io.f90 packmol/io.f90
 --- original/io.f90	2015-10-14 06:48:07.000000000 -0300
-+++ packmol/io.f90	2016-01-05 17:40:24.708862702 -0200
++++ packmol/io.f90	2016-05-03 13:06:51.833505956 -0300
 @@ -14,7 +14,7 @@
  !
  !
@@ -89,7 +89,16 @@ diff -wrupN original/io.f90 packmol/io.f90
    character(len=200) :: name(maxtype)
    character(len=80) :: pdbfile(maxtype), pdb_atom_line, pdb_hetatm_line,&
                         tinker_atom_line
-@@ -925,7 +927,7 @@ subroutine output(x,amass,&
+@@ -899,7 +899,7 @@ subroutine output(x,amass,&
+   if(xyz) then
+     open(30,file=xyzout,status='unknown') 
+     write(30,*) ntotat
+-    write(30,*) title 
++    write(30,'("#",A)') trim(title)
+     ilubar = 0 
+     ilugan = ntotmol*3 
+     icart = natfix
+@@ -925,7 +925,7 @@ subroutine output(x,amass,&
                            coor(idatom,1),coor(idatom,2),&
                            coor(idatom,3),&
                            v1,v2,v3) 
@@ -98,7 +107,7 @@ diff -wrupN original/io.f90 packmol/io.f90
            end do 
            ilugan = ilugan + 3 
            ilubar = ilubar + 3 
-@@ -935,7 +937,7 @@ subroutine output(x,amass,&
+@@ -935,7 +935,7 @@ subroutine output(x,amass,&
          idatom = idfirst(i_fixed) - 1
          do iatom = 1, natoms(i_fixed)
            idatom = idatom + 1
@@ -107,7 +116,7 @@ diff -wrupN original/io.f90 packmol/io.f90
          end do
        end if
      end do
-@@ -1541,7 +1543,7 @@ subroutine checkpoint(n,x,amass,&
+@@ -1541,7 +1541,7 @@ subroutine checkpoint(n,x,amass,&
    integer :: nloop, isem
    integer :: input_itype(maxtype)
  
@@ -116,10 +125,9 @@ diff -wrupN original/io.f90 packmol/io.f90
    character(len=80) :: pdbfile(maxtype) 
    character(len=200) :: xyzout
    character(len=200) :: name(maxtype)
-Binary files original/libpackmol.a and packmol/libpackmol.a differ
 diff -wrupN original/main.f90 packmol/main.f90
 --- original/main.f90	1969-12-31 21:00:00.000000000 -0300
-+++ packmol/main.f90	2016-01-05 17:40:24.708862702 -0200
++++ packmol/main.f90	2016-05-03 13:05:03.393507898 -0300
 @@ -0,0 +1,4 @@
 +program main
 +integer :: stat
@@ -127,7 +135,7 @@ diff -wrupN original/main.f90 packmol/main.f90
 +end program main
 diff -wrupN original/Makefile packmol/Makefile
 --- original/Makefile	2015-06-27 14:25:50.000000000 -0300
-+++ packmol/Makefile	2016-01-05 18:18:18.452798039 -0200
++++ packmol/Makefile	2016-05-03 13:05:03.393507898 -0300
 @@ -14,6 +14,10 @@
  #
  # The default compilation compiles only the serial version of packmol.
@@ -199,7 +207,7 @@ diff -wrupN original/Makefile packmol/Makefile
  initial.o : initial.f90 $(modules)
 diff -wrupN original/Makefile.default packmol/Makefile.default
 --- original/Makefile.default	2015-06-27 14:25:56.000000000 -0300
-+++ packmol/Makefile.default	2016-01-05 18:19:10.224796567 -0200
++++ packmol/Makefile.default	2016-05-03 13:05:03.393507898 -0300
 @@ -13,6 +13,10 @@
  #
  # The default compilation compiles only the serial version of packmol.
@@ -273,7 +281,7 @@ diff -wrupN original/Makefile.default packmol/Makefile.default
 Binary files original/packmol and packmol/packmol differ
 diff -wrupN original/packmol.f90 packmol/packmol.f90
 --- original/packmol.f90	2015-10-14 06:48:30.000000000 -0300
-+++ packmol/packmol.f90	2016-01-05 17:40:24.708862702 -0200
++++ packmol/packmol.f90	2016-05-03 13:05:03.393507898 -0300
 @@ -39,13 +39,28 @@
  !
  !
