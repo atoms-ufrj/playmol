@@ -35,12 +35,19 @@ use mFix
 
 implicit none
 
+type, private :: tVelocity
+  logical  :: active = .false.
+  integer  :: seed
+  real(rb) :: kT
+end type tVelocity
+
 type tPlaymol
   type(tBox)      :: box
   type(tPackmol)  :: packmol
   type(tCodeFlow) :: code_flow
   type(tMolecule) :: molecules
   type(tFix)      :: atomfix, typefix
+  type(tVelocity) :: velocity
 
   type(StrucList) :: atom_type_list      = StrucList( "atom type" )
   type(StrucList) :: bond_type_list      = StrucList( "bond type", 2, .true. )
@@ -64,8 +71,10 @@ type tPlaymol
     procedure :: read => tPlaymol_Read
     procedure :: write => tPlaymol_write
     procedure :: write_internals => tPlaymol_write_internals
+    procedure :: analyze_struct => tPlaymol_analyze_struct
     procedure :: write_lammps => tPlaymol_write_lammps
     procedure :: write_lammpstrj => tPlaymol_write_lammpstrj
+    procedure :: write_emdee => tPlaymol_write_emdee
     procedure :: read_geometry => tPlaymol_read_geometry
     procedure :: write_xyz => tPlaymol_write_xyz
     procedure :: summarize => tPlaymol_summarize
@@ -74,6 +83,21 @@ type tPlaymol
     procedure :: get_types => tPlaymol_get_types
     procedure :: check_coordinates => tPlaymol_check_coordinates
 end type tPlaymol
+
+type StrucHolder
+  integer :: multiplicity = 0
+  integer :: mol
+  character(sl) :: charge
+  character(sl), allocatable :: atoms(:), atom_types(:)
+  integer, allocatable :: atom_in_mol(:), itype(:)
+end type StrucHolder
+
+type TypeHolder
+  integer :: index
+  character(sl), allocatable :: types(:)
+  character(sl) :: params
+  character(sl) :: mass
+end type TypeHolder
 
 contains
 
@@ -90,6 +114,7 @@ contains
       select case (trim(arg(1)))
         case ("prefix","suffix"); call prefix_suffix_command
         case ("box"); call box_command
+        case ("velocity"); call velocity_command
         case ("atom_type"); call atom_type_command
         case ("bond_type"); call bond_type_command
         case ("angle_type"); call angle_type_command
@@ -415,8 +440,9 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine write_command
         integer :: unit, nspec
-        character(sl) :: formats(6) = ["playmol  ", "lammps   ", "summary  ", &
-                                       "xyz      ", "lammpstrj", "internals"  ]
+        character(sl) :: formats(7) = ["playmol  ", "lammps   ", "summary  ", &
+                                       "xyz      ", "lammpstrj", "emdee    ", &
+                                       "internals"  ]
         if (narg < 2) call error( "invalid write command" )
         if (.not.any(formats == arg(2))) call error( "invalid format", arg(2), "in write command" )
         select case (arg(2))
@@ -438,6 +464,7 @@ contains
           case ("summary"); call me % summarize( unit )
           case ("xyz"); call me % write_xyz( unit )
           case ("lammpstrj"); call me % write_lammpstrj( unit )
+          case ("emdee"); call me % write_emdee( unit )
           case ("internals"); call me % write_internals( unit, arg(3:2+nspec) )
         end select
         if (unit /= stdout) close(unit)
@@ -606,6 +633,15 @@ contains
         end if
       end subroutine packmol_command
       !---------------------------------------------------------------------------------------------
+      subroutine velocity_command
+        call writeln( "Setting velocities with parameters seed =", arg(2), "and kT = ", arg(3) )
+        if (narg /= 3) call error( "invalid velocity command" )
+        me % velocity % active = .true.
+        me % velocity % seed = str2int(arg(2))
+        me % velocity % kT = str2real(arg(3))
+        if (me % velocity % kT < 0.0_rb) call error( "invalid kT value" )
+      end subroutine velocity_command
+      !---------------------------------------------------------------------------------------------
   end subroutine tPlaymol_Read
 
   !=================================================================================================
@@ -620,7 +656,7 @@ contains
     call me % code_flow % next_command( unit, narg, arg )
     if (narg == 0) call error( "expected geometric data not provided" )
     N = str2int( arg(1) )
-    call writeln( "Number =", int2str(N) )
+    call writeln( "Number of data to be read:", int2str(N) )
     allocate( data(N,7), ndata(N) )
     do i = 1, N
       call me % code_flow % next_command( unit, narg, arg )
@@ -1065,26 +1101,116 @@ contains
 
   !=================================================================================================
 
+  subroutine tPlaymol_analyze_struct( me, structure, permol, total, type_map, list, typelist, &
+                                      nmols, atom )
+    class(tPlaymol),  intent(inout) :: me
+    type(StrucList),   intent(in)               :: list, typelist
+    integer,           intent(in)               :: nmols(me%molecules%N)
+    type(StrucHolder), intent(out)              :: structure(list%count)
+    type(StrucHolder), intent(in),  optional    :: atom(:)
+    integer,           intent(out)              :: permol(me%molecules%N)
+    integer,           intent(out)              :: total(me%molecules%N)
+    type(TypeHolder),  intent(out), allocatable :: type_map(:)
+    integer :: i, j, k, m, n, itype, imol, imax
+    type(Struc), pointer :: ptr
+    integer, allocatable :: aux(:)
+    if (list%count > 0) then
+      ! Identify the atoms and types in each structure and
+      ! count the number of structures in each molecule:
+      permol = 0
+      ptr => list%first
+      m = list%number
+      do i = 1, list%count
+        associate (s => structure(i))
+          allocate(s%atoms(m), s%atom_types(m), s%atom_in_mol(m), s%itype(0) )
+          S%atoms = ptr%id
+          call me % get_types( ptr%id, s%atom_types )
+          imol = str2int(me % molecules % list % parameters( ptr%id(1:1) ))
+          s%mol = imol
+          permol(imol) = permol(imol) + 1
+          if (present(atom)) then
+            do j = 1, m
+              k = 1
+              do while (atom(k)%atoms(1) /= s%atoms(j))
+                k = k + 1
+              end do
+              s%atom_in_mol(j) = atom(k)%atom_in_mol(1)
+            end do
+          end if
+          ptr => ptr%next
+        end associate
+      end do
+      ! Sort structures according to the molecules they belong to:
+      structure = structure(sorted( structure%mol ))
+      ! If structure = atom, determine atom_in_mol and charge:
+      if (.not.present(atom)) then
+        imol = 0
+        do i = 1, list%count
+          associate(s => structure(i))
+            if (s%mol > imol) then
+              j = 0
+              imol = s%mol
+            end if
+            j = j + 1
+            s%atom_in_mol = j
+            s%charge = me % charge_list % parameters( s%atoms, default = "0.0" )
+          end associate
+        end do
+      end if
+      ! Determine how many times the same structure appears in a molecule:
+      total = 0
+      ptr => typelist % first
+      do itype = 1, typelist % count
+        if (ptr % used) then
+          do i = 1, list%count
+            associate (s => structure(i))
+              if (ptr % match_id( s%atom_types, typelist%two_way )) then
+                n = s%multiplicity + 1
+                allocate( aux(n) )
+                aux = [s%itype, itype]
+                call move_alloc( aux, s%itype )
+                s%multiplicity = n
+                total(s%mol) = total(s%mol) + 1
+              end if
+            end associate
+          end do
+        end if
+        ptr => ptr % next
+      end do
+      ! Create a map for the indices of actually used types:
+      imax = maxval([(maxval(structure(i)%itype),i=1,list%count)])
+      allocate( aux(imax) )
+      aux = 0
+      forall (i=1:list%count, nmols(structure(i)%mol) > 0) aux(structure(i)%itype) = 1
+      allocate( type_map(count(aux == 1)) )
+      type_map%index = pack([(i,i=1,imax)],aux == 1)
+      ! Retrieve the parameters of each used type:
+      do i = 1, size(type_map)
+        allocate( type_map(i) % types(m) )
+        ptr => typelist % point_to( type_map(i)%index )
+        type_map(i) % types = ptr % id
+        type_map(i) % params = ptr % params
+        if (.not.present(atom)) type_map(i) % mass = me % mass_list % parameters( ptr % id )
+      end do
+      ! Apply an inverse map to the indices:
+      aux(type_map%index) = [(i,i=1,size(type_map))]
+      forall (i=1:list%count) structure(i)%itype = aux(structure(i)%itype)
+    else
+      permol = 0
+      total = 0
+      allocate( type_map(0) )
+    end if
+  end subroutine tPlaymol_analyze_struct
+
+  !=================================================================================================
+
   subroutine tPlaymol_write_lammps( me, unit )
     class(tPlaymol),  intent(inout) :: me
     integer,          intent(in)    :: unit
     integer :: i, j
-    type StrucHolder
-      integer :: multiplicity = 0
-      integer :: mol
-      character(sl) :: charge
-      character(sl), allocatable :: atoms(:), atom_types(:)
-      integer, allocatable :: atom_in_mol(:), itype(:)
-    end type StrucHolder
     type(StrucHolder) :: atom(me % atom_list % count), bond(me % bond_list % count),    &
                          ang(me % angle_list % count), dih(me % dihedral_list % count), &
                          imp(me % improper_list % count)
-    type TypeHolder
-      integer :: index
-      character(sl), allocatable :: types(:)
-      character(sl) :: params
-      character(sl) :: mass
-    end type TypeHolder
     type(TypeHolder), allocatable :: atom_types(:), bond_types(:), &
                                      ang_types(:),  dih_types(:),  &
                                      imp_types(:)
@@ -1097,30 +1223,26 @@ contains
     ! Molecules:
     n%mols = me % molecules % count()
     ! Atoms:
-    call analyze( atom, n%atoms, total%atoms, atom_types, &
-                  me%atom_list, me%atom_type_list, n%mols )
+    call me % analyze_struct( atom, n%atoms, total%atoms, atom_types, &
+                              me%atom_list, me%atom_type_list, n%mols )
     ! Bonds:
-    call attach( me%bond_list, me%extra_bond_list )
-    call analyze( bond, n%bonds, total%bonds, bond_types,  &
-                  me%bond_list, me%bond_type_list, n%mols, &
-                  atom )
-    call detach( me%bond_list, me%extra_bond_list )
+    call me % bond_list % attach( me%extra_bond_list )
+    call me % analyze_struct( bond, n%bonds, total%bonds, bond_types, &
+                              me%bond_list, me%bond_type_list, n%mols, atom )
+    call me % bond_list % detach( me%extra_bond_list )
     ! Angles:
-    call attach( me%angle_list, me%extra_angle_list )
-    call analyze( ang, n%angs, total%angs, ang_types,        &
-                  me%angle_list, me%angle_type_list, n%mols, &
-                  atom )
-    call detach( me%angle_list, me%extra_angle_list )
+    call me % angle_list % attach( me%extra_angle_list )
+    call me % analyze_struct( ang, n%angs, total%angs, ang_types, &
+                              me%angle_list, me%angle_type_list, n%mols, atom )
+    call me % angle_list % detach( me%extra_angle_list )
     ! Dihedrals:
-    call attach( me%dihedral_list, me%extra_dihedral_list )
-    call analyze( dih, n%dihs, total%dihs, dih_types,              &
-                  me%dihedral_list, me%dihedral_type_list, n%mols, &
-                  atom )
-    call detach( me%dihedral_list, me%extra_dihedral_list )
+    call me % dihedral_list % attach( me%extra_dihedral_list )
+    call me % analyze_struct( dih, n%dihs, total%dihs, dih_types, &
+                              me%dihedral_list, me%dihedral_type_list, n%mols, atom )
+    call me % dihedral_list % detach( me%extra_dihedral_list )
     ! Impropers:
-    call analyze( imp, n%imps, total%imps, imp_types,              &
-                  me%improper_list, me%improper_type_list, n%mols, &
-                  atom )
+    call me % analyze_struct( imp, n%imps, total%imps, imp_types, &
+                              me%improper_list, me%improper_type_list, n%mols, atom )
     ! Molecule indices:
     allocate( mol_index(sum(n%mols)) )
     ptr => me % molecules % xyz % first
@@ -1156,125 +1278,6 @@ contains
     call write_structure( "Dihedrals", dih,  n%dihs,  mol_index, n%atoms )
     call write_structure( "Impropers", imp,  n%imps,  mol_index, n%atoms )
     contains
-      !---------------------------------------------------------------------------------------------
-      subroutine analyze( structure, permol, total, type_map, list, typelist, nmols, atom )
-        type(StrucList),   intent(in)               :: list, typelist
-        integer,           intent(in)               :: nmols(me%molecules%N)
-        type(StrucHolder), intent(out)              :: structure(list%count)
-        type(StrucHolder), intent(in),  optional    :: atom(:)
-        integer,           intent(out)              :: permol(me%molecules%N)
-        integer,           intent(out)              :: total(me%molecules%N)
-        type(TypeHolder),  intent(out), allocatable :: type_map(:)
-        integer :: i, j, k, m, n, itype, imol, imax
-        type(Struc), pointer :: ptr
-        integer, allocatable :: aux(:)
-        if (list%count > 0) then
-          ! Identify the atoms and types in each structure and
-          ! count the number of structures in each molecule:
-          permol = 0
-          ptr => list%first
-          m = list%number
-          do i = 1, list%count
-            associate (s => structure(i))
-              allocate(s%atoms(m), s%atom_types(m), s%atom_in_mol(m), s%itype(0) )
-              S%atoms = ptr%id
-              call me % get_types( ptr%id, s%atom_types )
-              imol = str2int(me % molecules % list % parameters( ptr%id(1:1) ))
-              s%mol = imol
-              permol(imol) = permol(imol) + 1
-              if (present(atom)) then
-                do j = 1, m
-                  k = 1
-                  do while (atom(k)%atoms(1) /= s%atoms(j))
-                    k = k + 1
-                  end do
-                  s%atom_in_mol(j) = atom(k)%atom_in_mol(1)
-                end do
-              end if
-              ptr => ptr%next
-            end associate
-          end do
-          ! Sort structures according to the molecules they belong to:
-          structure = structure(sorted( structure%mol ))
-          ! If structure = atom, determine atom_in_mol and charge:
-          if (.not.present(atom)) then
-            imol = 0
-            do i = 1, list%count
-              associate(s => structure(i))
-                if (s%mol > imol) then
-                  j = 0
-                  imol = s%mol
-                end if
-                j = j + 1
-                s%atom_in_mol = j
-                s%charge = me % charge_list % parameters( s%atoms, default = "0.0" )
-              end associate
-            end do
-          end if
-          ! Determine how many times the same structure appears in a molecule:
-          total = 0
-          ptr => typelist % first
-          do itype = 1, typelist % count
-            if (ptr % used) then
-              do i = 1, list%count
-                associate (s => structure(i))
-                  if (ptr % match_id( s%atom_types, typelist%two_way )) then
-                    n = s%multiplicity + 1
-                    allocate( aux(n) )
-                    aux = [s%itype, itype]
-                    call move_alloc( aux, s%itype )
-                    s%multiplicity = n
-                    total(s%mol) = total(s%mol) + 1
-                  end if
-                end associate
-              end do
-            end if
-            ptr => ptr % next
-          end do
-          ! Create a map for the indices of actually used types:
-          imax = maxval([(maxval(structure(i)%itype),i=1,list%count)])
-          allocate( aux(imax) )
-          aux = 0
-          forall (i=1:list%count, nmols(structure(i)%mol) > 0) aux(structure(i)%itype) = 1
-          allocate( type_map(count(aux == 1)) )
-          type_map%index = pack([(i,i=1,imax)],aux == 1)
-          ! Retrieve the parameters of each used type:
-          do i = 1, size(type_map)
-            allocate( type_map(i) % types(m) )
-            ptr => typelist % point_to( type_map(i)%index )
-            type_map(i) % types = ptr % id
-            type_map(i) % params = ptr % params
-            if (.not.present(atom)) type_map(i) % mass = me % mass_list % parameters( ptr % id )
-          end do
-          ! Apply an inverse map to the indices:
-          aux(type_map%index) = [(i,i=1,size(type_map))]
-          forall (i=1:list%count) structure(i)%itype = aux(structure(i)%itype)
-        else
-          permol = 0
-          total = 0
-          allocate( type_map(0) )
-        end if
-      end subroutine analyze
-      !---------------------------------------------------------------------------------------------
-      subroutine attach( list, extra_list )
-        type(StrucList), intent(inout) :: list, extra_list
-        if (associated(list % last)) then
-          list % last % next => extra_list % first
-        else
-          list % first => extra_list % first
-        end if
-        list%count = list%count + extra_list%count
-      end subroutine attach
-      !---------------------------------------------------------------------------------------------
-      subroutine detach( list, extra_list )
-        type(StrucList), intent(inout) :: list, extra_list
-        if (associated(list % last)) then
-          list % last % next => null()
-        else
-          list % first => null()
-        end if
-        list%count = list%count - extra_list%count
-      end subroutine detach
       !---------------------------------------------------------------------------------------------
       subroutine write_count( n, name )
         integer,      intent(in) :: n
@@ -1335,7 +1338,8 @@ contains
         type(Struc), pointer :: patom
         integer :: i, j, k, m, katom, imol, kmol, prev
         character(sl) :: cstruc
-        integer, allocatable :: iatom(:)
+        integer,  allocatable :: iatom(:)
+        real(rb), allocatable :: V(:,:)
         character(sl), allocatable :: catom(:), xyz(:)
         if (any(n%mols*n%atoms > 0)) then
           write(unit,'(/,"Atoms",/)')
@@ -1361,6 +1365,14 @@ contains
               write(unit,'(A)') trim(join([cstruc, atom(i)%charge, xyz(j), "#", catom(j)]))
             end do
           end do
+          if (me%velocity%active) then
+            write(unit,'(/,"Velocities",/)')
+            V = velocities( sum(n%mols * total%atoms), me%velocity%seed, me%velocity%kT, &
+                            me % atom_masses % convert_to_real() )
+            do i = 1, size(V,2)
+              write(unit,'(A)') trim(join([int2str(i),real2str(V(:,i))]))
+            end do
+          end if
         end if
       end subroutine write_atoms
       !---------------------------------------------------------------------------------------------
@@ -1444,6 +1456,204 @@ contains
     end do
   end subroutine tPlaymol_write_lammpstrj
 
+  !=================================================================================================
+
+  subroutine tPlaymol_write_emdee( me, unit )
+    class(tPlaymol),  intent(inout) :: me
+    integer,          intent(in)    :: unit
+    integer :: i, j
+    type(StrucHolder) :: atom(me % atom_list % count), bond(me % bond_list % count),    &
+                         ang(me % angle_list % count), dih(me % dihedral_list % count), &
+                         imp(me % improper_list % count)
+    type(TypeHolder), allocatable :: atom_types(:), bond_types(:), &
+                                     ang_types(:),  dih_types(:),  &
+                                     imp_types(:)
+    type tCounter
+      integer :: atoms, bonds, angs, dihs, imps, mols
+    end type tCounter
+    type(tCounter) :: n(me%molecules%N), total(me%molecules%N)
+    type(Struc), pointer :: ptr
+    integer, allocatable :: mol_index(:)
+    ! Molecules:
+    n%mols = me % molecules % count()
+    ! Atoms:
+    call me % analyze_struct( atom, n%atoms, total%atoms, atom_types, &
+                              me%atom_list, me%atom_type_list, n%mols )
+    ! Bonds:
+    call me % bond_list % attach( me%extra_bond_list )
+    call me % analyze_struct( bond, n%bonds, total%bonds, bond_types, &
+                              me%bond_list, me%bond_type_list, n%mols, atom )
+    call me % bond_list % detach( me%extra_bond_list )
+    ! Angles:
+    call me % angle_list % attach( me%extra_angle_list )
+    call me % analyze_struct( ang, n%angs, total%angs, ang_types, &
+                              me%angle_list, me%angle_type_list, n%mols, atom )
+    call me % angle_list % detach( me%extra_angle_list )
+    ! Dihedrals:
+    call me % dihedral_list % attach( me%extra_dihedral_list )
+    call me % analyze_struct( dih, n%dihs, total%dihs, dih_types, &
+                              me%dihedral_list, me%dihedral_type_list, n%mols, atom )
+    call me % dihedral_list % detach( me%extra_dihedral_list )
+    ! Impropers:
+    call me % analyze_struct( imp, n%imps, total%imps, imp_types, &
+                              me%improper_list, me%improper_type_list, n%mols, atom )
+    ! Molecule indices:
+    allocate( mol_index(sum(n%mols)) )
+    ptr => me % molecules % xyz % first
+    do i = 1, size(mol_index)
+      mol_index(i) = str2int(me % molecules % list % parameters( ptr % id(1:1) ))
+      do j = 1, n(mol_index(i))%atoms
+        ptr => ptr % next
+      end do
+    end do
+    ! Write EmDee data file:
+    write(unit,'("# EmDee configuration generated by Playmol on ",A,/)') trim(now())
+    call write_count( size(atom_types), "atom types"     )
+    call write_count( size(bond_types), "bond types"     )
+    call write_count( size(ang_types),  "angle types"    )
+    call write_count( size(dih_types),  "dihedral types" )
+    call write_count( size(imp_types),  "improper types" )
+    write(unit,'()')
+    call write_count( sum(n%mols * total%atoms), "atoms"     )
+    call write_count( sum(n%mols * total%bonds), "bonds"     )
+    call write_count( sum(n%mols * total%angs),  "angles"    )
+    call write_count( sum(n%mols * total%dihs),  "dihedrals" )
+    call write_count( sum(n%mols * total%imps),  "impropers" )
+    if (me % box % exists()) call write_box_limits
+    call write_masses
+    call write_type( "PairTypes",     atom_types, me % atom_type_list     )
+    call write_type( "BondTypes",     bond_types, me % bond_type_list     )
+    call write_type( "AngleTypes",    ang_types,  me % angle_type_list    )
+    call write_type( "DihedralTypes", dih_types,  me % dihedral_type_list )
+    call write_type( "ImproperTypes", imp_types,  me % improper_type_list )
+    call write_atoms
+    call write_structure( "Bonds",     bond, n%bonds, mol_index, n%atoms )
+    call write_structure( "Angles",    ang,  n%angs,  mol_index, n%atoms )
+    call write_structure( "Dihedrals", dih,  n%dihs,  mol_index, n%atoms )
+    call write_structure( "Impropers", imp,  n%imps,  mol_index, n%atoms )
+    contains
+      !---------------------------------------------------------------------------------------------
+      subroutine write_count( n, name )
+        integer,      intent(in) :: n
+        character(*), intent(in) :: name
+        if (n > 0) then
+          write(unit,'("# ", A,X,A)') trim(int2str(n)), name
+          call writeln( int2str(n), name )
+        end if
+      end subroutine write_count
+      !---------------------------------------------------------------------------------------------
+      subroutine write_box_limits
+        if (me % box % def_type /= 4) then ! Orthogonal box
+          write(unit,'(/,"BoxLengths = [")')
+          write(unit,'(2X,A)') trim(real2str(me%box%length(1)))
+          write(unit,'(2X,A)') trim(real2str(me%box%length(2)))
+          write(unit,'(2X,A)') trim(real2str(me%box%length(3)))
+          write(unit,'("]")')
+        else ! Triclinic box
+          call error( "EmDee does not support non-orthogonal simulation boxes" )
+        end if
+      end subroutine write_box_limits
+      !---------------------------------------------------------------------------------------------
+      subroutine write_type( title, types, list )
+        character(*),      intent(in) :: title
+        type(TypeHolder),  intent(in) :: types(:)
+        type(StrucList),   intent(in) :: list
+        integer :: i
+        if (size(types) > 0) then
+          write(unit,'(/,A," = [")') title
+          do i = 1, size(types)
+            write(unit,'(2X,A)') trim(join(["EmDee."//types(i)%params, "#", types(i)%types]))
+          end do
+          write(unit,'("]")')
+        else
+          write(unit,'(/,A," = []")') title
+        end if
+      end subroutine write_type
+      !---------------------------------------------------------------------------------------------
+      subroutine write_masses
+        integer :: i
+        write(unit,'(/,"TypeMasses = [")')
+        do i = 1, size(atom_types)
+          write(unit,'(2X,A)') trim(join([atom_types(i)%mass, "#", atom_types(i)%types]))
+        end do
+        write(unit,'("]")')
+      end subroutine write_masses
+      !---------------------------------------------------------------------------------------------
+      subroutine write_atoms
+        type(Struc), pointer :: patom
+        integer :: i, j, k, m, katom, imol, kmol, prev
+        character(sl) :: cstruc, cxyz
+        integer,  allocatable :: iatom(:)
+        real(rb), allocatable :: momenta(:,:)
+        character(sl), allocatable :: catom(:), xyz(:)
+        write(unit,'(/,"Atoms = [")')
+        if (any(n%mols*n%atoms > 0)) then
+          m = maxval(n%atoms,n%mols > 0)
+          allocate( iatom(m), catom(m), xyz(m) )
+          patom => me % molecules % xyz % first
+          katom = 0
+          if (me%velocity%active) then
+            momenta = velocities( sum(n%mols * total%atoms), me%velocity%seed, me%velocity%kT, &
+                                  1.0_rb/me%atom_masses%convert_to_real() )
+          end if
+          do kmol = 1, size(mol_index)
+            imol = mol_index(kmol)
+            prev = sum(n(1:imol-1)%atoms)
+            m = n(imol)%atoms
+            forall (j=1:m) catom(j) = atom(prev+j)%atoms(1)
+            do j = 1, m
+              iatom(j:j) = pack([(k,k=1,m)],catom(1:m) == patom%id(1))
+              xyz(j) = patom%params
+              patom => patom % next
+            end do
+            xyz(1:m) = xyz(sorted(iatom(1:m)))
+            do j = 1, m
+              katom = katom + 1
+              i = prev + j
+              cxyz = xyz(j)
+              forall (k=1:len_trim(cxyz),cxyz(k:k)==" ") cxyz(k:k) = ","
+              cstruc = join([int2str([kmol, atom(i)%itype(1)]),atom(i)%charge,cxyz],",")
+              if (me%velocity%active) cstruc = join([cstruc,real2str(momenta(:,katom))],",")
+              write(unit,'("  (",A,") # ",A)') trim(cstruc), trim(atom(i)%atoms(1))
+            end do
+          end do
+        end if
+        write(unit,'("]")')
+      end subroutine write_atoms
+      !---------------------------------------------------------------------------------------------
+      subroutine write_structure( title, structure, permol, mol_index, natoms )
+        character(*),      intent(in) :: title
+        type(StrucHolder), intent(in) :: structure(:)
+        integer,           intent(in) :: permol(me%molecules%N), mol_index(:), natoms(:)
+        integer :: i, j, k, kmol, imol, sprev, aprev
+        character(sl) :: cstruc
+        if (any(n%mols*permol > 0)) then
+          write(unit,'(/,A," = [")') title
+          k = 0
+          aprev = 0
+          do kmol = 1, size(mol_index)
+            imol = mol_index(kmol)
+            sprev = sum(permol(1:imol-1))
+            do i = 1, permol(imol)
+              associate (s => structure(sprev+i))
+                do j = 1, s%multiplicity
+                  k = k + 1
+                  cstruc = join(int2str([aprev + s%atom_in_mol,s%itype(j)]),",")
+                  write(unit,'("  (",A,") # ",A)') trim(cstruc), trim(join(s%atoms))
+                end do
+              end associate
+            end do
+            aprev = aprev + natoms(imol)
+          end do
+          write(unit,'("]")')
+        else
+          write(unit,'(/,A," = []")') title
+        end if
+      end subroutine write_structure
+      !---------------------------------------------------------------------------------------------
+  end subroutine tPlaymol_write_emdee
+
+  !=================================================================================================
   !=================================================================================================
 
   subroutine tPlaymol_check_coordinates( me, imol )
@@ -1552,6 +1762,24 @@ contains
       end subroutine build_triatomic_molecule
       !-------------------------------------------------------------------------
   end subroutine tPlaymol_check_coordinates
+
+  !=================================================================================================
+
+  function velocities( N, seed, kT, mass ) result( V )
+    integer,  intent(in) :: N, seed
+    real(rb), intent(in) :: kT, mass(N)
+    real(rb)             :: V(3,N)
+    integer :: i
+    real(rb) :: Vcm(3)
+    type(rng) :: random
+    call random % init( seed )
+    do i = 1, N
+      V(:,i) = [random % normal(), random % normal(), random % normal()]
+    end do
+    Vcm = sum(V,2)/N
+    forall (i=1:N) V(:,i) = V(:,i) - Vcm
+    V = sqrt(kT*(3*N-3)/sum(V*V))*V
+  end function velocities
 
   !=================================================================================================
 

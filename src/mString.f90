@@ -26,6 +26,11 @@ implicit none
 character(2), parameter, private :: delimiters = achar(32)//achar(9)
 character,    parameter, private :: comment_mark = "#"
 
+interface join
+  module procedure :: join_with_space
+  module procedure :: join_with_sep
+end interface
+
 contains
 
   !=================================================================================================
@@ -174,7 +179,7 @@ contains
 
   !=================================================================================================
 
-  function join( arg ) result( str )
+  function join_with_space( arg ) result( str )
     character(*), intent(in) :: arg(:)
     character(sl)            :: str
     integer :: i, narg
@@ -187,7 +192,25 @@ contains
         str = trim(str)//" "//arg(i)
       end do
     end if
-  end function join
+  end function join_with_space
+
+  !=================================================================================================
+
+  function join_with_sep( arg, sep ) result( str )
+    character(*), intent(in) :: arg(:)
+    character,    intent(in) :: sep
+    character(sl)            :: str
+    integer :: i, narg
+    narg = size(arg)
+    if (narg == 0) then
+      str = ""
+    else
+      str = arg(1)
+      do i = 2, narg
+        str = trim(str)//sep//arg(i)
+      end do
+    end if
+  end function join_with_sep
 
   !=================================================================================================
 

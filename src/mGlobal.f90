@@ -19,6 +19,8 @@
 
 module mGlobal
 
+implicit none
+
 integer,      parameter :: rb = 8      !< Default number of bytes for real numbers
 integer,      parameter :: sl = 256    !< Default character string length
 character(3), parameter :: csl = "256" !< String with default character string length
@@ -29,10 +31,13 @@ integer :: logunit = 0                 !< Output unit for logging
 !> A simple random number generator:
 type rng
   integer, private :: jsr
+  logical, private :: generate = .true.
+  real(8), private :: saved
   contains
     procedure :: init => rng_init
     procedure :: i32 => rng_i32
     procedure :: uni => i32rng_uniform
+    procedure :: normal => i32rng_normal
     procedure :: letters => rng_letters
 end type rng
 
@@ -196,6 +201,29 @@ contains
     real(8)                   :: uni
     uni = 0.5_8 + 0.2328306e-9_8 * a%i32()
   end function i32rng_uniform
+
+  !=================================================================================================
+
+  function i32rng_normal( a ) result( normal )
+    class(rng), intent(inout) :: a
+    real(8)                   :: normal
+    integer  :: i1, i2
+    real(rb) :: a1, a2
+    if (a%generate) then
+      i1 = -huge(1)
+      do while (i1 == -huge(1))
+        i1 = a%i32()
+        i2 = a%i32()
+      end do
+      a1 = sqrt(-2.0_8 * log(0.5_8 + 0.2328306e-9_8*i1))
+      a2 = 6.283185307179586477_8*(0.5_8 + 0.2328306e-9_8*i2)
+      a%saved = a1*cos(a2)
+      normal  = a1*sin(a2)
+    else
+      normal = a%saved
+    end if
+    a%generate = .not. a%generate
+  end function i32rng_normal
 
   !=================================================================================================
 

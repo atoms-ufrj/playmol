@@ -27,6 +27,7 @@ physically meaningful values are those corresponding to [LAMMPS real units].
 | [build]         | guesses atom positions from provided geometric information                |
 | [prefix/suffix] | defines default prefixes or suffixes for atom types and atoms             |
 | [box]           | defines the properties of a simulation box                                |
+| [velocity]      | defines parameters for genarating Maxwell-Boltzmann atomic velocities     |
 | [align]         | aligns the principal axes of a molecule to the Cartesian axes             |
 | [packmol]       | executes Packmol in order to create a packed molecular system             |
 | [write]         | saves system info in different file formats (including LAMMPS data files) |
@@ -1147,6 +1148,46 @@ lattice system (_lx_ = _ly_ ≠ _lz_ and _alpha_ = _beta_ ≠ _gamma_).
 [build], [packmol], [write]
 
 ----------------------------------------------------------------------------------------------------
+<a name="velocity"></a>
+velocity
+----------------------------------------------------------------------------------------------------
+
+**Syntax**:
+
+	velocity	<seed> <kT>
+
+* _seed_ = seed for the random number generator (an integer number)
+* _kT_ = temperature multiplied by the Boltzmann constant (in energy units)
+
+**Description**:
+
+This command tells Playmol to include atom velocities in some output files created via [write] and
+specifies the parameters used to generate the velocity vectors. The affected file formats are
+_lammps_ and _emdee_.
+
+The parameter _seed_ must be a positive integer number, which will seed a pseudo-random number
+generator. For a given set of atoms with specified masses, different values of _seed_ will produce
+distinct sets of velocity vectors.
+
+The parameter _kT_ is the temperature multiplied by the Boltzmann constant, which witll determine
+the atomic speeds. The velocity vector elements for an atom with mass _m_ will be randomly generated
+from a normal distribution with mean zero and standard deviation equal to _sqrt(kT/m)_. Therefore,
+the units of _kT_ must be chosen accordingly. For instance, if [LAMMPS real units] are employed,
+then the appropriate value of the Boltzmann constant is 8.31451E-7 # Da.Å²/(fs².K).
+
+**Examples**:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+define		kB as 8.31451E-7 # Da.Å²/(fs².K)
+define		T as 298.15 # K
+velocity	6234 {$kB*$T}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**See also**:
+
+[write]
+
+----------------------------------------------------------------------------------------------------
 <a name="align"></a>
 align
 ----------------------------------------------------------------------------------------------------
@@ -1380,7 +1421,7 @@ write
 
 	write		 <format> [<file>]
 
-* _format_ = _playmol_ or _lammps_ or _summary_ or _xyz_ or _lammpstrj_
+* _format_ = _playmol_ or _lammps_ or _emdee_ or _summary_ or _xyz_ or _lammpstrj_
 * _file_ (optional) = name of a file to be created
 
 **Description**:
@@ -1396,6 +1437,9 @@ Type and atom prefixes are explicitly added to the corresponding identifiers.
 * __lammps__: the command will produce information in the LAMMPS configuration file format, which
 can be used as an initial configuration for a Molecular Dynamics simulation using LAMMPS through its
 command [read_data].
+
+* __emdee__: the command will produce code in the [Julia] programming language, which can be used to
+define an initial configuration for a Molecular Dynamics simulation using the [EmDee] package.
 
 * __summary__: this option will print a summary of the system characteristics, including the amount
 of every defined and detected structure such as angles, dihedrals, and molecules. Properties of each
@@ -1585,6 +1629,7 @@ The example above writes a summary of the current molecular system and then quit
 [improper]:		#improper
 [build]:		#build
 [box]:			#box
+[velocity]:		#velocity
 [packmol]:		#packmol
 [align]:		#align
 [write]:		#write
@@ -1609,3 +1654,5 @@ The example above writes a summary of the current molecular system and then quit
 [VMD]:				http://www.ks.uiuc.edu/Research/vmd
 [Avogadro]:			http://avogadro.cc/wiki/Main_Page
 [ASCII]:			https://en.wikipedia.org/wiki/ASCII#ASCII_printable_code_chart
+[Julia]:			http://julialang.org
+[EmDee]:			https://github.com/craabreu/emdee

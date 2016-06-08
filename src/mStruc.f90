@@ -52,6 +52,9 @@ type StrucList
     procedure :: count_used => StrucList_count_used
     procedure :: print => StrucList_print
     procedure :: remove => StrucList_remove
+    procedure :: attach => StrucList_attach
+    procedure :: detach => StrucList_detach
+    procedure :: convert_to_real => StrucList_convert_to_real
     procedure :: destroy => StrucList_destroy
 end type StrucList
 
@@ -354,6 +357,48 @@ contains
     end if
     me % count = me % count - 1
   end subroutine StrucList_remove
+
+  !=================================================================================================
+
+  subroutine StrucList_attach( me, extra_list )
+    class(StrucList), intent(inout) :: me
+    type(StrucList),  intent(in)    :: extra_list
+    if (associated(me % last)) then
+      me % last % next => extra_list % first
+    else
+      me % first => extra_list % first
+    end if
+    me%count = me%count + extra_list%count
+  end subroutine StrucList_attach
+
+  !=================================================================================================
+
+  subroutine StrucList_detach( me, extra_list )
+    class(StrucList), intent(inout) :: me
+    type(StrucList),  intent(in)    :: extra_list
+    if (associated(me % last)) then
+      me % last % next => null()
+    else
+      me % first => null()
+    end if
+    me%count = me%count - extra_list%count
+  end subroutine StrucList_detach
+
+  !=================================================================================================
+
+  function StrucList_convert_to_real( me ) result( value )
+    class(StrucList), intent(in) :: me
+    real(rb)                     :: value(me%count)
+    integer :: i
+    type(Struc), pointer :: current
+    current => me % first
+    i = 0
+    do while (associated(current))
+      i = i + 1
+      value(i) = str2real( current % params )
+      current => current % next
+    end do
+  end function StrucList_convert_to_real
 
   !=================================================================================================
 

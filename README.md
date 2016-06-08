@@ -125,6 +125,7 @@ Here is a complete list of Playmol commands:
 | **build**         | guesses atom positions from provided geometric information                |
 | **prefix/suffix** | defines default prefixes or suffixes for atom types and atoms             |
 | **box**           | defines the properties of a simulation box                                |
+| **velocity**      | defines parameters for generating Maxwell-Boltzmann atomic velocities     |
 | **align**         | aligns the principal axes of a molecule to the Cartesian axes             |
 | **packmol**       | executes Packmol in order to create a packed molecular system             |
 | **write**         | saves system info in different file formats (including LAMMPS data files) |

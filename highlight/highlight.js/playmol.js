@@ -40,7 +40,7 @@ function(hljs) {
       'define as for from in to downto next if then else endif atom_type mass ' +
       'diameter bond_type angle_type dihedral_type improper_type atom charge ' +
       'bond link unlink build align include shell aspect packmol seed retry ' +
-      'nloops fix copy pack',
+      'nloops fix copy pack velocity',
     built_in:
       'not abs exp log ln sqrt sinh cosh tanh sin cos tan asin acos atan ' +
       'int nint ceil floor mol'
@@ -50,7 +50,7 @@ function(hljs) {
     className: 'keyword',
     variants: [
       { begin: /\bbox\s+(lengths|density|volume|angles)\b/ },
-      { begin: /\bwrite\s+(playmol|lammps|summary|xyz|lammpstrj|internals)\b/ },
+      { begin: /\bwrite\s+(playmol|lammps|emdee|summary|xyz|lammpstrj|internals)\b/ },
       { begin: /\baction\s+(execute|setup)\b/ },
       { begin: /\b(pre|suf)fix\s+(atom|type)s(\s+none)?\b/ },
       { begin: /\bimproper(\s+search)?\b/ },
