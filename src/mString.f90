@@ -66,7 +66,7 @@ contains
 
   elemental function replace_macro( a ) result( b )
    character(*), intent(in) :: a
-   character(len(a))   :: b
+   character(len(a))        :: b
    integer :: i
    b = ""
    do i = 1, len_trim(a)
@@ -77,6 +77,17 @@ contains
      end if
    end do
   end function replace_macro
+
+  !=================================================================================================
+
+  function replace( string, a, b ) result( new )
+    character(*), intent(in)    :: string
+    character,    intent(in)    :: a, b
+    character(len_trim(string)) :: new
+    integer :: k
+    new = trim(string)
+    forall (k=1:len_trim(new),new(k:k)==a) new(k:k) = b
+  end function replace
 
   !=================================================================================================
 

@@ -95,7 +95,7 @@ end type StrucHolder
 
 type TypeHolder
   integer :: index
-  character(sl), allocatable :: types(:)
+  character(sl) :: types
   character(sl) :: model
   character(sl) :: params
   character(sl) :: mass
@@ -1200,9 +1200,8 @@ contains
       type_map%index = pack([(i,i=1,imax)],aux == 1)
       ! Retrieve the parameters of each used type:
       do i = 1, size(type_map)
-        allocate( type_map(i) % types(m) )
         ptr => typelist % point_to( type_map(i)%index )
-        type_map(i) % types = ptr % id
+        type_map(i) % types = join(ptr % id)
         if (me%models_on) then
           call split( ptr % params, narg, arg )
           type_map(i) % model = arg(1)
@@ -1353,7 +1352,7 @@ contains
           end if
           do i = 1, size(types)
             write(unit,'(A," # ",A)') trim(join([int2str(i), types(i)%model, types(i)%params])), &
-                                      trim(join(types(i)%types))
+                                      trim(types(i)%types)
           end do
         end if
       end subroutine write_type
@@ -1402,8 +1401,12 @@ contains
             write(unit,'(/,"Velocities",/)')
             V = velocities( sum(n%mols * total%atoms), me%velocity%seed, me%velocity%kT, &
                             me % atom_masses % convert_to_real() )
-            do i = 1, size(V,2)
-              write(unit,'(A)') trim(join([int2str(i),real2str(V(:,i))]))
+            katom = 0
+            do kmol = 1, size(mol_index)
+              do j = 1, natoms(mol_index(kmol))
+                katom = katom + 1
+                write(unit,'(A)') trim(join([int2str(katom),real2str(V(:,katom)), "#", catom(j)]))
+              end do
             end do
           end if
         end if
@@ -1554,11 +1557,11 @@ contains
     call write_count( sum(n%mols * total%imps),  "impropers" )
     if (me % box % exists()) call write_box_limits
     call write_masses
-    call write_type( "PairTypes",     atom_types, me % atom_type_list     )
-    call write_type( "BondTypes",     bond_types, me % bond_type_list     )
-    call write_type( "AngleTypes",    ang_types,  me % angle_type_list    )
-    call write_type( "DihedralTypes", dih_types,  me % dihedral_type_list )
-    call write_type( "ImproperTypes", imp_types,  me % improper_type_list )
+    call write_type( "Pair",     atom_types, me % atom_type_list     )
+    call write_type( "Bond",     bond_types, me % bond_type_list     )
+    call write_type( "Angle",    ang_types,  me % angle_type_list    )
+    call write_type( "Dihedral", dih_types,  me % dihedral_type_list )
+    call write_type( "Improper", imp_types,  me % improper_type_list )
     call write_atoms
     call write_structure( "Bonds",     bond, n%bonds, mol_index, n%atoms, 2 )
     call write_structure( "Angles",    ang,  n%angs,  mol_index, n%atoms, 3 )
@@ -1593,9 +1596,15 @@ contains
         type(StrucList),   intent(in) :: list
         integer :: i
         if (size(types) > 0) then
-          write(unit,'(/,A," = [")') title
+          write(unit,'(/,A,"Types = [")') title
           do i = 1, size(types)
-            write(unit,'(2X,A)') trim(join(["EmDee."//types(i)%params, "#", types(i)%types]))
+            if (me%models_on) then
+              write(unit,'(2X,A)',advance="no") "EmDee."//trim(title)//"_"// &
+                                                replace(types(i)%model,"/","_")
+            else
+              write(unit,'(2X)',advance="no")
+            end if
+            write(unit,'("(",A,") # ",A)') replace(types(i)%params," ",","), trim(types(i)%types)
           end do
           write(unit,'("]")')
         else
@@ -1646,8 +1655,7 @@ contains
             do j = 1, m
               katom = katom + 1
               i = prev + j
-              cxyz = xyz(j)
-              forall (k=1:len_trim(cxyz),cxyz(k:k)==" ") cxyz(k:k) = ","
+              cxyz = replace(xyz(j)," ",",")
               cstruc = join([int2str([kmol, atom(i)%itype(1)]),atom(i)%charge,cxyz],",")
               if (me%velocity%active) cstruc = join([cstruc,real2str(momenta(:,katom))],",")
               write(unit,'("  (",A,") # ",A)') trim(cstruc), trim(atom(i)%atoms(1))

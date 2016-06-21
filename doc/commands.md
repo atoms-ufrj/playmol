@@ -1,5 +1,5 @@
-Playmol Commands      {#commands}
-================
+Commands      {#commands}
+========
 
 Playmol is designed to execute scripts containing the commands described below. Click in the command
 name for detailed description and examples. In all examples, the units of measurement employed for
