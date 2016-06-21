@@ -115,6 +115,7 @@ Here is a complete list of Playmol commands:
 | **angle_type**    | defines parameters for angles involving atoms of three given types        |
 | **dihedral_type** | defines parameters for dihedrals involving atoms of four given types      |
 | **improper_type** | defines parameters for impropers involving atoms of four given types      |
+| **models**        | defines whether the first attribute of each type is a model name          |
 | **atom**          | creates an atom with given name and type                                  |
 | **charge**        | specifies the charge of a given atom                                      |
 | **bond**          | creates chemical bonds and automatically detects angles and dihedrals     |

@@ -136,7 +136,7 @@ contains
         open_for = 1
         do while (open_for > 0)
           commandline = next_command_line( unit )
-          if (len_trim(commandline) == 0) then
+          if (commandline == "") then
             open_for = -1
           else if (commandline == "next") then
             open_for = open_for - 1
@@ -165,32 +165,44 @@ contains
       subroutine evaluate_if_command
         logical :: execute
         type(tCommand), pointer :: first, curr
+        integer :: open_if
         character(sl) :: commandline
+        logical :: else_found
         if (narg < 3) call error( "invalid if/then/else definition" )
         if (arg(3) /= "then") call error( "invalid if/then/else definition" )
         if (.not.any(arg(2)==["1","0"])) call  error( "invalid if/then/else clause" )
         execute = arg(2) == "1"
         first => null()
-        commandline = next_command_line( unit )
-        do while (commandline /= "endif")
-          select case (trim(commandline))
-            case ("")
-              call error( "unfinished if/then/else construct" )
-            case ("else")
-              execute = .not.execute
-            case default
-              if (execute) then
-                if (associated(first)) then
-                  allocate( curr % next )
-                  curr => curr % next
-                else
-                  allocate( first )
-                  curr => first
-                end if
-                curr % content = commandline
-              end if
-          end select
+        open_if = 1
+        else_found = .false.
+        do while (.true.)
           commandline = next_command_line( unit )
+          if (commandline == "") call error( "unfinished if/then/else construct" )
+          if (open_if == 1) then
+            if (commandline == "else") then
+              if (else_found) call error( "invalid if/then/else definition" )
+              execute = .not.execute
+              else_found = .true.
+              cycle
+            else if (commandline == "endif") then
+              exit
+            end if
+          end if
+          if (execute) then
+            if (associated(first)) then
+              allocate( curr % next )
+              curr => curr % next
+            else
+              allocate( first )
+              curr => first
+            end if
+            curr % content = commandline
+          end if
+          if (commandline(1:2) == "if") then
+            open_if = open_if + 1
+          else if (commandline == "endif") then
+            open_if = open_if - 1
+          end if
         end do
         if (associated(first)) then
           curr % next => me % commands

@@ -48,6 +48,7 @@ type tPlaymol
   type(tMolecule) :: molecules
   type(tFix)      :: atomfix, typefix
   type(tVelocity) :: velocity
+  logical         :: models_on = .false.
 
   type(StrucList) :: atom_type_list      = StrucList( "atom type" )
   type(StrucList) :: bond_type_list      = StrucList( "bond type", 2, .true. )
@@ -95,6 +96,7 @@ end type StrucHolder
 type TypeHolder
   integer :: index
   character(sl), allocatable :: types(:)
+  character(sl) :: model
   character(sl) :: params
   character(sl) :: mass
 end type TypeHolder
@@ -115,6 +117,7 @@ contains
         case ("prefix","suffix"); call prefix_suffix_command
         case ("box"); call box_command
         case ("velocity"); call velocity_command
+        case ("models"); call models_command
         case ("atom_type"); call atom_type_command
         case ("bond_type"); call bond_type_command
         case ("angle_type"); call angle_type_command
@@ -438,6 +441,16 @@ contains
         deallocate( Mass, Coord )
       end subroutine align_command
       !---------------------------------------------------------------------------------------------
+      subroutine models_command
+        call writeln( "Defining models status as", join(arg(2:narg)) )
+        if (narg /= 2) call error( "invalid models command" )
+        select case (arg(2))
+          case ("on"); me % models_on = .true.
+          case ("off"); me % models_on = .false.
+          case default; call error( "invalid models command" )
+        end select
+      end subroutine models_command
+      !---------------------------------------------------------------------------------------------
       subroutine write_command
         integer :: unit, nspec
         character(sl) :: formats(7) = ["playmol  ", "lammps   ", "summary  ", &
@@ -517,8 +530,8 @@ contains
             end do
         end select
         select case (arg(2))
-          case ("all");            call reset_lists( [(i,i= 1,22)] )
-          case ("atom");           call reset_lists( [(i,i= 8,22)] )
+          case ("all");            call reset_lists( [(i,i=1,22)] )
+          case ("atom");           call reset_lists( [(i,i=8,22)] )
           case ("charge");         call reset_lists( [9] )
           case ("bond");           call reset_lists( [(i,i=10,17),20] )
           case ("angle");          call reset_lists( [11,14] )
@@ -1111,7 +1124,8 @@ contains
     integer,           intent(out)              :: permol(me%molecules%N)
     integer,           intent(out)              :: total(me%molecules%N)
     type(TypeHolder),  intent(out), allocatable :: type_map(:)
-    integer :: i, j, k, m, n, itype, imol, imax
+    integer :: i, j, k, m, n, itype, imol, imax, narg
+    character(sl) :: arg(10)
     type(Struc), pointer :: ptr
     integer, allocatable :: aux(:)
     if (list%count > 0) then
@@ -1189,7 +1203,13 @@ contains
         allocate( type_map(i) % types(m) )
         ptr => typelist % point_to( type_map(i)%index )
         type_map(i) % types = ptr % id
-        type_map(i) % params = ptr % params
+        if (me%models_on) then
+          call split( ptr % params, narg, arg )
+          type_map(i) % model = arg(1)
+          type_map(i) % params = join(arg(2:narg))
+        else
+          type_map(i) % params = ptr % params
+        end if
         if (.not.present(atom)) type_map(i) % mass = me % mass_list % parameters( ptr % id )
       end do
       ! Apply an inverse map to the indices:
@@ -1315,14 +1335,27 @@ contains
       end subroutine write_box_limits
       !---------------------------------------------------------------------------------------------
       subroutine write_type( title, types, list )
-        character(*),      intent(in) :: title
-        type(TypeHolder),  intent(in) :: types(:)
-        type(StrucList),   intent(in) :: list
+        character(*),      intent(in)    :: title
+        type(TypeHolder),  intent(inout) :: types(:)
+        type(StrucList),   intent(in)    :: list
         integer :: i
-        if (size(types) > 0) write(unit,'(/,A,/)') title
-        do i = 1, size(types)
-          write(unit,'(A)') trim(join([int2str(i), types(i)%params, "#", types(i)%types]))
-        end do
+        if (size(types) > 0) then
+          if (me%models_on) then
+            if (any(types(2:)%model /= types(1)%model)) then
+              write(unit,'(/,A," # hybrid",/)') title
+            else
+              write(unit,'(/,A," # ",A,/)') title, trim(types(1)%model)
+              types%model = ""
+            end if
+          else
+            write(unit,'(/,A,/)') title
+            types%model = ""
+          end if
+          do i = 1, size(types)
+            write(unit,'(A," # ",A)') trim(join([int2str(i), types(i)%model, types(i)%params])), &
+                                      trim(join(types(i)%types))
+          end do
+        end if
       end subroutine write_type
       !---------------------------------------------------------------------------------------------
       subroutine write_masses
@@ -1527,10 +1560,10 @@ contains
     call write_type( "DihedralTypes", dih_types,  me % dihedral_type_list )
     call write_type( "ImproperTypes", imp_types,  me % improper_type_list )
     call write_atoms
-    call write_structure( "Bonds",     bond, n%bonds, mol_index, n%atoms )
-    call write_structure( "Angles",    ang,  n%angs,  mol_index, n%atoms )
-    call write_structure( "Dihedrals", dih,  n%dihs,  mol_index, n%atoms )
-    call write_structure( "Impropers", imp,  n%imps,  mol_index, n%atoms )
+    call write_structure( "Bonds",     bond, n%bonds, mol_index, n%atoms, 2 )
+    call write_structure( "Angles",    ang,  n%angs,  mol_index, n%atoms, 3 )
+    call write_structure( "Dihedrals", dih,  n%dihs,  mol_index, n%atoms, 4 )
+    call write_structure( "Impropers", imp,  n%imps,  mol_index, n%atoms, 4 )
     contains
       !---------------------------------------------------------------------------------------------
       subroutine write_count( n, name )
@@ -1586,16 +1619,19 @@ contains
         integer,  allocatable :: iatom(:)
         real(rb), allocatable :: momenta(:,:)
         character(sl), allocatable :: catom(:), xyz(:)
-        write(unit,'(/,"Atoms = [")')
         if (any(n%mols*n%atoms > 0)) then
+          if (me%velocity%active) then
+            momenta = velocities( sum(n%mols * total%atoms), me%velocity%seed, me%velocity%kT, &
+                                  1.0_rb/me%atom_masses%convert_to_real() )
+            write(unit,'(/,"# Atoms data: mol, type, charge, rx, ry, rz, px, py, pz")')
+          else
+            write(unit,'(/,"# Atoms data: mol, type, charge, rx, ry, rz")')
+          end if
+          write(unit,'(/,"Atoms = [")')
           m = maxval(n%atoms,n%mols > 0)
           allocate( iatom(m), catom(m), xyz(m) )
           patom => me % molecules % xyz % first
           katom = 0
-          if (me%velocity%active) then
-            momenta = velocities( sum(n%mols * total%atoms), me%velocity%seed, me%velocity%kT, &
-                                  1.0_rb/me%atom_masses%convert_to_real() )
-          end if
           do kmol = 1, size(mol_index)
             imol = mol_index(kmol)
             prev = sum(n(1:imol-1)%atoms)
@@ -1621,13 +1657,15 @@ contains
         write(unit,'("]")')
       end subroutine write_atoms
       !---------------------------------------------------------------------------------------------
-      subroutine write_structure( title, structure, permol, mol_index, natoms )
+      subroutine write_structure( title, structure, permol, mol_index, natoms, ssize )
         character(*),      intent(in) :: title
         type(StrucHolder), intent(in) :: structure(:)
-        integer,           intent(in) :: permol(me%molecules%N), mol_index(:), natoms(:)
+        integer,           intent(in) :: permol(me%molecules%N), mol_index(:), natoms(:), ssize
         integer :: i, j, k, kmol, imol, sprev, aprev
         character(sl) :: cstruc
         if (any(n%mols*permol > 0)) then
+          write(unit,'(/,"# ",A," data:",A)') trim(title), &
+                                    trim(join([(" atom-"//trim(int2str(i)),i=1,ssize)," type"],","))
           write(unit,'(/,A," = [")') title
           k = 0
           aprev = 0
@@ -1638,7 +1676,7 @@ contains
               associate (s => structure(sprev+i))
                 do j = 1, s%multiplicity
                   k = k + 1
-                  cstruc = join(int2str([aprev + s%atom_in_mol,s%itype(j)]),",")
+                  cstruc = join(int2str([aprev + s%atom_in_mol, s%itype(j)]),",")
                   write(unit,'("  (",A,") # ",A)') trim(cstruc), trim(join(s%atoms))
                 end do
               end associate

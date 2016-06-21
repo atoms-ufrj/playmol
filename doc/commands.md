@@ -17,6 +17,7 @@ physically meaningful values are those corresponding to [LAMMPS real units].
 | [angle_type]    | defines parameters for angles involving atoms of three given types        |
 | [dihedral_type] | defines parameters for dihedrals involving atoms of four given types      |
 | [improper_type] | defines parameters for impropers involving atoms of four given types      |
+| [models]        | defines whether the first attribute of each type is a model name          |
 | [atom]          | creates an atom with given name and type                                  |
 | [charge]        | specifies the charge of a given atom                                      |
 | [bond]          | creates chemical bonds and automatically detects angles and dihedrals     |
@@ -555,6 +556,41 @@ in this specific order.
 **See also**:
 
 [atom_type], [improper], [write], [prefix/suffix]
+
+----------------------------------------------------------------------------------------------------
+<a name="models"></a>
+models
+----------------------------------------------------------------------------------------------------
+
+**Syntax**:
+
+	models		<status>
+
+* _status_ = _on_ or _off_ (_default_ == _off_)
+
+**Description**:
+
+This command asserts if Playmol must consider the first attribute of any created [atom_type],
+[bond_type], [angle_type], [dihedral_type], or [improper_type] as the specification of a
+mathematical model for such type. This will affect the output of a [write] command if the format
+_lammps_ or the format _emdee_ is chosen.
+
+**Examples**:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+atom_type	lj/cut   $epsilon $sigma
+bond_type	harmonic $kb $r0
+angle_type	harmonic $ka $theta0
+models		on
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the example above, the first attributes of the created [atom_type], [bond_type], and [angle_type]
+will be considered as a [LAMMPS pair style], a [LAMMPS bond style], and a [LAMMPS angle style],
+respectively, when a [write] command with _lammps_ format is issued afterwards.
+
+**See also**:
+
+[atom_type], [bond_type], [angle_type], [dihedral_type], [improper_type], [write]
 
 ----------------------------------------------------------------------------------------------------
 <a name="atom"></a>
@@ -1620,6 +1656,7 @@ The example above writes a summary of the current molecular system and then quit
 [angle_type]:		#angle_type
 [dihedral_type]:	#dihedral_type
 [improper_type]:	#improper_type
+[models]:		#models
 [atom]:			#atom
 [charge]:		#charge
 [bond]:			#bond

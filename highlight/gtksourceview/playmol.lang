@@ -76,6 +76,7 @@
       <keyword>xyz</keyword>
       <keyword>build</keyword>
       <keyword>align</keyword>
+      <keyword>models\s+(on|off)</keyword>
       <keyword>box\s+(lengths|density|volume|angles)</keyword>
       <keyword>packmol</keyword>
       <keyword>write\s+(playmol|lammps|emdee|summary|xyz|lammpstrj|internals)</keyword>
