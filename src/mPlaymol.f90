@@ -1116,7 +1116,7 @@ contains
 
   subroutine tPlaymol_analyze_struct( me, structure, permol, total, type_map, list, typelist, &
                                       nmols, atom )
-    class(tPlaymol),  intent(inout) :: me
+    class(tPlaymol),   intent(inout)            :: me
     type(StrucList),   intent(in)               :: list, typelist
     integer,           intent(in)               :: nmols(me%molecules%N)
     type(StrucHolder), intent(out)              :: structure(list%count)
@@ -1371,12 +1371,13 @@ contains
         integer :: i, j, k, m, katom, imol, kmol, prev
         character(sl) :: cstruc
         integer,  allocatable :: iatom(:)
-        real(rb), allocatable :: V(:,:)
+        real(rb), allocatable :: V(:,:), atom_mass(:), type_mass(:)
         character(sl), allocatable :: catom(:), xyz(:)
         if (any(n%mols*n%atoms > 0)) then
           write(unit,'(/,"Atoms",/)')
           m = maxval(n%atoms,n%mols > 0)
-          allocate( iatom(m), catom(m), xyz(m) )
+          allocate( iatom(m), catom(m), xyz(m), atom_mass(sum(n%mols*total%atoms)) )
+          type_mass = me % atom_masses % convert_to_real()
           patom => me % molecules % xyz % first
           katom = 0
           do kmol = 1, size(mol_index)
@@ -1395,12 +1396,12 @@ contains
               i = prev + j
               cstruc = join(int2str([katom, kmol, atom(i)%itype]))
               write(unit,'(A)') trim(join([cstruc, atom(i)%charge, xyz(j), "#", catom(j)]))
+              atom_mass(katom) = type_mass(atom(i)%itype(1))
             end do
           end do
           if (me%velocity%active) then
             write(unit,'(/,"Velocities",/)')
-            V = velocities( sum(n%mols * total%atoms), me%velocity%seed, me%velocity%kT, &
-                            me % atom_masses % convert_to_real() )
+            V = velocities( sum(n%mols*total%atoms), me%velocity%seed, me%velocity%kT, atom_mass )
             katom = 0
             do kmol = 1, size(mol_index)
               do j = 1, natoms(mol_index(kmol))
@@ -1599,8 +1600,7 @@ contains
           write(unit,'(/,A,"Types = [")') title
           do i = 1, size(types)
             if (me%models_on) then
-              write(unit,'(2X,A)',advance="no") "EmDee."//trim(title)//"_"// &
-                                                replace(types(i)%model,"/","_")
+              write(unit,'(2X,A)',advance="no") "EmDee."//replace(types(i)%model,"/","_")
             else
               write(unit,'(2X)',advance="no")
             end if
@@ -1816,15 +1816,20 @@ contains
     real(rb), intent(in) :: kT, mass(N)
     real(rb)             :: V(3,N)
     integer :: i
-    real(rb) :: Vcm(3)
+    real(rb) :: Vcm(3), stdev, Mtotal
     type(rng) :: random
     call random % init( seed )
+    Mtotal = 0.0_rb
+    Vcm = 0.0_rb
     do i = 1, N
-      V(:,i) = [random % normal(), random % normal(), random % normal()]
+      stdev = sqrt(kT/mass(i))
+      V(:,i) = stdev*[random % normal(), random % normal(), random % normal()]
+      Vcm = Vcm + mass(i)*V(:,i)
+      Mtotal = Mtotal + mass(i)
     end do
-    Vcm = sum(V,2)/N
+    Vcm = Vcm/Mtotal
     forall (i=1:N) V(:,i) = V(:,i) - Vcm
-    V = sqrt(kT*(3*N-3)/sum(V*V))*V
+    V = sqrt(kT*(3*N-3)/sum([(mass(i)*V(:,i)**2,i=1,N)]))*V
   end function velocities
 
   !=================================================================================================
