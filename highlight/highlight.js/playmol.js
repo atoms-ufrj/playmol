@@ -50,9 +50,8 @@ function(hljs) {
     className: 'keyword',
     variants: [
       { begin: /\bbox\s+(lengths|density|volume|angles)\b/ },
-      { begin: /\bwrite\s+(playmol|lammps|emdee|summary|xyz|lammpstrj|internals)\b/ },
+      { begin: /\bwrite\s+(playmol|lammps|lmp\/models|emdee|summary|xyz|lammpstrj|internals)\b/ },
       { begin: /\baction\s+(execute|setup)\b/ },
-      { begin: /\bmodels\s+(on|off)\b/ },
       { begin: /\b(pre|suf)fix\s+(atom|type)s(\s+none)?\b/ },
       { begin: /\bimproper(\s+search)?\b/ },
       { begin: /\bextra\s+(bond|angle|dihedral)\b/ },

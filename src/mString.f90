@@ -298,8 +298,8 @@ contains
   elemental function real2str( a ) result( str )
     real(rb), intent(in) :: a
     character(sl)        :: str
-!    write(str,*) a
-    write(str,*) real(a,4)
+    write(str,*) a
+!    write(str,*) real(a,4)
     str = adjustl(str)
   end function real2str
 

@@ -17,8 +17,8 @@ changing the value defined in the first command, one can choose among various 3-
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 define 		model as TIP3P
-define		density as 1.0 # g/cm³
-define          N as 500
+define		density as 0.998 # g/cm³
+define  	N as 500
 include		$model.playmol
 atom_type	HW       $LJ_H
 atom_type	OW       $LJ_O
@@ -67,17 +67,30 @@ define charge_H  as  0.417
 define charge_O  as -0.834
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+### File: SPC_E.playmol
+
+The following file contains the SPC/E \cite Berendsen_1987 model parameters:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+define LJ_H      as  0.0000       0.0000
+define LJ_O      as  0.1554253    3.165492
+define bond_OH   as  {1059.162/2} 1.0        # k from SPC/Fw
+define angle_HOH as  {75.90/2}    109.47     # k from SPC/Fw
+define charge_H  as  0.4238
+define charge_O  as -0.8476
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 ### File: SPC_Fw.playmol
 
 The following file contains the SPC/Fw \cite Wu_2006 model parameters:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-atom_type   HW        0.0          0.0
-atom_type   OW        0.1554253    3.165492
-bond_type   HW OW     {1059.162/2} 1.012
-angle_type  HW OW HW  {75.90/2}    113.24
-charge      OW*      -0.820
-charge      HW*       0.410
+define LJ_H      as  0.0000       0.0000
+define LJ_O      as  0.1554253    3.165492
+define bond_OH   as  {1059.162/2} 1.012
+define angle_HOH as  {75.90/2}    113.24
+define charge_H  as  0.410
+define charge_O  as -0.820
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -131,7 +144,7 @@ box      density {0.602214*$rho} # Da/Å³
 align    mol(C1) x y
 packmol  seed $seed retry 0.95 copy mol(C1) $nmols action execute
 
-write    lammps C${N}_$FF.lammpsdata
+write    lmp/models C${N}_$FF.lammpsdata
 write    summary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -140,8 +153,6 @@ write    summary
 The following file contains the NERD \cite Nath_1998 model parameters:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-models          on
-
 define          cutoff  as 13.8     # Å
 define          L       as 1.54     # Å
 define          theta   as 114      # degrees

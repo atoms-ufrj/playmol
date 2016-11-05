@@ -48,7 +48,6 @@ type tPlaymol
   type(tMolecule) :: molecules
   type(tFix)      :: atomfix, typefix
   type(tVelocity) :: velocity
-  logical         :: models_on = .false.
 
   type(StrucList) :: atom_type_list      = StrucList( "atom type" )
   type(StrucList) :: bond_type_list      = StrucList( "bond type", 2, .true. )
@@ -117,7 +116,6 @@ contains
         case ("prefix","suffix"); call prefix_suffix_command
         case ("box"); call box_command
         case ("velocity"); call velocity_command
-        case ("models"); call models_command
         case ("atom_type"); call atom_type_command
         case ("bond_type"); call bond_type_command
         case ("angle_type"); call angle_type_command
@@ -441,21 +439,11 @@ contains
         deallocate( Mass, Coord )
       end subroutine align_command
       !---------------------------------------------------------------------------------------------
-      subroutine models_command
-        call writeln( "Defining models status as", join(arg(2:narg)) )
-        if (narg /= 2) call error( "invalid models command" )
-        select case (arg(2))
-          case ("on"); me % models_on = .true.
-          case ("off"); me % models_on = .false.
-          case default; call error( "invalid models command" )
-        end select
-      end subroutine models_command
-      !---------------------------------------------------------------------------------------------
       subroutine write_command
         integer :: unit, nspec
-        character(sl) :: formats(7) = ["playmol  ", "lammps   ", "summary  ", &
-                                       "xyz      ", "lammpstrj", "emdee    ", &
-                                       "internals"  ]
+        character(sl) :: formats(8) = ["playmol   ", "lammps    ", "lmp/models", "summary   ", &
+                                       "xyz       ", "lammpstrj ", "emdee     ", &
+                                       "internals "  ]
         if (narg < 2) call error( "invalid write command" )
         if (.not.any(formats == arg(2))) call error( "invalid format", arg(2), "in write command" )
         select case (arg(2))
@@ -473,7 +461,8 @@ contains
         end if
         select case (arg(2))
           case ("playmol"); call me % write( unit )
-          case ("lammps");  call me % write_lammps( unit )
+          case ("lammps"); call me % write_lammps( unit, models = .false. )
+          case ("lmp/models"); call me % write_lammps( unit, models = .true. )
           case ("summary"); call me % summarize( unit )
           case ("xyz"); call me % write_xyz( unit )
           case ("lammpstrj"); call me % write_lammpstrj( unit )
@@ -1115,11 +1104,12 @@ contains
   !=================================================================================================
 
   subroutine tPlaymol_analyze_struct( me, structure, permol, total, type_map, list, typelist, &
-                                      nmols, atom )
+                                      nmols, models, atom )
     class(tPlaymol),   intent(inout)            :: me
     type(StrucList),   intent(in)               :: list, typelist
     integer,           intent(in)               :: nmols(me%molecules%N)
     type(StrucHolder), intent(out)              :: structure(list%count)
+    logical,           intent(in)               :: models
     type(StrucHolder), intent(in),  optional    :: atom(:)
     integer,           intent(out)              :: permol(me%molecules%N)
     integer,           intent(out)              :: total(me%molecules%N)
@@ -1202,7 +1192,7 @@ contains
       do i = 1, size(type_map)
         ptr => typelist % point_to( type_map(i)%index )
         type_map(i) % types = join(ptr % id)
-        if (me%models_on) then
+        if (models) then
           call split( ptr % params, narg, arg )
           type_map(i) % model = arg(1)
           type_map(i) % params = join(arg(2:narg))
@@ -1223,9 +1213,10 @@ contains
 
   !=================================================================================================
 
-  subroutine tPlaymol_write_lammps( me, unit )
+  subroutine tPlaymol_write_lammps( me, unit, models )
     class(tPlaymol),  intent(inout) :: me
     integer,          intent(in)    :: unit
+    logical,          intent(in)    :: models
     integer :: i, j
     type(StrucHolder) :: atom(me % atom_list % count), bond(me % bond_list % count),    &
                          ang(me % angle_list % count), dih(me % dihedral_list % count), &
@@ -1243,25 +1234,25 @@ contains
     n%mols = me % molecules % count()
     ! Atoms:
     call me % analyze_struct( atom, n%atoms, total%atoms, atom_types, &
-                              me%atom_list, me%atom_type_list, n%mols )
+                              me%atom_list, me%atom_type_list, n%mols, models )
     ! Bonds:
     call me % bond_list % attach( me%extra_bond_list )
     call me % analyze_struct( bond, n%bonds, total%bonds, bond_types, &
-                              me%bond_list, me%bond_type_list, n%mols, atom )
+                              me%bond_list, me%bond_type_list, n%mols, models, atom )
     call me % bond_list % detach( me%extra_bond_list )
     ! Angles:
     call me % angle_list % attach( me%extra_angle_list )
     call me % analyze_struct( ang, n%angs, total%angs, ang_types, &
-                              me%angle_list, me%angle_type_list, n%mols, atom )
+                              me%angle_list, me%angle_type_list, n%mols, models, atom )
     call me % angle_list % detach( me%extra_angle_list )
     ! Dihedrals:
     call me % dihedral_list % attach( me%extra_dihedral_list )
     call me % analyze_struct( dih, n%dihs, total%dihs, dih_types, &
-                              me%dihedral_list, me%dihedral_type_list, n%mols, atom )
+                              me%dihedral_list, me%dihedral_type_list, n%mols, models, atom )
     call me % dihedral_list % detach( me%extra_dihedral_list )
     ! Impropers:
     call me % analyze_struct( imp, n%imps, total%imps, imp_types, &
-                              me%improper_list, me%improper_type_list, n%mols, atom )
+                              me%improper_list, me%improper_type_list, n%mols, models, atom )
     ! Molecule indices:
     allocate( mol_index(sum(n%mols)) )
     ptr => me % molecules % xyz % first
@@ -1339,7 +1330,7 @@ contains
         type(StrucList),   intent(in)    :: list
         integer :: i
         if (size(types) > 0) then
-          if (me%models_on) then
+          if (models) then
             if (any(types(2:)%model /= types(1)%model)) then
               write(unit,'(/,A," # hybrid",/)') title
             else
@@ -1515,25 +1506,25 @@ contains
     n%mols = me % molecules % count()
     ! Atoms:
     call me % analyze_struct( atom, n%atoms, total%atoms, atom_types, &
-                              me%atom_list, me%atom_type_list, n%mols )
+                              me%atom_list, me%atom_type_list, n%mols, .true. )
     ! Bonds:
     call me % bond_list % attach( me%extra_bond_list )
     call me % analyze_struct( bond, n%bonds, total%bonds, bond_types, &
-                              me%bond_list, me%bond_type_list, n%mols, atom )
+                              me%bond_list, me%bond_type_list, n%mols, .true., atom )
     call me % bond_list % detach( me%extra_bond_list )
     ! Angles:
     call me % angle_list % attach( me%extra_angle_list )
     call me % analyze_struct( ang, n%angs, total%angs, ang_types, &
-                              me%angle_list, me%angle_type_list, n%mols, atom )
+                              me%angle_list, me%angle_type_list, n%mols, .true., atom )
     call me % angle_list % detach( me%extra_angle_list )
     ! Dihedrals:
     call me % dihedral_list % attach( me%extra_dihedral_list )
     call me % analyze_struct( dih, n%dihs, total%dihs, dih_types, &
-                              me%dihedral_list, me%dihedral_type_list, n%mols, atom )
+                              me%dihedral_list, me%dihedral_type_list, n%mols, .true., atom )
     call me % dihedral_list % detach( me%extra_dihedral_list )
     ! Impropers:
     call me % analyze_struct( imp, n%imps, total%imps, imp_types, &
-                              me%improper_list, me%improper_type_list, n%mols, atom )
+                              me%improper_list, me%improper_type_list, n%mols, .true., atom )
     ! Molecule indices:
     allocate( mol_index(sum(n%mols)) )
     ptr => me % molecules % xyz % first
@@ -1599,11 +1590,7 @@ contains
         if (size(types) > 0) then
           write(unit,'(/,A,"Types = [")') title
           do i = 1, size(types)
-            if (me%models_on) then
-              write(unit,'(2X,A)',advance="no") "EmDee."//replace(types(i)%model,"/","_")
-            else
-              write(unit,'(2X)',advance="no")
-            end if
+            write(unit,'(2X,A)',advance="no") "EmDee."//replace(types(i)%model,"/","_")
             write(unit,'("(",A,") # ",A)') replace(types(i)%params," ",","), trim(types(i)%types)
           end do
           write(unit,'("]")')
@@ -1699,7 +1686,6 @@ contains
       !---------------------------------------------------------------------------------------------
   end subroutine tPlaymol_write_emdee
 
-  !=================================================================================================
   !=================================================================================================
 
   subroutine tPlaymol_check_coordinates( me, imol )

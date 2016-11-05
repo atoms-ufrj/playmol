@@ -1,15 +1,15 @@
 # TIP3P water model:
 prefix types T
-atom_type	HW	pair_lj(0.000,0.000)
-atom_type	OW	pair_lj(0.102,3.188)
+atom_type	HW	lj/cut 0.000 0.000
+atom_type	OW	lj/cut 0.102 3.188
 
 mass		HW	1.008
 mass		OW	15.9994
 
 diameter	HW	1.5
 
-bond_type	HW OW		bond_harmonic(450.0,0.9572)
-angle_type	HW OW HW	angle_harmonic(55.0,104.52)
+bond_type	HW OW		harmonic 450.0 0.9572
+angle_type	HW OW HW	harmonic 55.0 104.52
 
 prefix atoms W_
 atom		H1	HW
@@ -30,10 +30,11 @@ O	0.9572	0.0 	0.0
 H2	1.19719	0.92663	0.0
 
 box		density 0.0602214
-packmol		diameter 2.5 retry 1.0 pack mol(W_H2) 300 action execute
+packmol		diameter 2.5 retry 1.0 pack mol(W_H2) 903 action execute
 
 velocity	234 {8.31451E-7*298}
 write		emdee water.jl
+write		lmp/models water.lmp
 #write		lammpstrj water.lammpstrj
 #write		xyz water.xyz
 write		summary
