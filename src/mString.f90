@@ -305,6 +305,15 @@ contains
 
   !=================================================================================================
 
+  elemental function float2str( a ) result( str )
+    real(rb), intent(in) :: a
+    character(sl)        :: str
+    write(str,*) real(a,4)
+    str = adjustl(str)
+  end function float2str
+
+  !=================================================================================================
+
   elemental function is_int( arg ) result( ok )
     character(*), intent(in) :: arg
     logical                  :: ok

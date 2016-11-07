@@ -1197,6 +1197,7 @@ contains
           type_map(i) % model = arg(1)
           type_map(i) % params = join(arg(2:narg))
         else
+          type_map(i) % model = ""
           type_map(i) % params = ptr % params
         end if
         if (.not.present(atom)) type_map(i) % mass = me % mass_list % parameters( ptr % id )
@@ -1549,16 +1550,16 @@ contains
     call write_count( sum(n%mols * total%imps),  "impropers" )
     if (me % box % exists()) call write_box_limits
     call write_masses
-    call write_type( "Pair",     atom_types, me % atom_type_list     )
-    call write_type( "Bond",     bond_types, me % bond_type_list     )
-    call write_type( "Angle",    ang_types,  me % angle_type_list    )
-    call write_type( "Dihedral", dih_types,  me % dihedral_type_list )
-    call write_type( "Improper", imp_types,  me % improper_type_list )
-    call write_atoms
-    call write_structure( "Bonds",     bond, n%bonds, mol_index, n%atoms, 2 )
-    call write_structure( "Angles",    ang,  n%angs,  mol_index, n%atoms, 3 )
-    call write_structure( "Dihedrals", dih,  n%dihs,  mol_index, n%atoms, 4 )
-    call write_structure( "Impropers", imp,  n%imps,  mol_index, n%atoms, 4 )
+    call write_type( "pair",     atom_types, me % atom_type_list     )
+    call write_type( "bond",     bond_types, me % bond_type_list     )
+    call write_type( "angle",    ang_types,  me % angle_type_list    )
+    call write_type( "dihedral", dih_types,  me % dihedral_type_list )
+    call write_type( "improper", imp_types,  me % improper_type_list )
+    call write_atoms( n%atoms )
+    call write_structure( "bonds",     bond, n%bonds, mol_index, n%atoms, 2 )
+    call write_structure( "angles",    ang,  n%angs,  mol_index, n%atoms, 3 )
+    call write_structure( "dihedrals", dih,  n%dihs,  mol_index, n%atoms, 4 )
+    call write_structure( "impropers", imp,  n%imps,  mol_index, n%atoms, 4 )
     contains
       !---------------------------------------------------------------------------------------------
       subroutine write_count( n, name )
@@ -1572,7 +1573,7 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine write_box_limits
         if (me % box % def_type /= 4) then ! Orthogonal box
-          write(unit,'(/,"BoxLengths = [")')
+          write(unit,'(/,"boxLengths = [")')
           write(unit,'(2X,A)') trim(real2str(me%box%length(1)))
           write(unit,'(2X,A)') trim(real2str(me%box%length(2)))
           write(unit,'(2X,A)') trim(real2str(me%box%length(3)))
@@ -1590,66 +1591,80 @@ contains
         if (size(types) > 0) then
           write(unit,'(/,A,"Types = [")') title
           do i = 1, size(types)
-            write(unit,'(2X,A)',advance="no") "EmDee."//replace(types(i)%model,"/","_")
+            write(unit,'(2X,A)',advance="no") "EmDee."//trim(title)//"_"// &
+                                              replace(types(i)%model,"/","_")
             write(unit,'("(",A,") # ",A)') replace(types(i)%params," ",","), trim(types(i)%types)
           end do
           write(unit,'("]")')
         else
-          write(unit,'(/,A," = []")') title
+          write(unit,'(/,A,"Types = []")') title
         end if
       end subroutine write_type
       !---------------------------------------------------------------------------------------------
       subroutine write_masses
         integer :: i
-        write(unit,'(/,"TypeMasses = [")')
+        write(unit,'(/,"typeMasses = [")')
         do i = 1, size(atom_types)
           write(unit,'(2X,A)') trim(join([atom_types(i)%mass, "#", atom_types(i)%types]))
         end do
         write(unit,'("]")')
       end subroutine write_masses
       !---------------------------------------------------------------------------------------------
-      subroutine write_atoms
+      subroutine write_atoms( natoms )
+        integer, intent(in) :: natoms(:)
         type(Struc), pointer :: patom
         integer :: i, j, k, m, katom, imol, kmol, prev
-        character(sl) :: cstruc, cxyz
+        character(sl) :: cstruc
         integer,  allocatable :: iatom(:)
-        real(rb), allocatable :: momenta(:,:)
+        real(rb), allocatable :: V(:,:), atom_mass(:), type_mass(:)
         character(sl), allocatable :: catom(:), xyz(:)
         if (any(n%mols*n%atoms > 0)) then
+          m = maxval(n%atoms,n%mols > 0)
+          allocate( iatom(m), catom(m), xyz(m), atom_mass(sum(n%mols*total%atoms)) )
+          type_mass = me % atom_masses % convert_to_real()
+          katom = 0
+          do kmol = 1, size(mol_index)
+            imol = mol_index(kmol)
+            prev = sum(natoms(1:imol-1))
+            do j = 1, natoms(imol)
+              katom = katom + 1
+              i = prev + j
+              atom_mass(katom) = type_mass(atom(i)%itype(1))
+            end do
+          end do
           if (me%velocity%active) then
-            momenta = velocities( sum(n%mols * total%atoms), me%velocity%seed, me%velocity%kT, &
-                                  1.0_rb/me%atom_masses%convert_to_real() )
+            V = velocities( sum(n%mols*total%atoms), me%velocity%seed, me%velocity%kT, atom_mass )
             write(unit,'(/,"# Atoms data: mol, type, charge, rx, ry, rz, px, py, pz")')
           else
             write(unit,'(/,"# Atoms data: mol, type, charge, rx, ry, rz")')
           end if
-          write(unit,'(/,"Atoms = [")')
-          m = maxval(n%atoms,n%mols > 0)
-          allocate( iatom(m), catom(m), xyz(m) )
           patom => me % molecules % xyz % first
           katom = 0
+          write(unit,'(/,"atoms = [")')
           do kmol = 1, size(mol_index)
             imol = mol_index(kmol)
-            prev = sum(n(1:imol-1)%atoms)
-            m = n(imol)%atoms
+            prev = sum(natoms(1:imol-1))
+            m = natoms(imol)
             forall (j=1:m) catom(j) = atom(prev+j)%atoms(1)
             do j = 1, m
               iatom(j:j) = pack([(k,k=1,m)],catom(1:m) == patom%id(1))
-              xyz(j) = patom%params
+              xyz(j) = replace(patom%params," ",",")
               patom => patom % next
             end do
             xyz(1:m) = xyz(sorted(iatom(1:m)))
             do j = 1, m
               katom = katom + 1
               i = prev + j
-              cxyz = replace(xyz(j)," ",",")
-              cstruc = join([int2str([kmol, atom(i)%itype(1)]),atom(i)%charge,cxyz],",")
-              if (me%velocity%active) cstruc = join([cstruc,real2str(momenta(:,katom))],",")
-              write(unit,'("  (",A,") # ",A)') trim(cstruc), trim(atom(i)%atoms(1))
+              cstruc = join(int2str([katom, kmol, atom(i)%itype]),",")
+              cstruc = join([cstruc, atom(i)%charge, xyz(j)],",")
+              if (me%velocity%active) then
+                cstruc = join([cstruc,float2str(atom_mass(katom)*V(:,katom))],",")
+              end if
+              write(unit,'(2X,"(",A,") # ",A)') trim(cstruc), catom(j)
             end do
           end do
+          write(unit,'("]")')
         end if
-        write(unit,'("]")')
       end subroutine write_atoms
       !---------------------------------------------------------------------------------------------
       subroutine write_structure( title, structure, permol, mol_index, natoms, ssize )
@@ -1659,8 +1674,8 @@ contains
         integer :: i, j, k, kmol, imol, sprev, aprev
         character(sl) :: cstruc
         if (any(n%mols*permol > 0)) then
-          write(unit,'(/,"# ",A," data:",A)') trim(title), &
-                                    trim(join([(" atom-"//trim(int2str(i)),i=1,ssize)," type"],","))
+          write(unit,'(/,"# ",A," data:",A)') &
+            trim(title), trim(join([(" atom-"//trim(int2str(i)),i=1,ssize)," type"],","))
           write(unit,'(/,A," = [")') title
           k = 0
           aprev = 0

@@ -1,7 +1,7 @@
 # TIP3P water model:
 prefix types T
-atom_type	HW	lj/cut 0.000 0.000
-atom_type	OW	lj/cut 0.102 3.188
+atom_type	HW	lj/sf/coul/sf 0.000 0.000 9.0
+atom_type	OW	lj/sf/coul/sf 0.102 3.188 9.0
 
 mass		HW	1.008
 mass		OW	15.9994
