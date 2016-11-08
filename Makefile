@@ -11,7 +11,10 @@ PACKMOL = ./lib
 
 exec = playmol
 
-SRC  = $(wildcard $(SRCDIR)/*.f90)
+src = $(addprefix $(SRCDIR)/, $(addsuffix .f90, $(1)))
+SRC  = $(call src, mBox mFix mMolecule mParser mString mCodeFlow mGlobal \
+                   mPackmol mPlaymol mStruc playmol)
+AUX  = $(call src, write_emdee write_lammps write_lammpstrj write_summary write_internals)
 OBJ  = $(patsubst $(SRCDIR)/%.f90,$(OBJDIR)/%.o,$(SRC))
 
 all: $(BINDIR)/$(exec)
@@ -42,7 +45,7 @@ $(PACKMOL)/libpackmol.a:
 $(OBJDIR)/playmol.o: $(SRCDIR)/playmol.f90 $(OBJDIR)/mPlaymol.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/mPlaymol.o: $(SRCDIR)/mPlaymol.f90 $(OBJDIR)/mCodeFlow.o $(OBJDIR)/mPackmol.o \
+$(OBJDIR)/mPlaymol.o: $(SRCDIR)/mPlaymol.f90 $(AUX) $(OBJDIR)/mCodeFlow.o $(OBJDIR)/mPackmol.o \
                       $(OBJDIR)/mFix.o $(OBJDIR)/mBox.o $(OBJDIR)/mMolecule.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 

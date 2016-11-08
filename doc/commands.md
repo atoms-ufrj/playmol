@@ -21,6 +21,7 @@ physically meaningful values are those corresponding to [LAMMPS real units].
 | [charge]        | specifies the charge of a given atom                                      |
 | [bond]          | creates chemical bonds and automatically detects angles and dihedrals     |
 | [improper]      | creates an improper involving four given atoms or search for impropers    |
+| [body]          | select a set of atoms to be marked as a single body                       |
 | [extra]         | creates an extra bond, angle, or dihedral involving given atoms           |
 | [link]          | links two atoms (and fuses their molecules) without actually bonding them |
 | [unlink]        | removes an existing link (and splits the corresponding molecule)          |
@@ -694,7 +695,7 @@ molecules.
 
 **See also**:
 
-[bond_type], [atom_type], [write], [quit]
+[bond_type], [atom], [atom_type], [write], [quit]
 
 ----------------------------------------------------------------------------------------------------
 <a name="improper"></a>
@@ -745,6 +746,52 @@ searches for impropers of this type.
 **See also**:
 
 [improper_type], [atom]
+
+----------------------------------------------------------------------------------------------------
+<a name="body"></a>
+body
+----------------------------------------------------------------------------------------------------
+
+**Syntax**:
+
+	body	<atom-1> <atom-2> [<atom-3> <atom-4> ...]
+
+* _atom-x_ = the name of a previously defined atom
+
+**Description**:
+
+This command selects a set of atoms to be marked as a single body. These atoms must all belong to
+the same molecule. This is used to define rigid bodies when creating an [EmDee] configuration file
+using the [write] command.
+
+Each parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be
+provided, with no use of wildcard characters (* or ?). If an atom-related [prefix/suffix] has been
+previously activated, then the actual atom identifier will contain such prefix and/or suffix added
+to _atom-x_. A body must contain at least two atoms.
+
+Each parameter _atom-x_ must be distinct from all others in the same body and from the others
+belonging to all previously defined bodies.
+
+**Examples**:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+for i from 1 to 6
+  atom C$i C
+  atom H$i H
+  bond C$i H$i
+next
+bond C2 C1 C3
+bond C4 C3 C5
+bond C6 C5 C1
+body C1 C2 C3 C4 C5 C6
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the example above, a benzene molecule is created and all its carbon atoms are grouped together as
+a single body.
+
+**See also**:
+
+[atom], [write]
 
 ----------------------------------------------------------------------------------------------------
 <a name="extra"></a>
@@ -1631,10 +1678,11 @@ The example above writes a summary of the current molecular system and then quit
 [atom]:			#atom
 [charge]:		#charge
 [bond]:			#bond
+[improper]:		#improper
+[body]:			#body
 [extra]:		#extra
 [link]:			#link
 [unlink]:		#unlink
-[improper]:		#improper
 [build]:		#build
 [box]:			#box
 [velocity]:		#velocity

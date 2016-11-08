@@ -83,8 +83,8 @@ contains
   !=================================================================================================
 
   subroutine tMolecule_fuse( me, atoms )
-    class(tMolecule), intent(inout)        :: me
-    character(sl),    intent(inout)        :: atoms(2)
+    class(tMolecule), intent(inout) :: me
+    character(sl),    intent(inout) :: atoms(2)
     integer :: i, mol(2), imin, imax
     type(Struc), pointer :: ptr
     if (atoms(1) == atoms(2)) call error( "atom", atoms(1), "cannot bind to itself" )

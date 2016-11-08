@@ -22,6 +22,8 @@ charge		O	-0.830
 bond		H1 O
 bond		O H2
 
+body		O H1 H2
+
 build
 3
 # Water molecule coordinates:

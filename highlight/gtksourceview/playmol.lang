@@ -68,6 +68,7 @@
       <keyword>atom</keyword>
       <keyword>charge</keyword>
       <keyword>bond</keyword>
+      <keyword>body</keyword>
       <keyword>link</keyword>
       <keyword>unlink</keyword>
       <keyword>extra\s+(bond|angle|dihedral)</keyword>
