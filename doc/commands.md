@@ -21,7 +21,7 @@ physically meaningful values are those corresponding to [LAMMPS real units].
 | [charge]        | specifies the charge of a given atom                                      |
 | [bond]          | creates chemical bonds and automatically detects angles and dihedrals     |
 | [improper]      | creates an improper involving four given atoms or search for impropers    |
-| [body]          | select a set of atoms to be marked as a single body                       |
+| [body]          | selects a set of atoms to be marked as a single body                      |
 | [extra]         | creates an extra bond, angle, or dihedral involving given atoms           |
 | [link]          | links two atoms (and fuses their molecules) without actually bonding them |
 | [unlink]        | removes an existing link (and splits the corresponding molecule)          |

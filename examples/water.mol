@@ -1,7 +1,7 @@
 # TIP3P water model:
-prefix types T
-atom_type	HW	lj/sf/coul/sf 0.000 0.000 9.0
-atom_type	OW	lj/sf/coul/sf 0.102 3.188 9.0
+#prefix types T
+atom_type	HW	lj/sf/coul/sf 0.000 0.000
+atom_type	OW	lj/sf/coul/sf 0.102 3.188
 
 mass		HW	1.008
 mass		OW	15.9994
@@ -11,7 +11,7 @@ diameter	HW	1.5
 bond_type	HW OW		harmonic 450.0 0.9572
 angle_type	HW OW HW	harmonic 55.0 104.52
 
-prefix atoms W_
+#prefix atoms W_
 atom		H1	HW
 atom		O	OW
 atom		H2	HW
@@ -22,7 +22,7 @@ charge		O	-0.830
 bond		H1 O
 bond		O H2
 
-body		O H1 H2
+body		O H1
 
 build
 3
@@ -32,7 +32,7 @@ O	0.9572	0.0 	0.0
 H2	1.19719	0.92663	0.0
 
 box		density 0.0602214
-packmol		diameter 2.5 retry 1.0 pack mol(W_H2) 903 action execute
+packmol		diameter 2.5 retry 1.0 pack mol(H2) 903 action execute
 
 velocity	234 {8.31451E-7*298}
 write		emdee water.jl
