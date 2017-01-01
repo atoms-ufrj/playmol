@@ -4,7 +4,7 @@ FOPTS = -O3 -march=native -ffast-math -funroll-loops -fstrict-aliasing -cpp -Wun
 SRCDIR  = ./src
 OBJDIR  = $(SRCDIR)/obj
 BINDIR  = ./bin
-DOCDIR  = ./doc
+DOCDIR  = ./docs
 GTKDIR  = ./highlight
 
 PACKMOL = ./lib
@@ -22,7 +22,7 @@ all: $(BINDIR)/$(exec)
 .PHONY: install clean doc
 
 doc:
-	cd doc && doxygen
+	cd $(DOCDIR) && doxygen
 
 clean:
 	rm -rf $(OBJDIR)
