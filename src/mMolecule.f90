@@ -437,7 +437,7 @@ contains
       A = eigenvectors( inertia, MoI )
       A = transpose(A(:,sort_vector(MoI)))
       ! Recalculate positions in the body-fixed frame:
-      forall (i=1:N) Coord(:,i) = matmul( A, delta(:,i) )
+      Coord = matmul( A, delta )
     end if
     contains
     !-----------------------------------------------------------------------------------------------

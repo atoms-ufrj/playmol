@@ -33,7 +33,7 @@ clean:
 install:
 	cp -f $(BINDIR)/$(exec) /usr/local/bin
 	cp -f $(PACKMOL)/packmol/packmol /usr/local/bin
-	sh $(GTKDIR)/install.sh
+	bash $(GTKDIR)/install.sh
 
 $(BINDIR)/$(exec): $(OBJ) $(PACKMOL)/libpackmol.a
 	mkdir -p $(BINDIR)

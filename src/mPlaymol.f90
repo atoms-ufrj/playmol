@@ -689,7 +689,7 @@ contains
   subroutine tPlaymol_read_geometry( me, unit )
     class(tPlaymol), intent(inout) :: me
     integer,      intent(in)    :: unit
-    integer       :: N, i, narg, natoms
+    integer       :: N, i, narg
     character(sl) :: arg(7)
     integer,       allocatable :: ndata(:)
     character(sl), allocatable :: data(:,:)
@@ -703,13 +703,18 @@ contains
       call writeln( int2str(i), ":", join(arg(1:narg)) )
       if (narg == 0) call error( "expected geometric data not completed" )
       select case (narg)
-        case (3); natoms = 2 ! Bond
-        case (4); natoms = 1 ! Coordinates
-        case (5); natoms = 3 ! Bond and angle
-        case (7); natoms = 4 ! Bond, angle, and dihedral
-        case default; natoms = 0
+        case (3)
+          call me % atomfix % apply( arg(1:2) ) ! Bond
+        case (4)
+          call me % atomfix % apply( arg(1) )   ! Coordinates
+        case (5)
+          call me % atomfix % apply( arg(1:2) ) ! Bond and angle
+          call me % atomfix % apply( arg(4) )
+        case (7)
+          call me % atomfix % apply( arg(1:2) ) ! Bond, angle, and dihedral
+          call me % atomfix % apply( arg(4) )
+          call me % atomfix % apply( arg(6) )
       end select
-      call me % atomfix % apply( arg(1:natoms) )
       ndata(i) = narg
       data(i,1:narg) = arg(1:narg)
     end do

@@ -11,7 +11,7 @@ diameter	HW	1.5
 bond_type	HW OW		harmonic 450.0 0.9572
 angle_type	HW OW HW	harmonic 55.0 104.52
 
-#prefix atoms W_
+prefix atoms W_
 atom		H1	HW
 atom		O	OW
 atom		H2	HW
@@ -31,8 +31,9 @@ H1	0.0	0.0	0.0
 O	0.9572	0.0 	0.0
 H2	1.19719	0.92663	0.0
 
+align		mol(W_O) x y
 box		density 0.0602214
-packmol		diameter 2.5 retry 1.0 pack mol(H2) 903 action execute
+packmol		diameter 2.5 retry 1.0 pack mol(W_H2) 903 action execute
 
 velocity	234 {8.31451E-7*298}
 write		emdee water.jl
