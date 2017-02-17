@@ -25,6 +25,15 @@ Federal University of Rio de Janeiro, Brazil
 
 --------------------------------------------------------------------------------
 
+Online Manual
+-------------
+
+The Playmol User Manual is available at:
+
+http://atoms-ufrj.github.io/playmol/docs/html
+
+--------------------------------------------------------------------------------
+
 Forum
 -----
 
