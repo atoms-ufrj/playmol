@@ -22,7 +22,7 @@ all: $(BINDIR)/$(exec)
 .PHONY: install clean doc
 
 doc:
-	cd $(DOCDIR) && doxygen
+	make -C $(DOCDIR)
 
 clean:
 	rm -rf $(OBJDIR)

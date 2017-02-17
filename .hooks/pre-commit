@@ -1,0 +1,14 @@
+#!/bin/bash
+date=$(LANG=en_US date +"%d %b %Y")
+
+line="'27s/.*/call writeln( \"Playmol ($date)\" )/'"
+eval "sed -i $line ./src/playmol.f90"
+git add ./src/playmol.f90
+
+line="'3s/.*/PROJECT_BRIEF = \"(Version: $date)\"/'"
+eval "sed -i $line ./docs/Doxyfile"
+git add ./docs/Doxyfile
+
+make -C ./docs &> /dev/null
+git add ./docs/html/*
+
