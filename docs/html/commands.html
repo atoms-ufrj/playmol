@@ -47,7 +47,7 @@
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">
    </div>
-   <div id="projectbrief">(Version: 17 Feb 2017)</div>
+   <div id="projectbrief">(Version: 26 May 2017)</div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
           <div class="left">
@@ -544,7 +544,7 @@ endif
 <p>The parameter <em>molecule</em> specifies the molecule to be aligned with the Cartesian axes. This specification can be done in either of the following ways:</p>
 <ol type="1">
 <li>By directly employing the numerical index of the compound. The command <a href="#write">write</a>, with its option <em>summary</em>, can be helpful for checking the indexes of the existing ones.</li>
-<li>By using the function <code>mol(atom)</code>, where <em>atom</em> is the identifier of an existing <a href="#atom">atom</a>. Such identifier must be tightly placed inside the parentheses (that is, without any spaces and/or tabs). Note that an active, atom-related <a href="#prefix_suffix">prefix/suffix</a> will NOT be applied automatically to <em>atom</em>.</li>
+<li>By using the function <code>mol(atom)</code>, where <em>atom</em> is the identifier of an existing <a href="#atom">atom</a>. Such identifier must be tightly placed inside the parentheses (that is, without any spaces and/or tabs). Note that an active, atom-related <a href="#prefix_suffix">prefix/suffix</a> will be applied automatically to <em>atom</em>.</li>
 </ol>
 <p>Except in a few special cases, the specified molecule must have already been instantiated (see the <a href="basics.html">Playmol Basics</a> section). In this case, the first set of atomic coordinates previously provided for such molecule will be employed. The special cases, which might not require previous instantiation, are: (1) monoatomic molecules, (2) diatomic molecules whose involved <a href="#bond_type">bond_type</a> describes a harmonic potential, and (3) triatomic molecules whose involved <a href="#bond_type">bond_type</a> and <a href="#angle_type">angle_type</a> both describe harmonic potentials. In these cases, Playmol will consider the second <a href="#bond_type">bond_type</a>'s attribute as an equilibrium distance and the second <a href="#angle_type">angle_type</a>'s attribute as an equilibrium angle (in degrees).</p>
 <p>The parameter <em>axis-1</em> must be equal to <em>x</em>, <em>y</em>, or <em>z</em>, and specifies the Cartesian axis with which the molecule will be aligned considering its most elongated principal axis.</p>
@@ -611,7 +611,7 @@ endif
 <p>A molecule specification for the <em>fix/copy/pack</em> keywords can be done in either of the following ways:</p>
 <ol type="1">
 <li>By directly employing the numerical index of the compound. The command <a href="#write">write</a>, with its option <em>summary</em>, can be helpful for checking the indexes of the existing ones. One may note, however, that these indexes can possibly change during the execution of a script (please see the <a href="#bond">bond</a> command description). Thus, the specification must refer to the index which the desired compound will have at the moment of a <code>packmol action</code> command (see below).</li>
-<li>By using the function <code>mol(atom)</code>, where <em>atom</em> is the identifier of an existing <a href="#atom">atom</a>. Such identifier must be tightly placed inside the parentheses (that is, without any spaces and/or tabs). At the moment of a <code>packmol action</code> command, the function will return the index of the compound that contains the specified atom. Note that an active, atom-related <a href="#prefix_suffix">prefix/suffix</a> will NOT be applied automatically to <em>atom</em>.</li>
+<li>By using the function <code>mol(atom)</code>, where <em>atom</em> is the identifier of an existing <a href="#atom">atom</a>. Such identifier must be tightly placed inside the parentheses (that is, without any spaces and/or tabs). At the moment of a <code>packmol action</code> command, the function will return the index of the compound that contains the specified atom. Note that an active, atom-related <a href="#prefix_suffix">prefix/suffix</a> will be applied automatically to <em>atom</em>.</li>
 </ol>
 <p>The usage of each keyword <em>fix</em>, <em>copy</em>, or <em>pack</em> is: </p><pre class="fragment">fix &lt;molecule&gt; &lt;x&gt; &lt;y&gt; &lt;z&gt;
 </pre><p>This makes a copy of a molecule and, while keeping the original orientation, places its geometric center at the provided coordinate (<em>x</em>, <em>y</em>, <em>z</em>). </p><pre class="fragment">copy &lt;molecule&gt; &lt;N&gt;

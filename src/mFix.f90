@@ -52,7 +52,13 @@ contains
   elemental subroutine tFix_apply( me, string )
     class(tFix),   intent(in)    :: me
     character(sl), intent(inout) :: string
-    string = trim(me % prefix) // trim(string) // trim(me % suffix)
+    integer :: last
+    last = len_trim(string)
+    if ((last > 5).and.(string(1:4) == "mol(").and.(string(last:last) == ")")) then
+      string = "mol(" // trim(me % prefix) // string(5:last-1) // trim(me % suffix) // ")"
+    else
+      string = trim(me % prefix) // trim(string) // trim(me % suffix)
+    end if
   end subroutine tFix_apply
 
   !=================================================================================================

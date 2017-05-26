@@ -47,7 +47,7 @@
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">
    </div>
-   <div id="projectbrief">(Version: 17 Feb 2017)</div>
+   <div id="projectbrief">(Version: 26 May 2017)</div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
           <div class="left">

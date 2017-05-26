@@ -1261,7 +1261,7 @@ _summary_, can be helpful for checking the indexes of the existing ones.
 
 2. By using the function `mol(atom)`, where _atom_ is the identifier of an existing [atom]. Such
 identifier must be tightly placed inside the parentheses (that is, without any spaces and/or tabs).
-Note that an active, atom-related [prefix/suffix] will NOT be applied automatically to _atom_.
+Note that an active, atom-related [prefix/suffix] will be applied automatically to _atom_.
 
 Except in a few special cases, the specified molecule must have already been instantiated (see the
 [Playmol Basics] section). In this case, the first set of atomic coordinates previously provided
@@ -1382,7 +1382,7 @@ will have at the moment of a `packmol action` command (see below).
 2. By using the function `mol(atom)`, where _atom_ is the identifier of an existing [atom]. Such
 identifier must be tightly placed inside the parentheses (that is, without any spaces and/or tabs).
 At the moment of a `packmol action` command, the function will return the index of the compound that
-contains the specified atom. Note that an active, atom-related [prefix/suffix] will NOT be applied
+contains the specified atom. Note that an active, atom-related [prefix/suffix] will be applied
 automatically to _atom_.
 
 The usage of each keyword _fix_, _copy_, or _pack_ is:

@@ -441,6 +441,7 @@ contains
         character :: dir(3) = ["x","y","z"]
         real(rb) :: lb(3), ub(3)
         if (narg /= 4) call error( "invalid align command" )
+        call me % atomfix % apply( arg(2) )
         imol = me % molecules % index(arg(2))
         do i = 3, 4
           if (len_trim(arg(i)) /= 1) call error( "invalid align command" )
@@ -627,6 +628,7 @@ contains
                 case default; call error( "invalid packmol command" )
               end select
               if (narg < iarg+nopts+1) call error( "invalid packmol command" )
+              call me % atomfix % apply( arg(iarg+1) )
               call me % packmol % list % add( nopts+2, arg(iarg:iarg+1+nopts), repeatable = .true. )
               imol = me % molecules % index( arg(iarg+1) )
               select case (arg(iarg+1))
