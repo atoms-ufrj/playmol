@@ -27,7 +27,6 @@ doc:
 clean:
 	rm -rf $(OBJDIR)
 	rm -rf $(BINDIR)
-	rm -rf $(DOCDIR)/html/
 	cd $(PACKMOL) && make clean
 
 install:

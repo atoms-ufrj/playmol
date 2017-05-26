@@ -1,11 +1,14 @@
-VERSION = 15.287
-
-all:
-	tar -zxvf packmol-$(VERSION).tar.gz
-	cd packmol && sed -i 's/\r//g' *.f90 && patch < ../packmol.patch && make && make lib
+all: packmol
+	make -C packmol/ lib
 	mv packmol/libpackmol.a ./
 
 clean:
+	rm -f libpackmol.a
+
+cleanall:
 	rm -rf packmol/
 	rm -f libpackmol.a
+
+packmol:
+	git clone https://github.com/atoms-ufrj/packmol
 

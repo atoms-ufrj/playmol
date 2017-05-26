@@ -289,9 +289,9 @@ contains
           do iatom = 1, natoms(ifile)
             D = diameter(ifile,iatom)
             if (abs((D - me%diameter)/me%diameter) > rbtol) then
-              write(unit,'("  atom ",A)') trim(int2str(iatom))
+              write(unit,'("  atoms ",A)') trim(int2str(iatom))
               write(unit,'("    radius ",A)') trim(real2str(0.5_rb*scaling*D))
-              write(unit,'("  end atom ")')
+              write(unit,'("  end atoms ")')
             end if
           end do
           write(unit,'("end structure")')
