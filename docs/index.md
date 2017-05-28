@@ -26,6 +26,10 @@ The sections of this manual are:
 
 https://groups.google.com/forum/#!forum/playmol-users
 
+### Online User's Manual:
+
+http://atoms.peq.coppe.ufrj.br/playmol
+
 @copyright GNU Public License.
 
 @author Charlles R. A. Abreu (abreu@eq.ufrj.br)<br>

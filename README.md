@@ -30,7 +30,7 @@ Online Manual
 
 The Playmol User Manual is available at:
 
-[http://atoms-ufrj.github.io/playmol/docs/html](http://atoms-ufrj.github.io/playmol/docs/html)
+[http://atoms.peq.coppe.ufrj.br/playmol](http://atoms.peq.coppe.ufrj.br/playmol)
 
 --------------------------------------------------------------------------------
 
