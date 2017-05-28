@@ -1,5 +1,27 @@
-FORT  = gfortran
-FOPTS = -O3 -march=native -ffast-math -funroll-loops -fstrict-aliasing -cpp -Wunused
+# Define DEBUG or FAST mode:
+#   Build the "fast" version with: `make` or `make DEBUG=0`
+#   Build the "debug" version with: `make DEBUG=1`
+DEBUG ?= 0
+
+# Installation prefix:
+PREFIX ?= /usr/local
+
+# Compilers and their basic options:
+FORT ?= gfortran
+BASIC_F_OPTS = -march=native -m64 -fPIC -fopenmp -cpp -fmax-errors=1
+
+# Option FAST (default):
+FAST_F_OPTS = -Ofast
+
+# Option DEBUG:
+DEBUG_F_OPTS = -Wall -Wno-maybe-uninitialized --coverage -g -Og #-fcheck=all -Ddebug
+
+# Checks chosen option:
+ifeq ($(DEBUG), 1)
+  FOPTS = $(BASIC_F_OPTS) $(DEBUG_F_OPTS)
+else
+  FOPTS = $(BASIC_F_OPTS) $(FAST_F_OPTS)
+endif
 
 SRCDIR  = ./src
 OBJDIR  = $(SRCDIR)/obj

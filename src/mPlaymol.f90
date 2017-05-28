@@ -63,9 +63,6 @@ type tPlaymol
   type(StrucList) :: link_list           = StrucList( "virtual link", 2, .true. )
   type(StrucList) :: angle_list          = StrucList( "angle", 3, .true. )
   type(StrucList) :: dihedral_list       = StrucList( "dihedral", 4, .true. )
-  type(StrucList) :: extra_bond_list     = StrucList( "extra bond", 2, .true. )
-  type(StrucList) :: extra_angle_list    = StrucList( "extra angle", 3, .true. )
-  type(StrucList) :: extra_dihedral_list = StrucList( "extra dihedral", 4, .true. )
   type(StrucList) :: improper_list       = StrucList( "improper", 4 )
   type(StrucList) :: body_list     = StrucList( "rigid body" )
   type(StrucList) :: atom_bodies         = StrucList( "atom body" )
@@ -369,32 +366,35 @@ contains
           case ("dihedral"); call extra_dihedral_command
           case default; call error( "invalid extra command" )
         end select
-        imol = str2int(me % molecules % list % parameters( arg(2:2) ))
-        do i = 2, narg
-          jmol = str2int(me % molecules % list % parameters( arg(i:i) ))
-          if (jmol /= imol) call error( "atoms", join(arg(2:narg)), "are not in the same molecule" )
-        end do
+        if (choice /= "bond") then
+          imol = str2int(me % molecules % list % parameters( arg(2:2) ))
+          do i = 2, narg
+            jmol = str2int(me % molecules % list % parameters( arg(i:i) ))
+            if (jmol /= imol) call error("atoms", join(arg(2:narg)), "are not in the same molecule")
+          end do
+        end if
       end subroutine extra_command
       !---------------------------------------------------------------------------------------------
       subroutine extra_bond_command
         call me % atomfix % apply( arg(2:3) )
-        call me % extra_bond_list % add( narg-1, arg(2:narg), me % atom_list )
+        call me % bond_list % add( narg-1, arg(2:narg), me % atom_list )
         if (narg /= 3) call error( "invalid extra bond command")
-        call me % extra_bond_list % handle( arg(2:3), me%atom_list, me%bond_type_list, 2 )
+        call me % bond_list % handle( arg(2:3), me%atom_list, me%bond_type_list, 2 )
+        call me % molecules % fuse( arg(2:3) )
       end subroutine extra_bond_command
       !---------------------------------------------------------------------------------------------
       subroutine extra_angle_command
         call me % atomfix % apply( arg(2:4) )
-        call me % extra_angle_list % add( narg-1, arg(2:narg), me % atom_list )
+        call me % angle_list % add( narg-1, arg(2:narg), me % atom_list )
         if (narg /= 4) call error( "invalid extra angle command")
-        call me % extra_angle_list % handle( arg(2:4), me%atom_list, me%angle_type_list, 2 )
+        call me % angle_list % handle( arg(2:4), me%atom_list, me%angle_type_list, 2 )
       end subroutine extra_angle_command
       !---------------------------------------------------------------------------------------------
       subroutine extra_dihedral_command
         call me % atomfix % apply( arg(2:5) )
-        call me % extra_dihedral_list % add( narg-1, arg(2:narg), me % atom_list )
+        call me % dihedral_list % add( narg-1, arg(2:narg), me % atom_list )
         if (narg /= 5) call error( "invalid extra dihedral command")
-        call me % extra_dihedral_list % handle( arg(2:5), me%atom_list, me%dihedral_type_list, 2 )
+        call me % dihedral_list % handle( arg(2:5), me%atom_list, me%dihedral_type_list, 2 )
       end subroutine extra_dihedral_command
       !---------------------------------------------------------------------------------------------
       subroutine improper_command
@@ -526,17 +526,14 @@ contains
         if (any(lists == 10)) call me % bond_list % destroy
         if (any(lists == 11)) call me % angle_list % destroy
         if (any(lists == 12)) call me % dihedral_list % destroy
-        if (any(lists == 13)) call me % extra_bond_list % destroy
-        if (any(lists == 14)) call me % extra_angle_list % destroy
-        if (any(lists == 15)) call me % extra_dihedral_list % destroy
-        if (any(lists == 16)) call me % improper_list % destroy
-        if (any(lists == 17)) call me % link_list % destroy
-        if (any(lists == 18)) call me % molecules % xyz % destroy
-        if (any(lists == 19)) call me % packmol % list % destroy
+        if (any(lists == 13)) call me % improper_list % destroy
+        if (any(lists == 14)) call me % link_list % destroy
+        if (any(lists == 15)) call me % molecules % xyz % destroy
+        if (any(lists == 16)) call me % packmol % list % destroy
         ! Lists automatically defined by Playmol:
-        if (any(lists == 20)) call me % molecules % bonds % destroy
-        if (any(lists == 21)) call me % molecules % list % destroy
-        if (any(lists == 22)) call me % atom_masses % destroy
+        if (any(lists == 17)) call me % molecules % bonds % destroy
+        if (any(lists == 18)) call me % molecules % list % destroy
+        if (any(lists == 19)) call me % atom_masses % destroy
       end subroutine reset_lists
       !---------------------------------------------------------------------------------------------
       subroutine reset_command
@@ -558,20 +555,17 @@ contains
             end do
         end select
         select case (arg(2))
-          case ("all");            call reset_lists( [(i,i=1,22)] )
-          case ("atom");           call reset_lists( [(i,i=8,22)] )
-          case ("charge");         call reset_lists( [9] )
-          case ("bond");           call reset_lists( [(i,i=10,17),20] )
-          case ("angle");          call reset_lists( [11,14] )
-          case ("dihedral");       call reset_lists( [12,15] )
-          case ("extra_bond");     call reset_lists( [13] )
-          case ("extra_angle");    call reset_lists( [14] )
-          case ("extra_dihedral"); call reset_lists( [15] )
-          case ("improper");       call reset_lists( [16] )
-          case ("link");           call reset_lists( [17] )
-          case ("xyz");            call reset_lists( [18] )
-          case ("packmol");        call reset_lists( [19] )
-          case default;            call error( "invalid reset command" )
+          case ("all");      call reset_lists( [(i,i=1,19)] )
+          case ("atom");     call reset_lists( [(i,i=8,19)] )
+          case ("charge");   call reset_lists( [9] )
+          case ("bond");     call reset_lists( [(i,i=10,14),17] )
+          case ("angle");    call reset_lists( [11] )
+          case ("dihedral"); call reset_lists( [12] )
+          case ("improper"); call reset_lists( [13] )
+          case ("link");     call reset_lists( [14] )
+          case ("xyz");      call reset_lists( [15] )
+          case ("packmol");  call reset_lists( [16] )
+          case default;      call error( "invalid reset command" )
         end select
       end subroutine reset_command
       !---------------------------------------------------------------------------------------------
@@ -892,9 +886,6 @@ contains
     call me % bond_list % print( unit )
     call me % angle_list % print( unit, comment = .true. )
     call me % dihedral_list % print( unit, comment = .true. )
-    call me % extra_bond_list % print( unit )
-    call me % extra_angle_list % print( unit )
-    call me % extra_dihedral_list % print( unit )
     call me % improper_list % print( unit )
     call me % link_list % print( unit )
     N = me % molecules % xyz % count

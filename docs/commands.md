@@ -21,8 +21,8 @@ physically meaningful values are those corresponding to [LAMMPS real units].
 | [charge]        | specifies the charge of a given atom                                      |
 | [bond]          | creates chemical bonds and automatically detects angles and dihedrals     |
 | [improper]      | creates an improper involving four given atoms or search for impropers    |
-| [body]          | selects a set of atoms to be marked as a single body                      |
 | [extra]         | creates an extra bond, angle, or dihedral involving given atoms           |
+| [body]          | selects a set of atoms to be marked as a single body                      |
 | [link]          | links two atoms (and fuses their molecules) without actually bonding them |
 | [unlink]        | removes an existing link (and splits the corresponding molecule)          |
 | [build]         | guesses atom positions from provided geometric information                |
@@ -814,8 +814,8 @@ or
 
 **Description**:
 
-This command creates an extra structure (bond, angle, dihedral) involving the specified atoms, which
-must all belong to the same molecule.
+This command creates an extra structure (bond, angle, dihedral) involving the specified atoms. In
+the case of an extra angle or extra dihedral, all specified atoms must  belong to the same molecule.
 
 The parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be
 provided, with no use of wildcard characters (* or ?). A corresponding structure type (that is,
@@ -1574,31 +1574,25 @@ in the table below.
 |    10 | bonds                                |
 |    11 | angles                               |
 |    12 | dihedrals                            |
-|    13 | extra bonds                          |
-|    14 | extra angles                         |
-|    15 | extra dihedrals                      |
-|    16 | impropers                            |
-|    17 | links                                |
-|    18 | atomic coordinates                   |
-|    19 | packmol fix/copy/pack specifications |
+|    13 | impropers                            |
+|    14 | links                                |
+|    15 | atomic coordinates                   |
+|    16 | packmol fix/copy/pack specifications |
 
 The parameter _list_ must be one of the following options:
 
-* __all__: deletes all lists previously created (_1_ to _19_).
-* __atom__: deletes the list of atoms and all its dependent lists (_8_ to _19_).
+* __all__: deletes all lists previously created (_1_ to _16_).
+* __atom__: deletes the list of atoms and all its dependent lists (_8_ to _16_).
 * __charge__: deletes the list of atomic charges (_9_).
-* __bond__: deletes the lists from _10_ to _17_ in the table above and resets all atoms as
+* __bond__: deletes the lists from _10_ to _14_ in the table above and resets all atoms as
 monoatomic molecules. The lists of coordinates and packmol specifications remain unchanged.
-* __angle__: deletes the lists of angles and extra angles (_11_ and _14_).
-* __dihedral__: deletes the lists of dihedrals and extra dihedrals (_12_ and _15_).
-* __extra_bond__: deletes the list of extra bonds (_13_).
-* __extra_angle__: deletes the list of extra angles (_14_).
-* __extra_dihedral__: deletes the list of extra dihedrals (_15_).
-* __improper__: deletes the list of impropers (_16_).
-* __link__: deletes the list of virtual links (_17_) and splits all molecules accordingly, as if
+* __angle__: deletes the lists of angles and extra angles (_11_).
+* __dihedral__: deletes the lists of dihedrals and extra dihedrals (_12_).
+* __improper__: deletes the list of impropers (_13_).
+* __link__: deletes the list of virtual links (_14_) and splits all molecules accordingly, as if
 the [unlink] command was issued individually for every link present in the list.
-* __xyz__: deletes the list of atomic coordinates (_18_).
-* __packmol__: deletes the list of [packmol fix/copy/pack specifications (_19_).
+* __xyz__: deletes the list of atomic coordinates (_15_).
+* __packmol__: deletes the list of [packmol fix/copy/pack specifications (_16_).
 
 **See also**:
 

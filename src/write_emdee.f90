@@ -44,22 +44,16 @@
                               me%atom_list, me%atom_type_list, n%mols, .true. )
 
     ! Bonds:
-    call me % bond_list % attach( me%extra_bond_list )
     call me % analyze_struct( bond, n%bonds, total%bonds, bond_types, &
                               me%bond_list, me%bond_type_list, n%mols, .true., atom )
-    call me % bond_list % detach( me%extra_bond_list )
 
     ! Angles:
-    call me % angle_list % attach( me%extra_angle_list )
     call me % analyze_struct( ang, n%angs, total%angs, ang_types, &
                               me%angle_list, me%angle_type_list, n%mols, .true., atom )
-    call me % angle_list % detach( me%extra_angle_list )
 
     ! Dihedrals:
-    call me % dihedral_list % attach( me%extra_dihedral_list )
     call me % analyze_struct( dih, n%dihs, total%dihs, dih_types, &
                               me%dihedral_list, me%dihedral_type_list, n%mols, .true., atom )
-    call me % dihedral_list % detach( me%extra_dihedral_list )
 
     ! Impropers:
     call me % analyze_struct( imp, n%imps, total%imps, imp_types, &

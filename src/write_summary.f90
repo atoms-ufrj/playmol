@@ -48,9 +48,6 @@
       call flush_data( unit, "atom", me % atom_list % count )
       call flush_data( unit, "bond", me % bond_list % count )
       call flush_data( unit, "virtual link", me % link_list % count )
-      call flush_data( unit, "extra bond", me % extra_bond_list % count )
-      call flush_data( unit, "extra angle", me % extra_angle_list % count )
-      call flush_data( unit, "extra dihedral", me % extra_dihedral_list % count )
       call flush_data( unit, "improper", me % improper_list % count )
       call flush_data( unit, "body", me % body_list % count )
       write(unit,'(/,A)') "Detected:"
