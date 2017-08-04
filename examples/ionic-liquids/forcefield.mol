@@ -6,6 +6,9 @@
 mass		N*		14.007
 mass		C*		12.011
 mass		H*		 1.008
+mass F* 0 # missing info
+mass S* 0 # missing info
+mass O* 0 # missing info
 
 # Dialkylimidazolium cation:
 
@@ -98,4 +101,3 @@ charge		CF*		  0.35
 charge		SB*		  1.02
 charge		OB*		 -0.53
 charge		NB*		 -0.66
-

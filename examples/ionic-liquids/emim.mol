@@ -1,8 +1,5 @@
 # ethyl-methyl-imidazolium ion (emim+):
 
-# Force field parameters:
-include		dialkylimidazolium.mol
-
 # Imidazolium ring:
 atom		NA1	NA	 # Nitrogen bonded to the methyl group
 atom		CR	CR	 # Carbon bonded to both nitrogens
@@ -59,8 +56,7 @@ improper	CR	CW2	NA2	C1E
 improper	NA2	CW1	CW2	HA2
 improper	CW2	NA1	CW1	HA1
 
-xyz
-
+build
 19
 # Ethyl-methyl-imidazolium:
 NA1	-0.671445 -1.685473  2.400065
@@ -82,4 +78,3 @@ CEE	 3.000581 -0.172090  1.459231
 HCE.1	 4.024584  0.044050  1.154596
 HCE.2	 2.310581  0.420312  0.858348
 HCE.3	 2.874160  0.080844  2.511914
-

@@ -1,0 +1,39 @@
+define      model as TIP4P
+define      density as .7 # g/cm³
+define          N as 500
+
+include     $model.mol
+
+atom_type   HW       $LJ_H
+atom_type   OW       $LJ_O
+
+atom_type   CH4       0 #XXX
+mass        CH4       16 #XXX
+
+mass        HW       1.008
+mass        OW       15.9994
+
+bond_type   HW OW    $bond_OH
+angle_type  HW OW HW $angle_HOH
+
+for i from 1 to 46
+  atom        H1_W_$i HW    $charge_H
+  atom        O_W_$i  OW    $charge_O
+  atom        H2_W_$i HW    $charge_H
+  bond        O_W_$i  H1_W_$i H2_W_$i
+next
+
+for i from 1 to 8
+  atom        CH4_$i CH4    0
+next
+
+box         density {0.602214*$density} # Da/Å³
+
+build uc-water.mol
+build uc-methane.mol
+
+write       lmp/models water_$model.lmp
+write       lammpstrj water_$model.lammpstrj
+write       xyz water_$model.xyz
+
+write    summary

@@ -1,0 +1,45 @@
+define N     as 5
+define FF    as nerd
+define seed  as 3467
+define nmols as 500
+define rho   as 0.6 # g/cm³
+define temp  as 180 # K
+
+mass CH4 16.04242 # Da
+mass CH3 15.03450 # Da
+mass CH2 14.02658 # Da
+
+include $FF.mol
+
+if {$N == 1} then
+  atom C1 CH4
+else
+  atom C1 CH3
+  for i from 2 to {$N-1}
+    atom C$i CH2
+    bond C$i C{$i-1}
+  next
+  atom C$N CH3
+  bond C$N C{$N-1}
+endif
+
+if {$N > 3} then
+  build
+    $N
+    C1 0 0 0
+    C2 C1 $L
+    C3 C2 $L C1 $theta
+    for i from 4 to $N
+      C$i C{$i-1} $L C{$i-2} $theta C{$i-3} $phi
+    next
+endif
+
+box      density {0.602214*$rho} # Da/Å³
+align    mol(C1) x y
+packmol  seed $seed retry 0.95 copy mol(C1) $nmols action execute
+
+write    lmp/models C${N}_$FF.lmp
+write    lammpstrj C${N}_$FF.lammpstrj
+write    xyz C${N}_$FF.xyz
+
+write    summary
