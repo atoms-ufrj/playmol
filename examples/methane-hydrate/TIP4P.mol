@@ -1,0 +1,11 @@
+define LJ_H      as  0.0000 0.0000 # XXX
+define LJ_O      as  0.1520 3.1507 # XXX
+
+define bond_OH_l0 as 0.9572 # XXX
+define bond_OH   as  553.00 $bond_OH_l0 # XXX
+
+define angle_HOH_theta0 as 104.52 # XXX
+define angle_HOH as  100.00 $angle_HOH_theta0 # XXX
+
+define charge_H  as  0.417 # XXX
+define charge_O  as -0.834 # XXX

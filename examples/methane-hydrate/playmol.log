@@ -1,0 +1,1747 @@
+Adding variable model with parameters TIP4P
+Adding variable density with parameters .7
+Adding variable N with parameters 500
+Including file TIP4P.mol
+Adding variable LJ_H with parameters 0.0000 0.0000
+Adding variable LJ_O with parameters 0.1520 3.1507
+Adding variable bond_OH_l0 with parameters 0.9572
+Adding variable bond_OH with parameters 553.00 0.9572
+Adding variable angle_HOH_theta0 with parameters 104.52
+Adding variable angle_HOH with parameters 100.00 104.52
+Adding variable charge_H with parameters 0.417
+Adding variable charge_O with parameters -0.834
+Adding atom type HW with parameters 0.0000 0.0000
+Adding atom type OW with parameters 0.1520 3.1507
+Adding atom type CH4 with parameters 0
+Adding mass CH4 with parameters 16
+Adding mass HW with parameters 1.008
+Adding mass OW with parameters 15.9994
+Adding bond type HW OW with parameters 553.00 0.9572
+Adding angle type HW OW HW with parameters 100.00 104.52
+Adding variable i with parameters 1
+Adding atom H1_W_1 with parameters HW
+Adding charge H1_W_1 with parameters 0.417
+Adding molecule H1_W_1 with parameters 1
+Adding atom O_W_1 with parameters OW
+Adding charge O_W_1 with parameters -0.834
+Adding molecule O_W_1 with parameters 2
+Adding atom H2_W_1 with parameters HW
+Adding charge H2_W_1 with parameters 0.417
+Adding molecule H2_W_1 with parameters 3
+Adding bond O_W_1 H1_W_1
+Fusing molecule 2 to molecule 1
+Lowering indices of molecules 3 to 3
+Adding bond O_W_1 H2_W_1
+Fusing molecule 2 to molecule 1
+Lowering indices of molecules 3 to 2
+Adding angle H1_W_1 O_W_1 H2_W_1
+Redefining variable i as 2
+Adding atom H1_W_2 with parameters HW
+Adding charge H1_W_2 with parameters 0.417
+Adding molecule H1_W_2 with parameters 2
+Adding atom O_W_2 with parameters OW
+Adding charge O_W_2 with parameters -0.834
+Adding molecule O_W_2 with parameters 3
+Adding atom H2_W_2 with parameters HW
+Adding charge H2_W_2 with parameters 0.417
+Adding molecule H2_W_2 with parameters 4
+Adding bond O_W_2 H1_W_2
+Fusing molecule 3 to molecule 2
+Lowering indices of molecules 4 to 4
+Adding bond O_W_2 H2_W_2
+Fusing molecule 3 to molecule 2
+Lowering indices of molecules 4 to 3
+Adding angle H1_W_2 O_W_2 H2_W_2
+Redefining variable i as 3
+Adding atom H1_W_3 with parameters HW
+Adding charge H1_W_3 with parameters 0.417
+Adding molecule H1_W_3 with parameters 3
+Adding atom O_W_3 with parameters OW
+Adding charge O_W_3 with parameters -0.834
+Adding molecule O_W_3 with parameters 4
+Adding atom H2_W_3 with parameters HW
+Adding charge H2_W_3 with parameters 0.417
+Adding molecule H2_W_3 with parameters 5
+Adding bond O_W_3 H1_W_3
+Fusing molecule 4 to molecule 3
+Lowering indices of molecules 5 to 5
+Adding bond O_W_3 H2_W_3
+Fusing molecule 4 to molecule 3
+Lowering indices of molecules 5 to 4
+Adding angle H1_W_3 O_W_3 H2_W_3
+Redefining variable i as 4
+Adding atom H1_W_4 with parameters HW
+Adding charge H1_W_4 with parameters 0.417
+Adding molecule H1_W_4 with parameters 4
+Adding atom O_W_4 with parameters OW
+Adding charge O_W_4 with parameters -0.834
+Adding molecule O_W_4 with parameters 5
+Adding atom H2_W_4 with parameters HW
+Adding charge H2_W_4 with parameters 0.417
+Adding molecule H2_W_4 with parameters 6
+Adding bond O_W_4 H1_W_4
+Fusing molecule 5 to molecule 4
+Lowering indices of molecules 6 to 6
+Adding bond O_W_4 H2_W_4
+Fusing molecule 5 to molecule 4
+Lowering indices of molecules 6 to 5
+Adding angle H1_W_4 O_W_4 H2_W_4
+Redefining variable i as 5
+Adding atom H1_W_5 with parameters HW
+Adding charge H1_W_5 with parameters 0.417
+Adding molecule H1_W_5 with parameters 5
+Adding atom O_W_5 with parameters OW
+Adding charge O_W_5 with parameters -0.834
+Adding molecule O_W_5 with parameters 6
+Adding atom H2_W_5 with parameters HW
+Adding charge H2_W_5 with parameters 0.417
+Adding molecule H2_W_5 with parameters 7
+Adding bond O_W_5 H1_W_5
+Fusing molecule 6 to molecule 5
+Lowering indices of molecules 7 to 7
+Adding bond O_W_5 H2_W_5
+Fusing molecule 6 to molecule 5
+Lowering indices of molecules 7 to 6
+Adding angle H1_W_5 O_W_5 H2_W_5
+Redefining variable i as 6
+Adding atom H1_W_6 with parameters HW
+Adding charge H1_W_6 with parameters 0.417
+Adding molecule H1_W_6 with parameters 6
+Adding atom O_W_6 with parameters OW
+Adding charge O_W_6 with parameters -0.834
+Adding molecule O_W_6 with parameters 7
+Adding atom H2_W_6 with parameters HW
+Adding charge H2_W_6 with parameters 0.417
+Adding molecule H2_W_6 with parameters 8
+Adding bond O_W_6 H1_W_6
+Fusing molecule 7 to molecule 6
+Lowering indices of molecules 8 to 8
+Adding bond O_W_6 H2_W_6
+Fusing molecule 7 to molecule 6
+Lowering indices of molecules 8 to 7
+Adding angle H1_W_6 O_W_6 H2_W_6
+Redefining variable i as 7
+Adding atom H1_W_7 with parameters HW
+Adding charge H1_W_7 with parameters 0.417
+Adding molecule H1_W_7 with parameters 7
+Adding atom O_W_7 with parameters OW
+Adding charge O_W_7 with parameters -0.834
+Adding molecule O_W_7 with parameters 8
+Adding atom H2_W_7 with parameters HW
+Adding charge H2_W_7 with parameters 0.417
+Adding molecule H2_W_7 with parameters 9
+Adding bond O_W_7 H1_W_7
+Fusing molecule 8 to molecule 7
+Lowering indices of molecules 9 to 9
+Adding bond O_W_7 H2_W_7
+Fusing molecule 8 to molecule 7
+Lowering indices of molecules 9 to 8
+Adding angle H1_W_7 O_W_7 H2_W_7
+Redefining variable i as 8
+Adding atom H1_W_8 with parameters HW
+Adding charge H1_W_8 with parameters 0.417
+Adding molecule H1_W_8 with parameters 8
+Adding atom O_W_8 with parameters OW
+Adding charge O_W_8 with parameters -0.834
+Adding molecule O_W_8 with parameters 9
+Adding atom H2_W_8 with parameters HW
+Adding charge H2_W_8 with parameters 0.417
+Adding molecule H2_W_8 with parameters 10
+Adding bond O_W_8 H1_W_8
+Fusing molecule 9 to molecule 8
+Lowering indices of molecules 10 to 10
+Adding bond O_W_8 H2_W_8
+Fusing molecule 9 to molecule 8
+Lowering indices of molecules 10 to 9
+Adding angle H1_W_8 O_W_8 H2_W_8
+Redefining variable i as 9
+Adding atom H1_W_9 with parameters HW
+Adding charge H1_W_9 with parameters 0.417
+Adding molecule H1_W_9 with parameters 9
+Adding atom O_W_9 with parameters OW
+Adding charge O_W_9 with parameters -0.834
+Adding molecule O_W_9 with parameters 10
+Adding atom H2_W_9 with parameters HW
+Adding charge H2_W_9 with parameters 0.417
+Adding molecule H2_W_9 with parameters 11
+Adding bond O_W_9 H1_W_9
+Fusing molecule 10 to molecule 9
+Lowering indices of molecules 11 to 11
+Adding bond O_W_9 H2_W_9
+Fusing molecule 10 to molecule 9
+Lowering indices of molecules 11 to 10
+Adding angle H1_W_9 O_W_9 H2_W_9
+Redefining variable i as 10
+Adding atom H1_W_10 with parameters HW
+Adding charge H1_W_10 with parameters 0.417
+Adding molecule H1_W_10 with parameters 10
+Adding atom O_W_10 with parameters OW
+Adding charge O_W_10 with parameters -0.834
+Adding molecule O_W_10 with parameters 11
+Adding atom H2_W_10 with parameters HW
+Adding charge H2_W_10 with parameters 0.417
+Adding molecule H2_W_10 with parameters 12
+Adding bond O_W_10 H1_W_10
+Fusing molecule 11 to molecule 10
+Lowering indices of molecules 12 to 12
+Adding bond O_W_10 H2_W_10
+Fusing molecule 11 to molecule 10
+Lowering indices of molecules 12 to 11
+Adding angle H1_W_10 O_W_10 H2_W_10
+Redefining variable i as 11
+Adding atom H1_W_11 with parameters HW
+Adding charge H1_W_11 with parameters 0.417
+Adding molecule H1_W_11 with parameters 11
+Adding atom O_W_11 with parameters OW
+Adding charge O_W_11 with parameters -0.834
+Adding molecule O_W_11 with parameters 12
+Adding atom H2_W_11 with parameters HW
+Adding charge H2_W_11 with parameters 0.417
+Adding molecule H2_W_11 with parameters 13
+Adding bond O_W_11 H1_W_11
+Fusing molecule 12 to molecule 11
+Lowering indices of molecules 13 to 13
+Adding bond O_W_11 H2_W_11
+Fusing molecule 12 to molecule 11
+Lowering indices of molecules 13 to 12
+Adding angle H1_W_11 O_W_11 H2_W_11
+Redefining variable i as 12
+Adding atom H1_W_12 with parameters HW
+Adding charge H1_W_12 with parameters 0.417
+Adding molecule H1_W_12 with parameters 12
+Adding atom O_W_12 with parameters OW
+Adding charge O_W_12 with parameters -0.834
+Adding molecule O_W_12 with parameters 13
+Adding atom H2_W_12 with parameters HW
+Adding charge H2_W_12 with parameters 0.417
+Adding molecule H2_W_12 with parameters 14
+Adding bond O_W_12 H1_W_12
+Fusing molecule 13 to molecule 12
+Lowering indices of molecules 14 to 14
+Adding bond O_W_12 H2_W_12
+Fusing molecule 13 to molecule 12
+Lowering indices of molecules 14 to 13
+Adding angle H1_W_12 O_W_12 H2_W_12
+Redefining variable i as 13
+Adding atom H1_W_13 with parameters HW
+Adding charge H1_W_13 with parameters 0.417
+Adding molecule H1_W_13 with parameters 13
+Adding atom O_W_13 with parameters OW
+Adding charge O_W_13 with parameters -0.834
+Adding molecule O_W_13 with parameters 14
+Adding atom H2_W_13 with parameters HW
+Adding charge H2_W_13 with parameters 0.417
+Adding molecule H2_W_13 with parameters 15
+Adding bond O_W_13 H1_W_13
+Fusing molecule 14 to molecule 13
+Lowering indices of molecules 15 to 15
+Adding bond O_W_13 H2_W_13
+Fusing molecule 14 to molecule 13
+Lowering indices of molecules 15 to 14
+Adding angle H1_W_13 O_W_13 H2_W_13
+Redefining variable i as 14
+Adding atom H1_W_14 with parameters HW
+Adding charge H1_W_14 with parameters 0.417
+Adding molecule H1_W_14 with parameters 14
+Adding atom O_W_14 with parameters OW
+Adding charge O_W_14 with parameters -0.834
+Adding molecule O_W_14 with parameters 15
+Adding atom H2_W_14 with parameters HW
+Adding charge H2_W_14 with parameters 0.417
+Adding molecule H2_W_14 with parameters 16
+Adding bond O_W_14 H1_W_14
+Fusing molecule 15 to molecule 14
+Lowering indices of molecules 16 to 16
+Adding bond O_W_14 H2_W_14
+Fusing molecule 15 to molecule 14
+Lowering indices of molecules 16 to 15
+Adding angle H1_W_14 O_W_14 H2_W_14
+Redefining variable i as 15
+Adding atom H1_W_15 with parameters HW
+Adding charge H1_W_15 with parameters 0.417
+Adding molecule H1_W_15 with parameters 15
+Adding atom O_W_15 with parameters OW
+Adding charge O_W_15 with parameters -0.834
+Adding molecule O_W_15 with parameters 16
+Adding atom H2_W_15 with parameters HW
+Adding charge H2_W_15 with parameters 0.417
+Adding molecule H2_W_15 with parameters 17
+Adding bond O_W_15 H1_W_15
+Fusing molecule 16 to molecule 15
+Lowering indices of molecules 17 to 17
+Adding bond O_W_15 H2_W_15
+Fusing molecule 16 to molecule 15
+Lowering indices of molecules 17 to 16
+Adding angle H1_W_15 O_W_15 H2_W_15
+Redefining variable i as 16
+Adding atom H1_W_16 with parameters HW
+Adding charge H1_W_16 with parameters 0.417
+Adding molecule H1_W_16 with parameters 16
+Adding atom O_W_16 with parameters OW
+Adding charge O_W_16 with parameters -0.834
+Adding molecule O_W_16 with parameters 17
+Adding atom H2_W_16 with parameters HW
+Adding charge H2_W_16 with parameters 0.417
+Adding molecule H2_W_16 with parameters 18
+Adding bond O_W_16 H1_W_16
+Fusing molecule 17 to molecule 16
+Lowering indices of molecules 18 to 18
+Adding bond O_W_16 H2_W_16
+Fusing molecule 17 to molecule 16
+Lowering indices of molecules 18 to 17
+Adding angle H1_W_16 O_W_16 H2_W_16
+Redefining variable i as 17
+Adding atom H1_W_17 with parameters HW
+Adding charge H1_W_17 with parameters 0.417
+Adding molecule H1_W_17 with parameters 17
+Adding atom O_W_17 with parameters OW
+Adding charge O_W_17 with parameters -0.834
+Adding molecule O_W_17 with parameters 18
+Adding atom H2_W_17 with parameters HW
+Adding charge H2_W_17 with parameters 0.417
+Adding molecule H2_W_17 with parameters 19
+Adding bond O_W_17 H1_W_17
+Fusing molecule 18 to molecule 17
+Lowering indices of molecules 19 to 19
+Adding bond O_W_17 H2_W_17
+Fusing molecule 18 to molecule 17
+Lowering indices of molecules 19 to 18
+Adding angle H1_W_17 O_W_17 H2_W_17
+Redefining variable i as 18
+Adding atom H1_W_18 with parameters HW
+Adding charge H1_W_18 with parameters 0.417
+Adding molecule H1_W_18 with parameters 18
+Adding atom O_W_18 with parameters OW
+Adding charge O_W_18 with parameters -0.834
+Adding molecule O_W_18 with parameters 19
+Adding atom H2_W_18 with parameters HW
+Adding charge H2_W_18 with parameters 0.417
+Adding molecule H2_W_18 with parameters 20
+Adding bond O_W_18 H1_W_18
+Fusing molecule 19 to molecule 18
+Lowering indices of molecules 20 to 20
+Adding bond O_W_18 H2_W_18
+Fusing molecule 19 to molecule 18
+Lowering indices of molecules 20 to 19
+Adding angle H1_W_18 O_W_18 H2_W_18
+Redefining variable i as 19
+Adding atom H1_W_19 with parameters HW
+Adding charge H1_W_19 with parameters 0.417
+Adding molecule H1_W_19 with parameters 19
+Adding atom O_W_19 with parameters OW
+Adding charge O_W_19 with parameters -0.834
+Adding molecule O_W_19 with parameters 20
+Adding atom H2_W_19 with parameters HW
+Adding charge H2_W_19 with parameters 0.417
+Adding molecule H2_W_19 with parameters 21
+Adding bond O_W_19 H1_W_19
+Fusing molecule 20 to molecule 19
+Lowering indices of molecules 21 to 21
+Adding bond O_W_19 H2_W_19
+Fusing molecule 20 to molecule 19
+Lowering indices of molecules 21 to 20
+Adding angle H1_W_19 O_W_19 H2_W_19
+Redefining variable i as 20
+Adding atom H1_W_20 with parameters HW
+Adding charge H1_W_20 with parameters 0.417
+Adding molecule H1_W_20 with parameters 20
+Adding atom O_W_20 with parameters OW
+Adding charge O_W_20 with parameters -0.834
+Adding molecule O_W_20 with parameters 21
+Adding atom H2_W_20 with parameters HW
+Adding charge H2_W_20 with parameters 0.417
+Adding molecule H2_W_20 with parameters 22
+Adding bond O_W_20 H1_W_20
+Fusing molecule 21 to molecule 20
+Lowering indices of molecules 22 to 22
+Adding bond O_W_20 H2_W_20
+Fusing molecule 21 to molecule 20
+Lowering indices of molecules 22 to 21
+Adding angle H1_W_20 O_W_20 H2_W_20
+Redefining variable i as 21
+Adding atom H1_W_21 with parameters HW
+Adding charge H1_W_21 with parameters 0.417
+Adding molecule H1_W_21 with parameters 21
+Adding atom O_W_21 with parameters OW
+Adding charge O_W_21 with parameters -0.834
+Adding molecule O_W_21 with parameters 22
+Adding atom H2_W_21 with parameters HW
+Adding charge H2_W_21 with parameters 0.417
+Adding molecule H2_W_21 with parameters 23
+Adding bond O_W_21 H1_W_21
+Fusing molecule 22 to molecule 21
+Lowering indices of molecules 23 to 23
+Adding bond O_W_21 H2_W_21
+Fusing molecule 22 to molecule 21
+Lowering indices of molecules 23 to 22
+Adding angle H1_W_21 O_W_21 H2_W_21
+Redefining variable i as 22
+Adding atom H1_W_22 with parameters HW
+Adding charge H1_W_22 with parameters 0.417
+Adding molecule H1_W_22 with parameters 22
+Adding atom O_W_22 with parameters OW
+Adding charge O_W_22 with parameters -0.834
+Adding molecule O_W_22 with parameters 23
+Adding atom H2_W_22 with parameters HW
+Adding charge H2_W_22 with parameters 0.417
+Adding molecule H2_W_22 with parameters 24
+Adding bond O_W_22 H1_W_22
+Fusing molecule 23 to molecule 22
+Lowering indices of molecules 24 to 24
+Adding bond O_W_22 H2_W_22
+Fusing molecule 23 to molecule 22
+Lowering indices of molecules 24 to 23
+Adding angle H1_W_22 O_W_22 H2_W_22
+Redefining variable i as 23
+Adding atom H1_W_23 with parameters HW
+Adding charge H1_W_23 with parameters 0.417
+Adding molecule H1_W_23 with parameters 23
+Adding atom O_W_23 with parameters OW
+Adding charge O_W_23 with parameters -0.834
+Adding molecule O_W_23 with parameters 24
+Adding atom H2_W_23 with parameters HW
+Adding charge H2_W_23 with parameters 0.417
+Adding molecule H2_W_23 with parameters 25
+Adding bond O_W_23 H1_W_23
+Fusing molecule 24 to molecule 23
+Lowering indices of molecules 25 to 25
+Adding bond O_W_23 H2_W_23
+Fusing molecule 24 to molecule 23
+Lowering indices of molecules 25 to 24
+Adding angle H1_W_23 O_W_23 H2_W_23
+Redefining variable i as 24
+Adding atom H1_W_24 with parameters HW
+Adding charge H1_W_24 with parameters 0.417
+Adding molecule H1_W_24 with parameters 24
+Adding atom O_W_24 with parameters OW
+Adding charge O_W_24 with parameters -0.834
+Adding molecule O_W_24 with parameters 25
+Adding atom H2_W_24 with parameters HW
+Adding charge H2_W_24 with parameters 0.417
+Adding molecule H2_W_24 with parameters 26
+Adding bond O_W_24 H1_W_24
+Fusing molecule 25 to molecule 24
+Lowering indices of molecules 26 to 26
+Adding bond O_W_24 H2_W_24
+Fusing molecule 25 to molecule 24
+Lowering indices of molecules 26 to 25
+Adding angle H1_W_24 O_W_24 H2_W_24
+Redefining variable i as 25
+Adding atom H1_W_25 with parameters HW
+Adding charge H1_W_25 with parameters 0.417
+Adding molecule H1_W_25 with parameters 25
+Adding atom O_W_25 with parameters OW
+Adding charge O_W_25 with parameters -0.834
+Adding molecule O_W_25 with parameters 26
+Adding atom H2_W_25 with parameters HW
+Adding charge H2_W_25 with parameters 0.417
+Adding molecule H2_W_25 with parameters 27
+Adding bond O_W_25 H1_W_25
+Fusing molecule 26 to molecule 25
+Lowering indices of molecules 27 to 27
+Adding bond O_W_25 H2_W_25
+Fusing molecule 26 to molecule 25
+Lowering indices of molecules 27 to 26
+Adding angle H1_W_25 O_W_25 H2_W_25
+Redefining variable i as 26
+Adding atom H1_W_26 with parameters HW
+Adding charge H1_W_26 with parameters 0.417
+Adding molecule H1_W_26 with parameters 26
+Adding atom O_W_26 with parameters OW
+Adding charge O_W_26 with parameters -0.834
+Adding molecule O_W_26 with parameters 27
+Adding atom H2_W_26 with parameters HW
+Adding charge H2_W_26 with parameters 0.417
+Adding molecule H2_W_26 with parameters 28
+Adding bond O_W_26 H1_W_26
+Fusing molecule 27 to molecule 26
+Lowering indices of molecules 28 to 28
+Adding bond O_W_26 H2_W_26
+Fusing molecule 27 to molecule 26
+Lowering indices of molecules 28 to 27
+Adding angle H1_W_26 O_W_26 H2_W_26
+Redefining variable i as 27
+Adding atom H1_W_27 with parameters HW
+Adding charge H1_W_27 with parameters 0.417
+Adding molecule H1_W_27 with parameters 27
+Adding atom O_W_27 with parameters OW
+Adding charge O_W_27 with parameters -0.834
+Adding molecule O_W_27 with parameters 28
+Adding atom H2_W_27 with parameters HW
+Adding charge H2_W_27 with parameters 0.417
+Adding molecule H2_W_27 with parameters 29
+Adding bond O_W_27 H1_W_27
+Fusing molecule 28 to molecule 27
+Lowering indices of molecules 29 to 29
+Adding bond O_W_27 H2_W_27
+Fusing molecule 28 to molecule 27
+Lowering indices of molecules 29 to 28
+Adding angle H1_W_27 O_W_27 H2_W_27
+Redefining variable i as 28
+Adding atom H1_W_28 with parameters HW
+Adding charge H1_W_28 with parameters 0.417
+Adding molecule H1_W_28 with parameters 28
+Adding atom O_W_28 with parameters OW
+Adding charge O_W_28 with parameters -0.834
+Adding molecule O_W_28 with parameters 29
+Adding atom H2_W_28 with parameters HW
+Adding charge H2_W_28 with parameters 0.417
+Adding molecule H2_W_28 with parameters 30
+Adding bond O_W_28 H1_W_28
+Fusing molecule 29 to molecule 28
+Lowering indices of molecules 30 to 30
+Adding bond O_W_28 H2_W_28
+Fusing molecule 29 to molecule 28
+Lowering indices of molecules 30 to 29
+Adding angle H1_W_28 O_W_28 H2_W_28
+Redefining variable i as 29
+Adding atom H1_W_29 with parameters HW
+Adding charge H1_W_29 with parameters 0.417
+Adding molecule H1_W_29 with parameters 29
+Adding atom O_W_29 with parameters OW
+Adding charge O_W_29 with parameters -0.834
+Adding molecule O_W_29 with parameters 30
+Adding atom H2_W_29 with parameters HW
+Adding charge H2_W_29 with parameters 0.417
+Adding molecule H2_W_29 with parameters 31
+Adding bond O_W_29 H1_W_29
+Fusing molecule 30 to molecule 29
+Lowering indices of molecules 31 to 31
+Adding bond O_W_29 H2_W_29
+Fusing molecule 30 to molecule 29
+Lowering indices of molecules 31 to 30
+Adding angle H1_W_29 O_W_29 H2_W_29
+Redefining variable i as 30
+Adding atom H1_W_30 with parameters HW
+Adding charge H1_W_30 with parameters 0.417
+Adding molecule H1_W_30 with parameters 30
+Adding atom O_W_30 with parameters OW
+Adding charge O_W_30 with parameters -0.834
+Adding molecule O_W_30 with parameters 31
+Adding atom H2_W_30 with parameters HW
+Adding charge H2_W_30 with parameters 0.417
+Adding molecule H2_W_30 with parameters 32
+Adding bond O_W_30 H1_W_30
+Fusing molecule 31 to molecule 30
+Lowering indices of molecules 32 to 32
+Adding bond O_W_30 H2_W_30
+Fusing molecule 31 to molecule 30
+Lowering indices of molecules 32 to 31
+Adding angle H1_W_30 O_W_30 H2_W_30
+Redefining variable i as 31
+Adding atom H1_W_31 with parameters HW
+Adding charge H1_W_31 with parameters 0.417
+Adding molecule H1_W_31 with parameters 31
+Adding atom O_W_31 with parameters OW
+Adding charge O_W_31 with parameters -0.834
+Adding molecule O_W_31 with parameters 32
+Adding atom H2_W_31 with parameters HW
+Adding charge H2_W_31 with parameters 0.417
+Adding molecule H2_W_31 with parameters 33
+Adding bond O_W_31 H1_W_31
+Fusing molecule 32 to molecule 31
+Lowering indices of molecules 33 to 33
+Adding bond O_W_31 H2_W_31
+Fusing molecule 32 to molecule 31
+Lowering indices of molecules 33 to 32
+Adding angle H1_W_31 O_W_31 H2_W_31
+Redefining variable i as 32
+Adding atom H1_W_32 with parameters HW
+Adding charge H1_W_32 with parameters 0.417
+Adding molecule H1_W_32 with parameters 32
+Adding atom O_W_32 with parameters OW
+Adding charge O_W_32 with parameters -0.834
+Adding molecule O_W_32 with parameters 33
+Adding atom H2_W_32 with parameters HW
+Adding charge H2_W_32 with parameters 0.417
+Adding molecule H2_W_32 with parameters 34
+Adding bond O_W_32 H1_W_32
+Fusing molecule 33 to molecule 32
+Lowering indices of molecules 34 to 34
+Adding bond O_W_32 H2_W_32
+Fusing molecule 33 to molecule 32
+Lowering indices of molecules 34 to 33
+Adding angle H1_W_32 O_W_32 H2_W_32
+Redefining variable i as 33
+Adding atom H1_W_33 with parameters HW
+Adding charge H1_W_33 with parameters 0.417
+Adding molecule H1_W_33 with parameters 33
+Adding atom O_W_33 with parameters OW
+Adding charge O_W_33 with parameters -0.834
+Adding molecule O_W_33 with parameters 34
+Adding atom H2_W_33 with parameters HW
+Adding charge H2_W_33 with parameters 0.417
+Adding molecule H2_W_33 with parameters 35
+Adding bond O_W_33 H1_W_33
+Fusing molecule 34 to molecule 33
+Lowering indices of molecules 35 to 35
+Adding bond O_W_33 H2_W_33
+Fusing molecule 34 to molecule 33
+Lowering indices of molecules 35 to 34
+Adding angle H1_W_33 O_W_33 H2_W_33
+Redefining variable i as 34
+Adding atom H1_W_34 with parameters HW
+Adding charge H1_W_34 with parameters 0.417
+Adding molecule H1_W_34 with parameters 34
+Adding atom O_W_34 with parameters OW
+Adding charge O_W_34 with parameters -0.834
+Adding molecule O_W_34 with parameters 35
+Adding atom H2_W_34 with parameters HW
+Adding charge H2_W_34 with parameters 0.417
+Adding molecule H2_W_34 with parameters 36
+Adding bond O_W_34 H1_W_34
+Fusing molecule 35 to molecule 34
+Lowering indices of molecules 36 to 36
+Adding bond O_W_34 H2_W_34
+Fusing molecule 35 to molecule 34
+Lowering indices of molecules 36 to 35
+Adding angle H1_W_34 O_W_34 H2_W_34
+Redefining variable i as 35
+Adding atom H1_W_35 with parameters HW
+Adding charge H1_W_35 with parameters 0.417
+Adding molecule H1_W_35 with parameters 35
+Adding atom O_W_35 with parameters OW
+Adding charge O_W_35 with parameters -0.834
+Adding molecule O_W_35 with parameters 36
+Adding atom H2_W_35 with parameters HW
+Adding charge H2_W_35 with parameters 0.417
+Adding molecule H2_W_35 with parameters 37
+Adding bond O_W_35 H1_W_35
+Fusing molecule 36 to molecule 35
+Lowering indices of molecules 37 to 37
+Adding bond O_W_35 H2_W_35
+Fusing molecule 36 to molecule 35
+Lowering indices of molecules 37 to 36
+Adding angle H1_W_35 O_W_35 H2_W_35
+Redefining variable i as 36
+Adding atom H1_W_36 with parameters HW
+Adding charge H1_W_36 with parameters 0.417
+Adding molecule H1_W_36 with parameters 36
+Adding atom O_W_36 with parameters OW
+Adding charge O_W_36 with parameters -0.834
+Adding molecule O_W_36 with parameters 37
+Adding atom H2_W_36 with parameters HW
+Adding charge H2_W_36 with parameters 0.417
+Adding molecule H2_W_36 with parameters 38
+Adding bond O_W_36 H1_W_36
+Fusing molecule 37 to molecule 36
+Lowering indices of molecules 38 to 38
+Adding bond O_W_36 H2_W_36
+Fusing molecule 37 to molecule 36
+Lowering indices of molecules 38 to 37
+Adding angle H1_W_36 O_W_36 H2_W_36
+Redefining variable i as 37
+Adding atom H1_W_37 with parameters HW
+Adding charge H1_W_37 with parameters 0.417
+Adding molecule H1_W_37 with parameters 37
+Adding atom O_W_37 with parameters OW
+Adding charge O_W_37 with parameters -0.834
+Adding molecule O_W_37 with parameters 38
+Adding atom H2_W_37 with parameters HW
+Adding charge H2_W_37 with parameters 0.417
+Adding molecule H2_W_37 with parameters 39
+Adding bond O_W_37 H1_W_37
+Fusing molecule 38 to molecule 37
+Lowering indices of molecules 39 to 39
+Adding bond O_W_37 H2_W_37
+Fusing molecule 38 to molecule 37
+Lowering indices of molecules 39 to 38
+Adding angle H1_W_37 O_W_37 H2_W_37
+Redefining variable i as 38
+Adding atom H1_W_38 with parameters HW
+Adding charge H1_W_38 with parameters 0.417
+Adding molecule H1_W_38 with parameters 38
+Adding atom O_W_38 with parameters OW
+Adding charge O_W_38 with parameters -0.834
+Adding molecule O_W_38 with parameters 39
+Adding atom H2_W_38 with parameters HW
+Adding charge H2_W_38 with parameters 0.417
+Adding molecule H2_W_38 with parameters 40
+Adding bond O_W_38 H1_W_38
+Fusing molecule 39 to molecule 38
+Lowering indices of molecules 40 to 40
+Adding bond O_W_38 H2_W_38
+Fusing molecule 39 to molecule 38
+Lowering indices of molecules 40 to 39
+Adding angle H1_W_38 O_W_38 H2_W_38
+Redefining variable i as 39
+Adding atom H1_W_39 with parameters HW
+Adding charge H1_W_39 with parameters 0.417
+Adding molecule H1_W_39 with parameters 39
+Adding atom O_W_39 with parameters OW
+Adding charge O_W_39 with parameters -0.834
+Adding molecule O_W_39 with parameters 40
+Adding atom H2_W_39 with parameters HW
+Adding charge H2_W_39 with parameters 0.417
+Adding molecule H2_W_39 with parameters 41
+Adding bond O_W_39 H1_W_39
+Fusing molecule 40 to molecule 39
+Lowering indices of molecules 41 to 41
+Adding bond O_W_39 H2_W_39
+Fusing molecule 40 to molecule 39
+Lowering indices of molecules 41 to 40
+Adding angle H1_W_39 O_W_39 H2_W_39
+Redefining variable i as 40
+Adding atom H1_W_40 with parameters HW
+Adding charge H1_W_40 with parameters 0.417
+Adding molecule H1_W_40 with parameters 40
+Adding atom O_W_40 with parameters OW
+Adding charge O_W_40 with parameters -0.834
+Adding molecule O_W_40 with parameters 41
+Adding atom H2_W_40 with parameters HW
+Adding charge H2_W_40 with parameters 0.417
+Adding molecule H2_W_40 with parameters 42
+Adding bond O_W_40 H1_W_40
+Fusing molecule 41 to molecule 40
+Lowering indices of molecules 42 to 42
+Adding bond O_W_40 H2_W_40
+Fusing molecule 41 to molecule 40
+Lowering indices of molecules 42 to 41
+Adding angle H1_W_40 O_W_40 H2_W_40
+Redefining variable i as 41
+Adding atom H1_W_41 with parameters HW
+Adding charge H1_W_41 with parameters 0.417
+Adding molecule H1_W_41 with parameters 41
+Adding atom O_W_41 with parameters OW
+Adding charge O_W_41 with parameters -0.834
+Adding molecule O_W_41 with parameters 42
+Adding atom H2_W_41 with parameters HW
+Adding charge H2_W_41 with parameters 0.417
+Adding molecule H2_W_41 with parameters 43
+Adding bond O_W_41 H1_W_41
+Fusing molecule 42 to molecule 41
+Lowering indices of molecules 43 to 43
+Adding bond O_W_41 H2_W_41
+Fusing molecule 42 to molecule 41
+Lowering indices of molecules 43 to 42
+Adding angle H1_W_41 O_W_41 H2_W_41
+Redefining variable i as 42
+Adding atom H1_W_42 with parameters HW
+Adding charge H1_W_42 with parameters 0.417
+Adding molecule H1_W_42 with parameters 42
+Adding atom O_W_42 with parameters OW
+Adding charge O_W_42 with parameters -0.834
+Adding molecule O_W_42 with parameters 43
+Adding atom H2_W_42 with parameters HW
+Adding charge H2_W_42 with parameters 0.417
+Adding molecule H2_W_42 with parameters 44
+Adding bond O_W_42 H1_W_42
+Fusing molecule 43 to molecule 42
+Lowering indices of molecules 44 to 44
+Adding bond O_W_42 H2_W_42
+Fusing molecule 43 to molecule 42
+Lowering indices of molecules 44 to 43
+Adding angle H1_W_42 O_W_42 H2_W_42
+Redefining variable i as 43
+Adding atom H1_W_43 with parameters HW
+Adding charge H1_W_43 with parameters 0.417
+Adding molecule H1_W_43 with parameters 43
+Adding atom O_W_43 with parameters OW
+Adding charge O_W_43 with parameters -0.834
+Adding molecule O_W_43 with parameters 44
+Adding atom H2_W_43 with parameters HW
+Adding charge H2_W_43 with parameters 0.417
+Adding molecule H2_W_43 with parameters 45
+Adding bond O_W_43 H1_W_43
+Fusing molecule 44 to molecule 43
+Lowering indices of molecules 45 to 45
+Adding bond O_W_43 H2_W_43
+Fusing molecule 44 to molecule 43
+Lowering indices of molecules 45 to 44
+Adding angle H1_W_43 O_W_43 H2_W_43
+Redefining variable i as 44
+Adding atom H1_W_44 with parameters HW
+Adding charge H1_W_44 with parameters 0.417
+Adding molecule H1_W_44 with parameters 44
+Adding atom O_W_44 with parameters OW
+Adding charge O_W_44 with parameters -0.834
+Adding molecule O_W_44 with parameters 45
+Adding atom H2_W_44 with parameters HW
+Adding charge H2_W_44 with parameters 0.417
+Adding molecule H2_W_44 with parameters 46
+Adding bond O_W_44 H1_W_44
+Fusing molecule 45 to molecule 44
+Lowering indices of molecules 46 to 46
+Adding bond O_W_44 H2_W_44
+Fusing molecule 45 to molecule 44
+Lowering indices of molecules 46 to 45
+Adding angle H1_W_44 O_W_44 H2_W_44
+Redefining variable i as 45
+Adding atom H1_W_45 with parameters HW
+Adding charge H1_W_45 with parameters 0.417
+Adding molecule H1_W_45 with parameters 45
+Adding atom O_W_45 with parameters OW
+Adding charge O_W_45 with parameters -0.834
+Adding molecule O_W_45 with parameters 46
+Adding atom H2_W_45 with parameters HW
+Adding charge H2_W_45 with parameters 0.417
+Adding molecule H2_W_45 with parameters 47
+Adding bond O_W_45 H1_W_45
+Fusing molecule 46 to molecule 45
+Lowering indices of molecules 47 to 47
+Adding bond O_W_45 H2_W_45
+Fusing molecule 46 to molecule 45
+Lowering indices of molecules 47 to 46
+Adding angle H1_W_45 O_W_45 H2_W_45
+Redefining variable i as 46
+Adding atom H1_W_46 with parameters HW
+Adding charge H1_W_46 with parameters 0.417
+Adding molecule H1_W_46 with parameters 46
+Adding atom O_W_46 with parameters OW
+Adding charge O_W_46 with parameters -0.834
+Adding molecule O_W_46 with parameters 47
+Adding atom H2_W_46 with parameters HW
+Adding charge H2_W_46 with parameters 0.417
+Adding molecule H2_W_46 with parameters 48
+Adding bond O_W_46 H1_W_46
+Fusing molecule 47 to molecule 46
+Lowering indices of molecules 48 to 48
+Adding bond O_W_46 H2_W_46
+Fusing molecule 47 to molecule 46
+Lowering indices of molecules 48 to 47
+Adding angle H1_W_46 O_W_46 H2_W_46
+Redefining variable i as 1
+Adding atom CH4_1 with parameters CH4
+Adding charge CH4_1 with parameters 0
+Adding molecule CH4_1 with parameters 47
+Redefining variable i as 2
+Adding atom CH4_2 with parameters CH4
+Adding charge CH4_2 with parameters 0
+Adding molecule CH4_2 with parameters 48
+Redefining variable i as 3
+Adding atom CH4_3 with parameters CH4
+Adding charge CH4_3 with parameters 0
+Adding molecule CH4_3 with parameters 49
+Redefining variable i as 4
+Adding atom CH4_4 with parameters CH4
+Adding charge CH4_4 with parameters 0
+Adding molecule CH4_4 with parameters 50
+Redefining variable i as 5
+Adding atom CH4_5 with parameters CH4
+Adding charge CH4_5 with parameters 0
+Adding molecule CH4_5 with parameters 51
+Redefining variable i as 6
+Adding atom CH4_6 with parameters CH4
+Adding charge CH4_6 with parameters 0
+Adding molecule CH4_6 with parameters 52
+Redefining variable i as 7
+Adding atom CH4_7 with parameters CH4
+Adding charge CH4_7 with parameters 0
+Adding molecule CH4_7 with parameters 53
+Redefining variable i as 8
+Adding atom CH4_8 with parameters CH4
+Adding charge CH4_8 with parameters 0
+Adding molecule CH4_8 with parameters 54
+Defining box density as 0.42154979999999997
+Reading geometric data from file uc-water.mol...
+Number of data to be read: 138
+1 : O_W_1 0.00000000 0.00000000 3.00606990
+2 : H1_W_1 -0.798959970 2.93700006E-02 3.53240991
+3 : H2_W_1 -2.93499995E-02 0.799449980 2.48046994
+4 : O_W_2 0.00000000 0.00000000 9.02392960
+5 : H1_W_2 0.798959970 -2.93700006E-02 8.49759007
+6 : H2_W_2 2.93499995E-02 -0.799449980 9.54953003
+7 : O_W_3 0.00000000 2.32078004 1.42200005
+8 : H1_W_3 -0.785650015 2.80392003 1.67806005
+9 : H2_W_3 -1.41799999E-02 2.32949996 0.464940012
+10 : O_W_4 0.00000000 2.32078004 10.6079998
+11 : H1_W_4 -1.61000004E-03 1.53076994 10.0675297
+12 : H2_W_4 -0.782149971 2.80012989 10.3346796
+13 : O_W_5 0.00000000 9.70921993 1.42200005
+14 : H1_W_5 1.61000004E-03 10.4992304 1.96247005
+15 : H2_W_5 0.782149971 9.22986984 1.69532001
+16 : O_W_6 0.00000000 9.70921993 10.6079998
+17 : H1_W_6 0.785650015 9.22607994 10.3519402
+18 : H2_W_6 1.41799999E-02 9.70049953 11.5650597
+19 : O_W_7 6.01499987 3.00606990 0.00000000
+20 : H1_W_7 5.21604013 3.53240991 -2.93700006E-02
+21 : H2_W_7 5.98565006 2.48046994 -0.799449980
+22 : O_W_8 6.01499987 9.02392960 0.00000000
+23 : H1_W_8 6.81396008 8.49759007 2.93700006E-02
+24 : H2_W_8 6.04435015 9.54953003 0.799449980
+25 : O_W_9 6.01499987 1.42200005 2.32078004
+26 : H1_W_9 6.01339006 1.96247005 1.53076994
+27 : H2_W_9 5.23285007 1.69532001 2.80012989
+28 : O_W_10 6.01499987 10.6079998 2.32078004
+29 : H1_W_10 5.22935009 10.3519402 2.80392003
+30 : H2_W_10 6.00082016 11.5650597 2.32949996
+31 : O_W_11 6.01499987 1.42200005 9.70921993
+32 : H1_W_11 6.80065012 1.67806005 9.22607994
+33 : H2_W_11 6.02918005 0.464940012 9.70049953
+34 : O_W_12 6.01499987 10.6079998 9.70921993
+35 : H1_W_12 6.01661015 10.0675297 10.4992304
+36 : H2_W_12 6.79715014 10.3346796 9.22986984
+37 : O_W_13 3.69467998 4.59285021 0.00000000
+38 : H1_W_13 3.67667007 5.54947996 2.77999993E-02
+39 : H2_W_13 3.19572997 4.32094002 0.770290017
+40 : O_W_14 3.69467998 7.43715000 0.00000000
+41 : H1_W_14 4.48543978 7.97652006 1.67000003E-03
+42 : H2_W_14 3.19969010 7.73930979 -0.761520028
+43 : O_W_15 2.32031989 0.00000000 4.59285021
+44 : H1_W_15 1.52955997 1.67000003E-03 4.05348015
+45 : H2_W_15 2.81531000 -0.761520028 4.29068995
+46 : O_W_16 2.32031989 0.00000000 7.43715000
+47 : H1_W_16 2.33833003 2.77999993E-02 6.48051977
+48 : H2_W_16 2.81926990 0.770290017 7.70906019
+49 : O_W_17 2.26337004 3.71265006 2.20970011
+50 : H1_W_17 2.78150010 3.12469006 2.75931001
+51 : H2_W_17 1.49688005 3.19583988 1.96145999
+52 : O_W_18 2.26337004 3.71265006 9.82030010
+53 : H1_W_18 2.72097993 3.99406004 10.6125298
+54 : H2_W_18 1.49535000 3.24035001 10.1417303
+55 : O_W_19 2.26337004 8.31735039 2.20970011
+56 : H1_W_19 2.75257993 7.98645020 1.45642996
+57 : H2_W_19 1.99545002 7.53142023 2.68589997
+58 : O_W_20 2.26337004 8.31735039 9.82030010
+59 : H1_W_20 2.80736995 8.84438992 9.23503971
+60 : H2_W_20 2.00356007 7.56275988 9.29178047
+61 : O_W_21 3.75163007 2.20970011 3.71265006
+62 : H1_W_21 3.26242995 1.45643997 4.04358006
+63 : H2_W_21 4.01946020 2.68599010 4.49854994
+64 : O_W_22 3.75163007 9.82030010 3.71265006
+65 : H1_W_22 4.01141024 9.29172039 4.46719980
+66 : H2_W_22 3.20761991 9.23509979 3.18555999
+67 : O_W_23 3.75163007 2.20970011 8.31735039
+68 : H1_W_23 4.51811981 1.96145999 8.83415985
+69 : H2_W_23 3.23350000 2.75931001 8.90530968
+70 : O_W_24 3.75163007 9.82030010 8.31735039
+71 : H1_W_24 3.29401994 10.6125298 8.03594017
+72 : H2_W_24 4.51964998 10.1417303 8.78964996
+73 : O_W_25 8.33532047 4.59285021 0.00000000
+74 : H1_W_25 7.54455996 4.05348015 -1.67000003E-03
+75 : H2_W_25 8.83030987 4.29068995 0.761520028
+76 : O_W_26 8.33532047 7.43715000 0.00000000
+77 : H1_W_26 8.35332966 6.48051977 -2.77999993E-02
+78 : H2_W_26 8.83426952 7.70906019 -0.770290017
+79 : O_W_27 9.70967960 0.00000000 4.59285021
+80 : H1_W_27 9.69167042 -2.77999993E-02 5.54947996
+81 : H2_W_27 9.21072960 -0.770290017 4.32094002
+82 : O_W_28 9.70967960 0.00000000 7.43715000
+83 : H1_W_28 10.5004396 -1.67000003E-03 7.97652006
+84 : H2_W_28 9.21469021 0.761520028 7.73930979
+85 : O_W_29 9.76663017 3.71265006 2.20970011
+86 : H1_W_29 9.22262955 3.18561006 2.79496002
+87 : H2_W_29 10.0264397 4.46723986 2.73821998
+88 : O_W_30 9.76663017 3.71265006 9.82030010
+89 : H1_W_30 9.27742004 4.04355001 10.5735703
+90 : H2_W_30 10.0345497 4.49857998 9.34410000
+91 : O_W_31 9.76663017 8.31735039 2.20970011
+92 : H1_W_31 9.30902004 8.03594017 1.41746998
+93 : H2_W_31 10.5346498 8.78964996 1.88827002
+94 : O_W_32 9.76663017 8.31735039 9.82030010
+95 : H1_W_32 9.24849987 8.90530968 9.27068996
+96 : H2_W_32 10.5331202 8.83415985 10.0685396
+97 : O_W_33 8.27836990 2.20970011 3.71265006
+98 : H1_W_33 8.73598003 1.41746998 3.99406004
+99 : H2_W_33 7.51035023 1.88827002 3.24035001
+100 : O_W_34 8.27836990 9.82030010 3.71265006
+101 : H1_W_34 7.51187992 10.0685396 3.19583988
+102 : H2_W_34 8.79650021 9.27068996 3.12469006
+103 : O_W_35 8.27836990 2.20970011 8.31735039
+104 : H1_W_35 8.01858997 2.73828006 7.56279993
+105 : H2_W_35 8.82238007 2.79489994 8.84444046
+106 : O_W_36 8.27836990 9.82030010 8.31735039
+107 : H1_W_36 8.76756954 10.5735598 7.98642015
+108 : H2_W_36 8.01054001 9.34401035 7.53144979
+109 : O_W_37 3.00606990 6.01499987 6.01499987
+110 : H1_W_37 3.53240991 6.81396008 5.98563004
+111 : H2_W_37 2.48046994 6.04435015 5.21554995
+112 : O_W_38 9.02392960 6.01499987 6.01499987
+113 : H1_W_38 8.49759007 5.21604013 6.04437017
+114 : H2_W_38 9.54953003 5.98565006 6.81444979
+115 : O_W_39 1.42200005 6.01499987 8.33578014
+116 : H1_W_39 1.70685005 5.24474001 8.82750988
+117 : H2_W_39 1.96424997 6.01021004 7.54699993
+118 : O_W_40 10.6079998 6.01499987 8.33578014
+119 : H1_W_40 10.3474302 6.78909016 8.83489990
+120 : H2_W_40 11.5649595 6.03291988 8.34733963
+121 : O_W_41 1.42200005 6.01499987 3.69422007
+122 : H1_W_41 1.68256998 5.24091005 3.19510007
+123 : H2_W_41 0.465039998 5.99707985 3.68266010
+124 : O_W_42 10.6079998 6.01499987 3.69422007
+125 : H1_W_42 10.3231497 6.78526020 3.20249009
+126 : H2_W_42 10.0657501 6.01979017 4.48299980
+127 : O_W_43 4.59285021 3.69467998 6.01499987
+128 : H1_W_43 4.04997015 4.48302984 6.01964998
+129 : H2_W_43 4.30817986 3.20270991 6.78517008
+130 : O_W_44 7.43715000 3.69467998 6.01499987
+131 : H1_W_44 6.48018980 3.68314004 5.99710989
+132 : H2_W_44 7.69769001 3.19545007 5.24097013
+133 : O_W_45 4.59285021 8.33532047 6.01499987
+134 : H1_W_45 5.54980993 8.34685993 6.03288984
+135 : H2_W_45 4.33231020 8.83454990 6.78903008
+136 : O_W_46 7.43715000 8.33532047 6.01499987
+137 : H1_W_46 7.98003006 7.54696989 6.01035023
+138 : H2_W_46 7.72181988 8.82728958 5.24483013
+Number of provided geometric data: 138
+Processing 3 geometric data for molecule 1:
+Data provided for atom O_W_1 : 0.00000000 0.00000000 3.00606990
+Adding coordinate O_W_1 with parameters 0.0000000000000000 0.0000000000000000 3.0060699000000000
+Data provided for atom H1_W_1 : -0.798959970 2.93700006E-02 3.53240991
+Adding coordinate H1_W_1 with parameters -0.79895996999999996 2.9370000600000001E-002 3.5324099100000002
+Data provided for atom H2_W_1 : -2.93499995E-02 0.799449980 2.48046994
+Adding coordinate H2_W_1 with parameters -2.9349999500000001E-002 0.79944998000000000 2.4804699399999999
+Processing 3 geometric data for molecule 2:
+Data provided for atom O_W_2 : 0.00000000 0.00000000 9.02392960
+Adding coordinate O_W_2 with parameters 0.0000000000000000 0.0000000000000000 9.0239296000000007
+Data provided for atom H1_W_2 : 0.798959970 -2.93700006E-02 8.49759007
+Adding coordinate H1_W_2 with parameters 0.79895996999999996 -2.9370000600000001E-002 8.4975900699999993
+Data provided for atom H2_W_2 : 2.93499995E-02 -0.799449980 9.54953003
+Adding coordinate H2_W_2 with parameters 2.9349999500000001E-002 -0.79944998000000000 9.5495300299999997
+Processing 3 geometric data for molecule 3:
+Data provided for atom O_W_3 : 0.00000000 2.32078004 1.42200005
+Adding coordinate O_W_3 with parameters 0.0000000000000000 2.3207800399999998 1.4220000500000001
+Data provided for atom H1_W_3 : -0.785650015 2.80392003 1.67806005
+Adding coordinate H1_W_3 with parameters -0.78565001499999998 2.8039200300000000 1.6780600500000000
+Data provided for atom H2_W_3 : -1.41799999E-02 2.32949996 0.464940012
+Adding coordinate H2_W_3 with parameters -1.4179999900000000E-002 2.3294999600000001 0.46494001200000001
+Processing 3 geometric data for molecule 4:
+Data provided for atom O_W_4 : 0.00000000 2.32078004 10.6079998
+Adding coordinate O_W_4 with parameters 0.0000000000000000 2.3207800399999998 10.607999800000000
+Data provided for atom H1_W_4 : -1.61000004E-03 1.53076994 10.0675297
+Adding coordinate H1_W_4 with parameters -1.6100000399999999E-003 1.5307699400000001 10.067529700000000
+Data provided for atom H2_W_4 : -0.782149971 2.80012989 10.3346796
+Adding coordinate H2_W_4 with parameters -0.78214997100000005 2.8001298900000000 10.334679599999999
+Processing 3 geometric data for molecule 5:
+Data provided for atom O_W_5 : 0.00000000 9.70921993 1.42200005
+Adding coordinate O_W_5 with parameters 0.0000000000000000 9.7092199299999997 1.4220000500000001
+Data provided for atom H1_W_5 : 1.61000004E-03 10.4992304 1.96247005
+Adding coordinate H1_W_5 with parameters 1.6100000399999999E-003 10.499230400000000 1.9624700500000001
+Data provided for atom H2_W_5 : 0.782149971 9.22986984 1.69532001
+Adding coordinate H2_W_5 with parameters 0.78214997100000005 9.2298698399999992 1.6953200100000001
+Processing 3 geometric data for molecule 6:
+Data provided for atom O_W_6 : 0.00000000 9.70921993 10.6079998
+Adding coordinate O_W_6 with parameters 0.0000000000000000 9.7092199299999997 10.607999800000000
+Data provided for atom H1_W_6 : 0.785650015 9.22607994 10.3519402
+Adding coordinate H1_W_6 with parameters 0.78565001499999998 9.2260799400000000 10.351940200000000
+Data provided for atom H2_W_6 : 1.41799999E-02 9.70049953 11.5650597
+Adding coordinate H2_W_6 with parameters 1.4179999900000000E-002 9.7004995300000001 11.565059700000001
+Processing 3 geometric data for molecule 7:
+Data provided for atom O_W_7 : 6.01499987 3.00606990 0.00000000
+Adding coordinate O_W_7 with parameters 6.0149998699999996 3.0060699000000000 0.0000000000000000
+Data provided for atom H1_W_7 : 5.21604013 3.53240991 -2.93700006E-02
+Adding coordinate H1_W_7 with parameters 5.2160401299999997 3.5324099100000002 -2.9370000600000001E-002
+Data provided for atom H2_W_7 : 5.98565006 2.48046994 -0.799449980
+Adding coordinate H2_W_7 with parameters 5.9856500600000002 2.4804699399999999 -0.79944998000000000
+Processing 3 geometric data for molecule 8:
+Data provided for atom O_W_8 : 6.01499987 9.02392960 0.00000000
+Adding coordinate O_W_8 with parameters 6.0149998699999996 9.0239296000000007 0.0000000000000000
+Data provided for atom H1_W_8 : 6.81396008 8.49759007 2.93700006E-02
+Adding coordinate H1_W_8 with parameters 6.8139600800000002 8.4975900699999993 2.9370000600000001E-002
+Data provided for atom H2_W_8 : 6.04435015 9.54953003 0.799449980
+Adding coordinate H2_W_8 with parameters 6.0443501499999996 9.5495300299999997 0.79944998000000000
+Processing 3 geometric data for molecule 9:
+Data provided for atom O_W_9 : 6.01499987 1.42200005 2.32078004
+Adding coordinate O_W_9 with parameters 6.0149998699999996 1.4220000500000001 2.3207800399999998
+Data provided for atom H1_W_9 : 6.01339006 1.96247005 1.53076994
+Adding coordinate H1_W_9 with parameters 6.0133900599999999 1.9624700500000001 1.5307699400000001
+Data provided for atom H2_W_9 : 5.23285007 1.69532001 2.80012989
+Adding coordinate H2_W_9 with parameters 5.2328500699999996 1.6953200100000001 2.8001298900000000
+Processing 3 geometric data for molecule 10:
+Data provided for atom O_W_10 : 6.01499987 10.6079998 2.32078004
+Adding coordinate O_W_10 with parameters 6.0149998699999996 10.607999800000000 2.3207800399999998
+Data provided for atom H1_W_10 : 5.22935009 10.3519402 2.80392003
+Adding coordinate H1_W_10 with parameters 5.2293500899999996 10.351940200000000 2.8039200300000000
+Data provided for atom H2_W_10 : 6.00082016 11.5650597 2.32949996
+Adding coordinate H2_W_10 with parameters 6.0008201600000000 11.565059700000001 2.3294999600000001
+Processing 3 geometric data for molecule 11:
+Data provided for atom O_W_11 : 6.01499987 1.42200005 9.70921993
+Adding coordinate O_W_11 with parameters 6.0149998699999996 1.4220000500000001 9.7092199299999997
+Data provided for atom H1_W_11 : 6.80065012 1.67806005 9.22607994
+Adding coordinate H1_W_11 with parameters 6.8006501200000002 1.6780600500000000 9.2260799400000000
+Data provided for atom H2_W_11 : 6.02918005 0.464940012 9.70049953
+Adding coordinate H2_W_11 with parameters 6.0291800499999999 0.46494001200000001 9.7004995300000001
+Processing 3 geometric data for molecule 12:
+Data provided for atom O_W_12 : 6.01499987 10.6079998 9.70921993
+Adding coordinate O_W_12 with parameters 6.0149998699999996 10.607999800000000 9.7092199299999997
+Data provided for atom H1_W_12 : 6.01661015 10.0675297 10.4992304
+Adding coordinate H1_W_12 with parameters 6.0166101500000000 10.067529700000000 10.499230400000000
+Data provided for atom H2_W_12 : 6.79715014 10.3346796 9.22986984
+Adding coordinate H2_W_12 with parameters 6.7971501400000003 10.334679599999999 9.2298698399999992
+Processing 3 geometric data for molecule 13:
+Data provided for atom O_W_13 : 3.69467998 4.59285021 0.00000000
+Adding coordinate O_W_13 with parameters 3.6946799800000001 4.5928502099999999 0.0000000000000000
+Data provided for atom H1_W_13 : 3.67667007 5.54947996 2.77999993E-02
+Adding coordinate H1_W_13 with parameters 3.6766700700000001 5.5494799600000002 2.7799999299999999E-002
+Data provided for atom H2_W_13 : 3.19572997 4.32094002 0.770290017
+Adding coordinate H2_W_13 with parameters 3.1957299699999999 4.3209400200000001 0.77029001699999999
+Processing 3 geometric data for molecule 14:
+Data provided for atom O_W_14 : 3.69467998 7.43715000 0.00000000
+Adding coordinate O_W_14 with parameters 3.6946799800000001 7.4371499999999999 0.0000000000000000
+Data provided for atom H1_W_14 : 4.48543978 7.97652006 1.67000003E-03
+Adding coordinate H1_W_14 with parameters 4.4854397800000001 7.9765200600000004 1.6700000299999999E-003
+Data provided for atom H2_W_14 : 3.19969010 7.73930979 -0.761520028
+Adding coordinate H2_W_14 with parameters 3.1996901000000002 7.7393097900000001 -0.76152002799999996
+Processing 3 geometric data for molecule 15:
+Data provided for atom O_W_15 : 2.32031989 0.00000000 4.59285021
+Adding coordinate O_W_15 with parameters 2.3203198899999999 0.0000000000000000 4.5928502099999999
+Data provided for atom H1_W_15 : 1.52955997 1.67000003E-03 4.05348015
+Adding coordinate H1_W_15 with parameters 1.5295599700000000 1.6700000299999999E-003 4.0534801500000004
+Data provided for atom H2_W_15 : 2.81531000 -0.761520028 4.29068995
+Adding coordinate H2_W_15 with parameters 2.8153100000000002 -0.76152002799999996 4.2906899500000000
+Processing 3 geometric data for molecule 16:
+Data provided for atom O_W_16 : 2.32031989 0.00000000 7.43715000
+Adding coordinate O_W_16 with parameters 2.3203198899999999 0.0000000000000000 7.4371499999999999
+Data provided for atom H1_W_16 : 2.33833003 2.77999993E-02 6.48051977
+Adding coordinate H1_W_16 with parameters 2.3383300299999998 2.7799999299999999E-002 6.4805197699999999
+Data provided for atom H2_W_16 : 2.81926990 0.770290017 7.70906019
+Adding coordinate H2_W_16 with parameters 2.8192699000000001 0.77029001699999999 7.7090601899999998
+Processing 3 geometric data for molecule 17:
+Data provided for atom O_W_17 : 2.26337004 3.71265006 2.20970011
+Adding coordinate O_W_17 with parameters 2.2633700399999999 3.7126500600000001 2.2097001100000000
+Data provided for atom H1_W_17 : 2.78150010 3.12469006 2.75931001
+Adding coordinate H1_W_17 with parameters 2.7815001000000001 3.1246900599999998 2.7593100100000001
+Data provided for atom H2_W_17 : 1.49688005 3.19583988 1.96145999
+Adding coordinate H2_W_17 with parameters 1.4968800499999999 3.1958398799999999 1.9614599900000000
+Processing 3 geometric data for molecule 18:
+Data provided for atom O_W_18 : 2.26337004 3.71265006 9.82030010
+Adding coordinate O_W_18 with parameters 2.2633700399999999 3.7126500600000001 9.8203001000000008
+Data provided for atom H1_W_18 : 2.72097993 3.99406004 10.6125298
+Adding coordinate H1_W_18 with parameters 2.7209799299999999 3.9940600399999999 10.612529800000001
+Data provided for atom H2_W_18 : 1.49535000 3.24035001 10.1417303
+Adding coordinate H2_W_18 with parameters 1.4953500000000000 3.2403500099999998 10.141730300000001
+Processing 3 geometric data for molecule 19:
+Data provided for atom O_W_19 : 2.26337004 8.31735039 2.20970011
+Adding coordinate O_W_19 with parameters 2.2633700399999999 8.3173503899999996 2.2097001100000000
+Data provided for atom H1_W_19 : 2.75257993 7.98645020 1.45642996
+Adding coordinate H1_W_19 with parameters 2.7525799300000000 7.9864502000000002 1.4564299599999999
+Data provided for atom H2_W_19 : 1.99545002 7.53142023 2.68589997
+Adding coordinate H2_W_19 with parameters 1.9954500200000000 7.5314202300000002 2.6858999699999999
+Processing 3 geometric data for molecule 20:
+Data provided for atom O_W_20 : 2.26337004 8.31735039 9.82030010
+Adding coordinate O_W_20 with parameters 2.2633700399999999 8.3173503899999996 9.8203001000000008
+Data provided for atom H1_W_20 : 2.80736995 8.84438992 9.23503971
+Adding coordinate H1_W_20 with parameters 2.8073699500000000 8.8443899199999993 9.2350397100000006
+Data provided for atom H2_W_20 : 2.00356007 7.56275988 9.29178047
+Adding coordinate H2_W_20 with parameters 2.0035600699999998 7.5627598799999998 9.2917804700000008
+Processing 3 geometric data for molecule 21:
+Data provided for atom O_W_21 : 3.75163007 2.20970011 3.71265006
+Adding coordinate O_W_21 with parameters 3.7516300700000000 2.2097001100000000 3.7126500600000001
+Data provided for atom H1_W_21 : 3.26242995 1.45643997 4.04358006
+Adding coordinate H1_W_21 with parameters 3.2624299500000000 1.4564399699999999 4.0435800600000000
+Data provided for atom H2_W_21 : 4.01946020 2.68599010 4.49854994
+Adding coordinate H2_W_21 with parameters 4.0194602000000001 2.6859901000000002 4.4985499400000002
+Processing 3 geometric data for molecule 22:
+Data provided for atom O_W_22 : 3.75163007 9.82030010 3.71265006
+Adding coordinate O_W_22 with parameters 3.7516300700000000 9.8203001000000008 3.7126500600000001
+Data provided for atom H1_W_22 : 4.01141024 9.29172039 4.46719980
+Adding coordinate H1_W_22 with parameters 4.0114102400000000 9.2917203900000001 4.4671998000000004
+Data provided for atom H2_W_22 : 3.20761991 9.23509979 3.18555999
+Adding coordinate H2_W_22 with parameters 3.2076199100000000 9.2350997899999996 3.1855599899999998
+Processing 3 geometric data for molecule 23:
+Data provided for atom O_W_23 : 3.75163007 2.20970011 8.31735039
+Adding coordinate O_W_23 with parameters 3.7516300700000000 2.2097001100000000 8.3173503899999996
+Data provided for atom H1_W_23 : 4.51811981 1.96145999 8.83415985
+Adding coordinate H1_W_23 with parameters 4.5181198100000000 1.9614599900000000 8.8341598500000007
+Data provided for atom H2_W_23 : 3.23350000 2.75931001 8.90530968
+Adding coordinate H2_W_23 with parameters 3.2334999999999998 2.7593100100000001 8.9053096800000002
+Processing 3 geometric data for molecule 24:
+Data provided for atom O_W_24 : 3.75163007 9.82030010 8.31735039
+Adding coordinate O_W_24 with parameters 3.7516300700000000 9.8203001000000008 8.3173503899999996
+Data provided for atom H1_W_24 : 3.29401994 10.6125298 8.03594017
+Adding coordinate H1_W_24 with parameters 3.2940199400000001 10.612529800000001 8.0359401699999999
+Data provided for atom H2_W_24 : 4.51964998 10.1417303 8.78964996
+Adding coordinate H2_W_24 with parameters 4.5196499799999996 10.141730300000001 8.7896499600000002
+Processing 3 geometric data for molecule 25:
+Data provided for atom O_W_25 : 8.33532047 4.59285021 0.00000000
+Adding coordinate O_W_25 with parameters 8.3353204699999992 4.5928502099999999 0.0000000000000000
+Data provided for atom H1_W_25 : 7.54455996 4.05348015 -1.67000003E-03
+Adding coordinate H1_W_25 with parameters 7.5445599600000000 4.0534801500000004 -1.6700000299999999E-003
+Data provided for atom H2_W_25 : 8.83030987 4.29068995 0.761520028
+Adding coordinate H2_W_25 with parameters 8.8303098700000007 4.2906899500000000 0.76152002799999996
+Processing 3 geometric data for molecule 26:
+Data provided for atom O_W_26 : 8.33532047 7.43715000 0.00000000
+Adding coordinate O_W_26 with parameters 8.3353204699999992 7.4371499999999999 0.0000000000000000
+Data provided for atom H1_W_26 : 8.35332966 6.48051977 -2.77999993E-02
+Adding coordinate H1_W_26 with parameters 8.3533296600000000 6.4805197699999999 -2.7799999299999999E-002
+Data provided for atom H2_W_26 : 8.83426952 7.70906019 -0.770290017
+Adding coordinate H2_W_26 with parameters 8.8342695199999994 7.7090601899999998 -0.77029001699999999
+Processing 3 geometric data for molecule 27:
+Data provided for atom O_W_27 : 9.70967960 0.00000000 4.59285021
+Adding coordinate O_W_27 with parameters 9.7096795999999994 0.0000000000000000 4.5928502099999999
+Data provided for atom H1_W_27 : 9.69167042 -2.77999993E-02 5.54947996
+Adding coordinate H1_W_27 with parameters 9.6916704199999995 -2.7799999299999999E-002 5.5494799600000002
+Data provided for atom H2_W_27 : 9.21072960 -0.770290017 4.32094002
+Adding coordinate H2_W_27 with parameters 9.2107296000000005 -0.77029001699999999 4.3209400200000001
+Processing 3 geometric data for molecule 28:
+Data provided for atom O_W_28 : 9.70967960 0.00000000 7.43715000
+Adding coordinate O_W_28 with parameters 9.7096795999999994 0.0000000000000000 7.4371499999999999
+Data provided for atom H1_W_28 : 10.5004396 -1.67000003E-03 7.97652006
+Adding coordinate H1_W_28 with parameters 10.500439600000000 -1.6700000299999999E-003 7.9765200600000004
+Data provided for atom H2_W_28 : 9.21469021 0.761520028 7.73930979
+Adding coordinate H2_W_28 with parameters 9.2146902100000005 0.76152002799999996 7.7393097900000001
+Processing 3 geometric data for molecule 29:
+Data provided for atom O_W_29 : 9.76663017 3.71265006 2.20970011
+Adding coordinate O_W_29 with parameters 9.7666301700000009 3.7126500600000001 2.2097001100000000
+Data provided for atom H1_W_29 : 9.22262955 3.18561006 2.79496002
+Adding coordinate H1_W_29 with parameters 9.2226295500000006 3.1856100600000001 2.7949600200000000
+Data provided for atom H2_W_29 : 10.0264397 4.46723986 2.73821998
+Adding coordinate H2_W_29 with parameters 10.026439699999999 4.4672398600000003 2.7382199800000002
+Processing 3 geometric data for molecule 30:
+Data provided for atom O_W_30 : 9.76663017 3.71265006 9.82030010
+Adding coordinate O_W_30 with parameters 9.7666301700000009 3.7126500600000001 9.8203001000000008
+Data provided for atom H1_W_30 : 9.27742004 4.04355001 10.5735703
+Adding coordinate H1_W_30 with parameters 9.2774200400000009 4.0435500099999997 10.573570300000000
+Data provided for atom H2_W_30 : 10.0345497 4.49857998 9.34410000
+Adding coordinate H2_W_30 with parameters 10.034549699999999 4.4985799799999997 9.3440999999999992
+Processing 3 geometric data for molecule 31:
+Data provided for atom O_W_31 : 9.76663017 8.31735039 2.20970011
+Adding coordinate O_W_31 with parameters 9.7666301700000009 8.3173503899999996 2.2097001100000000
+Data provided for atom H1_W_31 : 9.30902004 8.03594017 1.41746998
+Adding coordinate H1_W_31 with parameters 9.3090200400000001 8.0359401699999999 1.4174699799999999
+Data provided for atom H2_W_31 : 10.5346498 8.78964996 1.88827002
+Adding coordinate H2_W_31 with parameters 10.534649800000000 8.7896499600000002 1.8882700200000000
+Processing 3 geometric data for molecule 32:
+Data provided for atom O_W_32 : 9.76663017 8.31735039 9.82030010
+Adding coordinate O_W_32 with parameters 9.7666301700000009 8.3173503899999996 9.8203001000000008
+Data provided for atom H1_W_32 : 9.24849987 8.90530968 9.27068996
+Adding coordinate H1_W_32 with parameters 9.2484998699999998 8.9053096800000002 9.2706899600000003
+Data provided for atom H2_W_32 : 10.5331202 8.83415985 10.0685396
+Adding coordinate H2_W_32 with parameters 10.533120200000001 8.8341598500000007 10.068539599999999
+Processing 3 geometric data for molecule 33:
+Data provided for atom O_W_33 : 8.27836990 2.20970011 3.71265006
+Adding coordinate O_W_33 with parameters 8.2783698999999995 2.2097001100000000 3.7126500600000001
+Data provided for atom H1_W_33 : 8.73598003 1.41746998 3.99406004
+Adding coordinate H1_W_33 with parameters 8.7359800300000003 1.4174699799999999 3.9940600399999999
+Data provided for atom H2_W_33 : 7.51035023 1.88827002 3.24035001
+Adding coordinate H2_W_33 with parameters 7.5103502300000002 1.8882700200000000 3.2403500099999998
+Processing 3 geometric data for molecule 34:
+Data provided for atom O_W_34 : 8.27836990 9.82030010 3.71265006
+Adding coordinate O_W_34 with parameters 8.2783698999999995 9.8203001000000008 3.7126500600000001
+Data provided for atom H1_W_34 : 7.51187992 10.0685396 3.19583988
+Adding coordinate H1_W_34 with parameters 7.5118799200000002 10.068539599999999 3.1958398799999999
+Data provided for atom H2_W_34 : 8.79650021 9.27068996 3.12469006
+Adding coordinate H2_W_34 with parameters 8.7965002099999996 9.2706899600000003 3.1246900599999998
+Processing 3 geometric data for molecule 35:
+Data provided for atom O_W_35 : 8.27836990 2.20970011 8.31735039
+Adding coordinate O_W_35 with parameters 8.2783698999999995 2.2097001100000000 8.3173503899999996
+Data provided for atom H1_W_35 : 8.01858997 2.73828006 7.56279993
+Adding coordinate H1_W_35 with parameters 8.0185899700000007 2.7382800600000001 7.5627999299999997
+Data provided for atom H2_W_35 : 8.82238007 2.79489994 8.84444046
+Adding coordinate H2_W_35 with parameters 8.8223800699999995 2.7948999400000001 8.8444404599999995
+Processing 3 geometric data for molecule 36:
+Data provided for atom O_W_36 : 8.27836990 9.82030010 8.31735039
+Adding coordinate O_W_36 with parameters 8.2783698999999995 9.8203001000000008 8.3173503899999996
+Data provided for atom H1_W_36 : 8.76756954 10.5735598 7.98642015
+Adding coordinate H1_W_36 with parameters 8.7675695400000002 10.573559800000000 7.9864201499999998
+Data provided for atom H2_W_36 : 8.01054001 9.34401035 7.53144979
+Adding coordinate H2_W_36 with parameters 8.0105400099999997 9.3440103499999996 7.5314497899999999
+Processing 3 geometric data for molecule 37:
+Data provided for atom O_W_37 : 3.00606990 6.01499987 6.01499987
+Adding coordinate O_W_37 with parameters 3.0060699000000000 6.0149998699999996 6.0149998699999996
+Data provided for atom H1_W_37 : 3.53240991 6.81396008 5.98563004
+Adding coordinate H1_W_37 with parameters 3.5324099100000002 6.8139600800000002 5.9856300400000002
+Data provided for atom H2_W_37 : 2.48046994 6.04435015 5.21554995
+Adding coordinate H2_W_37 with parameters 2.4804699399999999 6.0443501499999996 5.2155499499999998
+Processing 3 geometric data for molecule 38:
+Data provided for atom O_W_38 : 9.02392960 6.01499987 6.01499987
+Adding coordinate O_W_38 with parameters 9.0239296000000007 6.0149998699999996 6.0149998699999996
+Data provided for atom H1_W_38 : 8.49759007 5.21604013 6.04437017
+Adding coordinate H1_W_38 with parameters 8.4975900699999993 5.2160401299999997 6.0443701699999997
+Data provided for atom H2_W_38 : 9.54953003 5.98565006 6.81444979
+Adding coordinate H2_W_38 with parameters 9.5495300299999997 5.9856500600000002 6.8144497900000003
+Processing 3 geometric data for molecule 39:
+Data provided for atom O_W_39 : 1.42200005 6.01499987 8.33578014
+Adding coordinate O_W_39 with parameters 1.4220000500000001 6.0149998699999996 8.3357801400000007
+Data provided for atom H1_W_39 : 1.70685005 5.24474001 8.82750988
+Adding coordinate H1_W_39 with parameters 1.7068500499999999 5.2447400100000001 8.8275098799999991
+Data provided for atom H2_W_39 : 1.96424997 6.01021004 7.54699993
+Adding coordinate H2_W_39 with parameters 1.9642499700000000 6.0102100399999996 7.5469999300000001
+Processing 3 geometric data for molecule 40:
+Data provided for atom O_W_40 : 10.6079998 6.01499987 8.33578014
+Adding coordinate O_W_40 with parameters 10.607999800000000 6.0149998699999996 8.3357801400000007
+Data provided for atom H1_W_40 : 10.3474302 6.78909016 8.83489990
+Adding coordinate H1_W_40 with parameters 10.347430200000000 6.7890901599999998 8.8348998999999999
+Data provided for atom H2_W_40 : 11.5649595 6.03291988 8.34733963
+Adding coordinate H2_W_40 with parameters 11.564959500000001 6.0329198799999997 8.3473396300000005
+Processing 3 geometric data for molecule 41:
+Data provided for atom O_W_41 : 1.42200005 6.01499987 3.69422007
+Adding coordinate O_W_41 with parameters 1.4220000500000001 6.0149998699999996 3.6942200700000001
+Data provided for atom H1_W_41 : 1.68256998 5.24091005 3.19510007
+Adding coordinate H1_W_41 with parameters 1.6825699800000000 5.2409100500000001 3.1951000700000001
+Data provided for atom H2_W_41 : 0.465039998 5.99707985 3.68266010
+Adding coordinate H2_W_41 with parameters 0.46503999800000001 5.9970798500000004 3.6826601000000001
+Processing 3 geometric data for molecule 42:
+Data provided for atom O_W_42 : 10.6079998 6.01499987 3.69422007
+Adding coordinate O_W_42 with parameters 10.607999800000000 6.0149998699999996 3.6942200700000001
+Data provided for atom H1_W_42 : 10.3231497 6.78526020 3.20249009
+Adding coordinate H1_W_42 with parameters 10.323149700000000 6.7852601999999997 3.2024900900000000
+Data provided for atom H2_W_42 : 10.0657501 6.01979017 4.48299980
+Adding coordinate H2_W_42 with parameters 10.065750100000001 6.0197901700000003 4.4829998000000000
+Processing 3 geometric data for molecule 43:
+Data provided for atom O_W_43 : 4.59285021 3.69467998 6.01499987
+Adding coordinate O_W_43 with parameters 4.5928502099999999 3.6946799800000001 6.0149998699999996
+Data provided for atom H1_W_43 : 4.04997015 4.48302984 6.01964998
+Adding coordinate H1_W_43 with parameters 4.0499701500000000 4.4830298400000004 6.0196499799999996
+Data provided for atom H2_W_43 : 4.30817986 3.20270991 6.78517008
+Adding coordinate H2_W_43 with parameters 4.3081798600000001 3.2027099099999998 6.7851700800000003
+Processing 3 geometric data for molecule 44:
+Data provided for atom O_W_44 : 7.43715000 3.69467998 6.01499987
+Adding coordinate O_W_44 with parameters 7.4371499999999999 3.6946799800000001 6.0149998699999996
+Data provided for atom H1_W_44 : 6.48018980 3.68314004 5.99710989
+Adding coordinate H1_W_44 with parameters 6.4801897999999998 3.6831400400000001 5.9971098899999999
+Data provided for atom H2_W_44 : 7.69769001 3.19545007 5.24097013
+Adding coordinate H2_W_44 with parameters 7.6976900099999996 3.1954500700000001 5.2409701300000000
+Processing 3 geometric data for molecule 45:
+Data provided for atom O_W_45 : 4.59285021 8.33532047 6.01499987
+Adding coordinate O_W_45 with parameters 4.5928502099999999 8.3353204699999992 6.0149998699999996
+Data provided for atom H1_W_45 : 5.54980993 8.34685993 6.03288984
+Adding coordinate H1_W_45 with parameters 5.5498099300000003 8.3468599300000008 6.0328898400000002
+Data provided for atom H2_W_45 : 4.33231020 8.83454990 6.78903008
+Adding coordinate H2_W_45 with parameters 4.3323102000000002 8.8345499000000007 6.7890300799999999
+Processing 3 geometric data for molecule 46:
+Data provided for atom O_W_46 : 7.43715000 8.33532047 6.01499987
+Adding coordinate O_W_46 with parameters 7.4371499999999999 8.3353204699999992 6.0149998699999996
+Data provided for atom H1_W_46 : 7.98003006 7.54696989 6.01035023
+Adding coordinate H1_W_46 with parameters 7.9800300599999998 7.5469698899999997 6.0103502300000002
+Data provided for atom H2_W_46 : 7.72181988 8.82728958 5.24483013
+Adding coordinate H2_W_46 with parameters 7.7218198800000000 8.8272895800000004 5.2448301300000004
+Reading geometric data from file uc-methane.mol...
+Number of data to be read: 8
+1 : CH4_1 0.000 6.015 0.000
+2 : CH4_2 6.015 0.000 6.015
+3 : CH4_3 3.008 0.000 0.000
+4 : CH4_4 9.023 0.000 0.000
+5 : CH4_5 0.000 2.992 6.015
+6 : CH4_6 0.000 9.038 6.015
+7 : CH4_7 6.015 6.015 2.992
+8 : CH4_8 6.015 6.015 9.038
+Number of provided geometric data: 8
+Processing 1 geometric data for molecule 47:
+Data provided for atom CH4_1 : 0.000 6.015 0.000
+Adding coordinate CH4_1 with parameters 0.0000000000000000 6.0149999999999997 0.0000000000000000
+Processing 1 geometric data for molecule 48:
+Data provided for atom CH4_2 : 6.015 0.000 6.015
+Adding coordinate CH4_2 with parameters 6.0149999999999997 0.0000000000000000 6.0149999999999997
+Processing 1 geometric data for molecule 49:
+Data provided for atom CH4_3 : 3.008 0.000 0.000
+Adding coordinate CH4_3 with parameters 3.0080000000000000 0.0000000000000000 0.0000000000000000
+Processing 1 geometric data for molecule 50:
+Data provided for atom CH4_4 : 9.023 0.000 0.000
+Adding coordinate CH4_4 with parameters 9.0229999999999997 0.0000000000000000 0.0000000000000000
+Processing 1 geometric data for molecule 51:
+Data provided for atom CH4_5 : 0.000 2.992 6.015
+Adding coordinate CH4_5 with parameters 0.0000000000000000 2.9920000000000000 6.0149999999999997
+Processing 1 geometric data for molecule 52:
+Data provided for atom CH4_6 : 0.000 9.038 6.015
+Adding coordinate CH4_6 with parameters 0.0000000000000000 9.0380000000000003 6.0149999999999997
+Processing 1 geometric data for molecule 53:
+Data provided for atom CH4_7 : 6.015 6.015 2.992
+Adding coordinate CH4_7 with parameters 6.0149999999999997 6.0149999999999997 2.9920000000000000
+Processing 1 geometric data for molecule 54:
+Data provided for atom CH4_8 : 6.015 6.015 9.038
+Adding coordinate CH4_8 with parameters 6.0149999999999997 6.0149999999999997 9.0380000000000003
+Writing data to file water_TIP4P.lmp in lmp/models format...
+3 atom types
+1 bond types
+1 angle types
+146 atoms
+92 bonds
+46 angles
+Writing data to file water_TIP4P.lammpstrj in lammpstrj format...
+Writing data to file water_TIP4P.xyz in xyz format...
+Writing data in summary format...
+--------------------------------------------------------------------------------
+SUMMARY
+--------------------------------------------------------------------------------
+Specified:
+    3 atom types.
+    1 bond type.
+    1 angle type.
+  146 atoms.
+   92 bonds.
+
+Detected:
+   46 angles.
+   54 molecules.
+
+Effectively used:
+    3 atom types.
+    1 bond type.
+    1 angle type.
+
+Molecule[1]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_1 O_W_1 H2_W_1
+
+Molecule[2]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_2 O_W_2 H2_W_2
+
+Molecule[3]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_3 O_W_3 H2_W_3
+
+Molecule[4]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_4 O_W_4 H2_W_4
+
+Molecule[5]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_5 O_W_5 H2_W_5
+
+Molecule[6]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_6 O_W_6 H2_W_6
+
+Molecule[7]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_7 O_W_7 H2_W_7
+
+Molecule[8]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_8 O_W_8 H2_W_8
+
+Molecule[9]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_9 O_W_9 H2_W_9
+
+Molecule[10]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_10 O_W_10 H2_W_10
+
+Molecule[11]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_11 O_W_11 H2_W_11
+
+Molecule[12]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_12 O_W_12 H2_W_12
+
+Molecule[13]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_13 O_W_13 H2_W_13
+
+Molecule[14]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_14 O_W_14 H2_W_14
+
+Molecule[15]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_15 O_W_15 H2_W_15
+
+Molecule[16]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_16 O_W_16 H2_W_16
+
+Molecule[17]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_17 O_W_17 H2_W_17
+
+Molecule[18]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_18 O_W_18 H2_W_18
+
+Molecule[19]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_19 O_W_19 H2_W_19
+
+Molecule[20]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_20 O_W_20 H2_W_20
+
+Molecule[21]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_21 O_W_21 H2_W_21
+
+Molecule[22]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_22 O_W_22 H2_W_22
+
+Molecule[23]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_23 O_W_23 H2_W_23
+
+Molecule[24]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_24 O_W_24 H2_W_24
+
+Molecule[25]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_25 O_W_25 H2_W_25
+
+Molecule[26]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_26 O_W_26 H2_W_26
+
+Molecule[27]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_27 O_W_27 H2_W_27
+
+Molecule[28]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_28 O_W_28 H2_W_28
+
+Molecule[29]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_29 O_W_29 H2_W_29
+
+Molecule[30]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_30 O_W_30 H2_W_30
+
+Molecule[31]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_31 O_W_31 H2_W_31
+
+Molecule[32]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_32 O_W_32 H2_W_32
+
+Molecule[33]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_33 O_W_33 H2_W_33
+
+Molecule[34]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_34 O_W_34 H2_W_34
+
+Molecule[35]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_35 O_W_35 H2_W_35
+
+Molecule[36]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_36 O_W_36 H2_W_36
+
+Molecule[37]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_37 O_W_37 H2_W_37
+
+Molecule[38]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_38 O_W_38 H2_W_38
+
+Molecule[39]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_39 O_W_39 H2_W_39
+
+Molecule[40]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_40 O_W_40 H2_W_40
+
+Molecule[41]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_41 O_W_41 H2_W_41
+
+Molecule[42]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_42 O_W_42 H2_W_42
+
+Molecule[43]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_43 O_W_43 H2_W_43
+
+Molecule[44]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_44 O_W_44 H2_W_44
+
+Molecule[45]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_45 O_W_45 H2_W_45
+
+Molecule[46]:
+- Amount: 1
+- Mass: 18.015400000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 3
+- Atoms: H1_W_46 O_W_46 H2_W_46
+
+Molecule[47]:
+- Amount: 1
+- Mass: 16.000000000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 1
+- Atoms: CH4_1
+
+Molecule[48]:
+- Amount: 1
+- Mass: 16.000000000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 1
+- Atoms: CH4_2
+
+Molecule[49]:
+- Amount: 1
+- Mass: 16.000000000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 1
+- Atoms: CH4_3
+
+Molecule[50]:
+- Amount: 1
+- Mass: 16.000000000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 1
+- Atoms: CH4_4
+
+Molecule[51]:
+- Amount: 1
+- Mass: 16.000000000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 1
+- Atoms: CH4_5
+
+Molecule[52]:
+- Amount: 1
+- Mass: 16.000000000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 1
+- Atoms: CH4_6
+
+Molecule[53]:
+- Amount: 1
+- Mass: 16.000000000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 1
+- Atoms: CH4_7
+
+Molecule[54]:
+- Amount: 1
+- Mass: 16.000000000000000
+- Charge: 0.0000000000000000
+- Number of atoms: 1
+- Atoms: CH4_8
+
+System:
+- Molecules: 54
+- Total mass: 956.70839999999998
+- Box lengths: 13.141458457608852 13.141458457608852 13.141458457608852
+- Box density: 0.42154979999999997
+- Residual charge: 0.0000000000000000
+--------------------------------------------------------------------------------

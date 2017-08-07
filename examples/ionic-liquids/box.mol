@@ -1,0 +1,25 @@
+# Force field parameters:
+include		forcefield.mol
+
+#Species
+
+include		emim.mol
+
+include		ntf2.mol
+
+link CF1 NA1
+
+# Density at 298.15 K is 1518.4 kg/m³ (J. Phys. Chem. B, Vol. 112, No. 39, 2008)
+box		density 0.05 # lower density to easy calculation of the example
+
+packmol		tolerance 3.0 seed 5634 retry 0.95
+packmol		pack 1 100
+packmol		action execute
+
+unlink CF1 NA1
+
+write		lmp/models emim_ntf2.lmp
+write		lammpstrj emim_ntf2.lammpstrj
+write		xyz emim_ntf2.xyz
+
+write		summary
