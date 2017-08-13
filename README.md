@@ -130,6 +130,7 @@ Here is a complete list of Playmol commands:
 | **bond**          | creates chemical bonds and automatically detects angles and dihedrals     |
 | **improper**      | creates an improper involving four given atoms or search for impropers    |
 | **body**          | selects a set of atoms to be marked as a single body                      |
+| **mixing_rule**   | defines mixing rules for pairs of atom types                              |
 | **extra**         | creates an extra bond, angle, or dihedral involving given atoms           |
 | **link**          | links two atoms (and fuses their molecules) without actually bonding them |
 | **unlink**        | removes an existing link (and splits the corresponding molecule)          |

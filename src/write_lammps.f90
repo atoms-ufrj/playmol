@@ -75,7 +75,11 @@
     call write_count( sum(n%mols * total%imps),  "impropers" )
     if (me % box % exists()) call write_box_limits
     call write_masses
-    call write_type( "Pair Coeffs",     atom_types, me % atom_type_list     )
+    if (me % mixing_rule_list % count == 0) then
+      call write_type( "Pair Coeffs", atom_types, me % atom_type_list )
+    else
+      call write_ij_pair_coeffs( atom_types, me % atom_type_list )
+    end if
     call write_type( "Bond Coeffs",     bond_types, me % bond_type_list     )
     call write_type( "Angle Coeffs",    ang_types,  me % angle_type_list    )
     call write_type( "Dihedral Coeffs", dih_types,  me % dihedral_type_list )
@@ -121,6 +125,81 @@
           write(unit,'(A,X,"xy xz yz")') trim(join(real2str([xy,xz,yz])))
         end if
       end subroutine write_box_limits
+      !---------------------------------------------------------------------------------------------
+      subroutine write_ij_pair_coeffs( types, list )
+        type(TypeHolder),  intent(inout) :: types(:)
+        type(StrucList),   intent(in)    :: list
+        integer :: i, j, k, m, ntypes, npairs, narg, found, first
+        character(sl) :: rule, arg(20), itype(20), jtype(20)
+        logical :: all_found
+        real(rb) :: value
+        character(sl), allocatable :: pair(:), model(:)
+        if (size(types) > 0) then
+          ntypes = size(types)
+          npairs = ntypes*(ntypes - 1)/2 + ntypes
+          allocate( pair(npairs), model(npairs) )
+          k = 0
+          found = 0
+          first = merge(2,1,models)
+          do i = 1, ntypes
+            call split( list % parameters( [types(i)%types] ), narg, itype )
+            itype(narg+1:) = ""
+            k = k + 1
+            found = found + 1
+            if (models) model(k) = itype(1)
+            pair(k) = join(itype(first:narg))
+            do j = i+1, ntypes
+              call split( list % parameters( [types(j)%types] ), narg, jtype )
+              jtype(narg+1:) = ""
+              k = k + 1
+              rule = me % mixing_rule_list % parameters( [types(i)%types,types(j)%types] )
+              if (rule /= "") then
+                found = found + 1
+                pair(k) = ""
+                call split( rule, narg, arg )
+                if (models) model(k) = arg(1)
+                do m = first, narg
+                  select case (arg(m))
+                    case ("arithmetic")
+                      value = 0.5_rb*(str2real(itype(m)) + str2real(jtype(m)))
+                      pair(k) = trim(pair(k))//" "//trim(real2str(value))
+                    case ("geometric")
+                      value = sqrt(str2real(itype(m))*str2real(jtype(m)))
+                      pair(k) = trim(pair(k))//" "//trim(real2str(value))
+                    case default
+                      pair(k) = trim(pair(k))//" "//trim(arg(m))
+                  end select
+                end do
+              end if
+            end do
+          end do
+          if (found == 0) then
+            call write_type( "Pair Coeffs", types, list )
+          else if (found == npairs) then
+            if (models) then
+              if (any(model(2:) /= model(1))) then
+                write(unit,'(/,"PairIJ Coeffs # hybrid",/)')
+              else
+                write(unit,'(/,"PairIJ Coeffs # ",A,/)') trim(model(1))
+                model = ""
+              end if
+            else
+              write(unit,'(/,"PairIJ Coeffs",/)')
+              model = ""
+            end if
+            k = 0
+            do i = 1, ntypes
+              do j = i, ntypes
+                k = k + 1
+                write(unit,'(A," # ",A)') trim(join([int2str(i), int2str(j), model(k), pair(k)])), &
+                                          trim(join([types(i)%types,types(j)%types]))
+              end do
+            end do
+          else
+            call error("not all required mixing rules were defined")
+          end if
+        end if
+      end subroutine write_ij_pair_coeffs
       !---------------------------------------------------------------------------------------------
       subroutine write_type( title, types, list )
         character(*),      intent(in)    :: title

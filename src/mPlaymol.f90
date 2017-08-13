@@ -64,8 +64,9 @@ type tPlaymol
   type(StrucList) :: angle_list          = StrucList( "angle", 3, .true. )
   type(StrucList) :: dihedral_list       = StrucList( "dihedral", 4, .true. )
   type(StrucList) :: improper_list       = StrucList( "improper", 4 )
-  type(StrucList) :: body_list     = StrucList( "rigid body" )
+  type(StrucList) :: body_list           = StrucList( "rigid body" )
   type(StrucList) :: atom_bodies         = StrucList( "atom body" )
+  type(StrucList) :: mixing_rule_list    = StrucList( "mixing rule", 2, .true. )
 
   contains
     procedure :: read => tPlaymol_Read
@@ -128,6 +129,7 @@ contains
         case ("charge"); call charge_command
         case ("bond"); call bond_command
         case ("body"); call body_command
+        case ("mixing_rule"); call mixing_rule_command
         case ("link"); call link_command
         case ("unlink"); call unlink_command
         case ("extra"); call extra_command
@@ -338,6 +340,11 @@ contains
           if (jmol /= imol) call error( "not all atoms are in the same molecule" )
         end do
       end subroutine body_command
+      !---------------------------------------------------------------------------------------------
+      subroutine mixing_rule_command
+        call me % typefix % apply( arg(2:3) )
+        call me % mixing_rule_list % add( narg-1, arg(2:narg), me % atom_type_list, .true. )
+      end subroutine mixing_rule_command
       !---------------------------------------------------------------------------------------------
       subroutine link_command
         if (narg /= 3) call error( "invalid link command" )

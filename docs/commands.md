@@ -23,6 +23,7 @@ physically meaningful values are those corresponding to [LAMMPS real units].
 | [improper]      | creates an improper involving four given atoms or search for impropers    |
 | [extra]         | creates an extra bond, angle, or dihedral involving given atoms           |
 | [body]          | selects a set of atoms to be marked as a single body                      |
+| [mixing_rule]   | defines mixing rules for pairs of atom types                              |
 | [link]          | links two atoms (and fuses their molecules) without actually bonding them |
 | [unlink]        | removes an existing link (and splits the corresponding molecule)          |
 | [build]         | guesses atom positions from provided geometric information                |
@@ -267,7 +268,7 @@ will be employed in LAMMPS.
 
 **See also**:
 
-[atom], [bond_type], [angle_type], [dihedral_type], [improper_type], [prefix/suffix]
+[atom], [bond_type], [angle_type], [dihedral_type], [improper_type], [prefix/suffix], [mixing_rule]
 
 ----------------------------------------------------------------------------------------------------
 <a name="mass"></a>
@@ -792,6 +793,57 @@ a single body.
 **See also**:
 
 [atom], [write]
+
+----------------------------------------------------------------------------------------------------
+<a name="mixing_rule"></a>
+mixing_rule
+----------------------------------------------------------------------------------------------------
+
+**Syntax**:
+
+	mixing_rule	<type-1> <type-2> [<rule-1> <rule-2> ...]
+
+* _type-x_ = identifier of a previously defined atom type
+* _rule-x_ = a literal attribute or a rule for combining the x-th attribute of type-1 with the x-th
+attribute of type-2
+
+**Description**:
+
+This command defines mixing rules for defining attributes related to pairs of atom types. This will
+have a practical effect, for instance, when a [LAMMPS data file] is generated using the command
+[write] with either option _lammps_ or _lmp/models_.
+
+The parameters _type-1_ and _type-2_ are identifiers of previously defined atom types. Either order
+_type-1_ _type-2_ or _type-2_ _type-1_ will result in the same mixing rule. Wildcard characters (?
+and *) can be used to refer to multiple atom types. If a type-related [prefix/suffix] has been
+previously activated, then each actual atom type identifier will contain such prefix and/or suffix
+added to _type-x_.
+
+The parameter _rule-x_ is either a literal attribute or a keyword. If it is a literal attribute,
+then this will be the x-th attribute of the specified atom-type pair. If it is one of the keywords
+described below, a mixing rule will be used to combine the x-th attribute of _type-1_ with the x-th
+attribute of _type-2_. This requires that both atom types actually have a numerical-valued x-th
+attribute, otherwise [Playmol] will stop and throw an error message. The possible keywords are:
+
+* _geometric_: a geometric mean is computed for the corresponding [atom_type] attributes.
+
+* _arithmetic_: an arithmetic mead is computed for the corresponding [atom_type] attributes.
+
+**Examples**:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+atom_type	CH3 lj/cut 0.1947 3.75
+atom_type	CH2 lj/cut 0.0914 3.95
+mixing_rule	C* C* lj/cut geometric arithmetic
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the example above, a mixing rule is defined for all pairs of atom types whose identifiers begin
+with a letter "C". The parameter _rule-1_ is a literal attribute (lj/cut), while the parameters
+_rule-2_ and _rule-3_ are keywords for defining combination rules.
+
+**See also**:
+
+[atom_type], [prefix/suffix], [write]
 
 ----------------------------------------------------------------------------------------------------
 <a name="extra"></a>
@@ -1486,7 +1538,7 @@ Type and atom prefixes are explicitly added to the corresponding identifiers.
 can be used as an initial configuration for a Molecular Dynamics simulation using LAMMPS through its
 command [read_data].
 
-* __lmp/models__: identical to the _lammps_ option above, except that Playmol will consider the
+* __lmp/models__: identical to the _lammps_ option above, except that [Playmol] will consider the
 first attribute of every defined [atom_type] as the specification of a [LAMMPS pair style] for such
 atom type, as well as the first attribute of every [bond_type], [angle_type], [dihedral_type], or
 [improper_type] as the specification of a corresponding style in [LAMMPS].
@@ -1674,6 +1726,7 @@ The example above writes a summary of the current molecular system and then quit
 [bond]:			#bond
 [improper]:		#improper
 [body]:			#body
+[mixing_rule]:		#mixing_rule
 [extra]:		#extra
 [link]:			#link
 [unlink]:		#unlink
