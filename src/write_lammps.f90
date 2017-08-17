@@ -127,6 +127,7 @@
       end subroutine write_box_limits
       !---------------------------------------------------------------------------------------------
       subroutine write_ij_pair_coeffs( types, list )
+        use mMixingRule
         type(TypeHolder),  intent(inout) :: types(:)
         type(StrucList),   intent(in)    :: list
         integer :: i, j, k, m, ntypes, npairs, narg, found, first
@@ -159,16 +160,7 @@
                 call split( rule, narg, arg )
                 if (models) model(k) = arg(1)
                 do m = first, narg
-                  select case (arg(m))
-                    case ("arithmetic")
-                      value = 0.5_rb*(str2real(itype(m)) + str2real(jtype(m)))
-                      pair(k) = trim(pair(k))//" "//trim(real2str(value))
-                    case ("geometric")
-                      value = sqrt(str2real(itype(m))*str2real(jtype(m)))
-                      pair(k) = trim(pair(k))//" "//trim(real2str(value))
-                    case default
-                      pair(k) = trim(pair(k))//" "//trim(arg(m))
-                  end select
+                  pair(k) = trim(pair(k))//" "//trim(apply_rule( itype(m), jtype(m), arg(m) ))
                 end do
               end if
             end do

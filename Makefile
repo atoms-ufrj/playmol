@@ -8,13 +8,13 @@ PREFIX ?= /usr/local
 
 # Compilers and their basic options:
 FORT ?= gfortran
-BASIC_F_OPTS = -march=native -m64 -fPIC -fopenmp -cpp -fmax-errors=1
+BASIC_F_OPTS = -march=native -m64 -cpp -fmax-errors=1
 
 # Option FAST (default):
 FAST_F_OPTS = -Ofast
 
 # Option DEBUG:
-DEBUG_F_OPTS = -Wall -Wno-maybe-uninitialized --coverage -g -Og #-fcheck=all -Ddebug
+DEBUG_F_OPTS = -Wall -Wno-maybe-uninitialized
 
 # Checks chosen option:
 ifeq ($(DEBUG), 1)
@@ -34,7 +34,8 @@ PACKMOL = ./lib
 exec = playmol
 
 src = $(addprefix $(SRCDIR)/, $(addsuffix .f90, $(1)))
-SRC  = $(call src, mBox mFix mMolecule mParser mString mCodeFlow mGlobal \
+obj = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(1)))
+SRC  = $(call src, mBox mFix mMixingRule mMolecule mParser mString mCodeFlow mGlobal \
                    mPackmol mPlaymol mStruc playmol)
 AUX  = $(call src, write_emdee write_lammps write_lammpstrj write_summary write_internals)
 OBJ  = $(patsubst $(SRCDIR)/%.f90,$(OBJDIR)/%.o,$(SRC))
@@ -66,11 +67,11 @@ $(PACKMOL)/libpackmol.a:
 $(OBJDIR)/playmol.o: $(SRCDIR)/playmol.f90 $(OBJDIR)/mPlaymol.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/mPlaymol.o: $(SRCDIR)/mPlaymol.f90 $(AUX) $(OBJDIR)/mCodeFlow.o $(OBJDIR)/mPackmol.o \
-                      $(OBJDIR)/mFix.o $(OBJDIR)/mBox.o $(OBJDIR)/mMolecule.o
+$(OBJDIR)/mPlaymol.o: $(SRCDIR)/mPlaymol.f90 $(AUX) \
+                      $(call obj,mCodeFlow mPackmol mFix mMixingRule mBox mMolecule)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/mMolecule.o: $(SRCDIR)/mMolecule.f90 $(OBJDIR)/mStruc.o $(OBJDIR)/mGlobal.o
+$(OBJDIR)/mMolecule.o: $(SRCDIR)/mMolecule.f90 $(call obj,mStruc mGlobal)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mCodeFlow.o: $(SRCDIR)/mCodeFlow.f90 $(OBJDIR)/mParser.o $(OBJDIR)/mStruc.o
@@ -79,11 +80,13 @@ $(OBJDIR)/mCodeFlow.o: $(SRCDIR)/mCodeFlow.f90 $(OBJDIR)/mParser.o $(OBJDIR)/mSt
 $(OBJDIR)/mFix.o: $(SRCDIR)/mFix.f90 $(OBJDIR)/mGlobal.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
+$(OBJDIR)/mMixingRule.o: $(SRCDIR)/mMixingRule.f90 $(call obj,mString mGlobal)
+	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
+
 $(OBJDIR)/mParser.o: $(SRCDIR)/mParser.f90 $(OBJDIR)/mGlobal.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/mPackmol.o: $(SRCDIR)/mPackmol.f90 $(OBJDIR)/mMolecule.o \
-                      $(OBJDIR)/mStruc.o $(OBJDIR)/mBox.o
+$(OBJDIR)/mPackmol.o: $(SRCDIR)/mPackmol.f90 $(call obj,mMolecule mStruc mBox)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mBox.o: $(SRCDIR)/mBox.f90 $(OBJDIR)/mGlobal.o
