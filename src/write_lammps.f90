@@ -133,7 +133,6 @@
         integer :: i, j, k, m, ntypes, npairs, narg, found, first
         character(sl) :: rule, arg(20), itype(20), jtype(20)
         logical :: all_found
-        real(rb) :: value
         character(sl), allocatable :: pair(:), model(:)
         if (size(types) > 0) then
           ntypes = size(types)
