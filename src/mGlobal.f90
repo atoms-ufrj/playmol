@@ -67,14 +67,6 @@ contains
 
   !=================================================================================================
 
-  subroutine write_msg( prefix, msg )
-    character(*), intent(in) :: prefix, msg
-    write(stdout,'(A,A)',advance='no') prefix, msg
-    if (logunit /= 0) write(logunit,'(A,A)',advance='no') prefix, msg
-  end subroutine write_msg
-
-  !=================================================================================================
-
   subroutine end_line()
     write(stdout,'()')
     if (logunit /= 0) write(logunit,'()')
@@ -85,20 +77,26 @@ contains
   subroutine writeln( msg, msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9, advance )
     character(*), intent(in), optional :: msg, msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9
     logical,      intent(in), optional :: advance
-    if (present(msg))  call write_msg( "", trim(msg) )
-    if (present(msg1)) call write_msg( " ", trim(msg1) )
-    if (present(msg2)) call write_msg( " ", trim(msg2) )
-    if (present(msg3)) call write_msg( " ", trim(msg3) )
-    if (present(msg4)) call write_msg( " ", trim(msg4) )
-    if (present(msg5)) call write_msg( " ", trim(msg5) )
-    if (present(msg6)) call write_msg( " ", trim(msg6) )
-    if (present(msg7)) call write_msg( " ", trim(msg7) )
-    if (present(msg8)) call write_msg( " ", trim(msg8) )
-    if (present(msg9)) call write_msg( " ", trim(msg9) )
-    if (present(advance)) then
-      if (advance) call end_line
+    character(sl) :: emsg
+    logical :: wait
+    emsg = trim(msg)
+    if (present(msg1)) emsg = trim(emsg)//" "//trim(msg1)
+    if (present(msg2)) emsg = trim(emsg)//" "//trim(msg2)
+    if (present(msg3)) emsg = trim(emsg)//" "//trim(msg3)
+    if (present(msg4)) emsg = trim(emsg)//" "//trim(msg4)
+    if (present(msg5)) emsg = trim(emsg)//" "//trim(msg5)
+    if (present(msg6)) emsg = trim(emsg)//" "//trim(msg6)
+    if (present(msg7)) emsg = trim(emsg)//" "//trim(msg7)
+    if (present(msg8)) emsg = trim(emsg)//" "//trim(msg8)
+    if (present(msg9)) emsg = trim(emsg)//" "//trim(msg9)
+    wait = present(advance)
+    if (wait) wait = .not.advance
+    if (wait) then
+      write(stdout,'(A)',advance="no") trim(emsg)
+      if (logunit /= 0) write(logunit,'(A)',advance="no") trim(emsg)
     else
-      call end_line
+      write(stdout,'(A)') trim(emsg)
+      if (logunit /= 0) write(logunit,'(A)') trim(emsg)
     end if
   end subroutine writeln
 
@@ -107,6 +105,7 @@ contains
   subroutine warning( msg, msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9 )
     character(*), intent(in)           :: msg
     character(*), intent(in), optional :: msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9
+    character(sl) :: wmsg
     if (.not.associated(first_warning)) then
       allocate( first_warning )
       last_warning => first_warning
@@ -114,18 +113,19 @@ contains
       allocate( last_warning % next )
       last_warning => last_warning % next
     end if
-    last_warning % msg = trim(msg)
-    if (present(msg1)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg1)
-    if (present(msg2)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg2)
-    if (present(msg3)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg3)
-    if (present(msg4)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg4)
-    if (present(msg5)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg5)
-    if (present(msg6)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg6)
-    if (present(msg7)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg7)
-    if (present(msg8)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg8)
-    if (present(msg9)) last_warning % msg = trim(last_warning % msg)//" "//trim(msg9)
-    call write_msg( "WARNING: ", trim(last_warning % msg) )
-    call end_line
+    wmsg = trim(msg)
+    if (present(msg1)) wmsg = trim(wmsg)//" "//trim(msg1)
+    if (present(msg2)) wmsg = trim(wmsg)//" "//trim(msg2)
+    if (present(msg3)) wmsg = trim(wmsg)//" "//trim(msg3)
+    if (present(msg4)) wmsg = trim(wmsg)//" "//trim(msg4)
+    if (present(msg5)) wmsg = trim(wmsg)//" "//trim(msg5)
+    if (present(msg6)) wmsg = trim(wmsg)//" "//trim(msg6)
+    if (present(msg7)) wmsg = trim(wmsg)//" "//trim(msg7)
+    if (present(msg8)) wmsg = trim(wmsg)//" "//trim(msg8)
+    if (present(msg9)) wmsg = trim(wmsg)//" "//trim(msg9)
+    write(stdout,'(A)') achar(27)//"[1;96mWARNING: "//trim(wmsg)//achar(27)//"[0m"
+    if (logunit /= 0) write(logunit,'(A)') "WARNING: "//trim(wmsg)
+    last_warning % msg = wmsg
   end subroutine warning
 
   !=================================================================================================
@@ -135,10 +135,11 @@ contains
     ptr => first_warning
     if (associated(ptr)) then
       call writeln()
-      call writeln( "********** SUMMARY OF WARNINGS **********" )
+      write(stdout,'(A)') achar(27)//"[1;96m*** SUMMARY OF WARNINGS ***"//achar(27)//"[0m"
+      if (logunit /= 0) write(logunit,'("********** SUMMARY OF WARNINGS **********")')
     end if
     do while (associated(ptr))
-      call writeln( ptr % msg )
+      call writeln( ">", ptr % msg )
       ptr => ptr % next
     end do
   end subroutine reprint_warnings
@@ -148,17 +149,19 @@ contains
   subroutine error( msg, msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9 )
     character(*), intent(in)           :: msg
     character(*), intent(in), optional :: msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9
-    call write_msg( "ERROR: ", trim(msg) )
-    if (present(msg1)) call write_msg( " ", trim(msg1) )
-    if (present(msg2)) call write_msg( " ", trim(msg2) )
-    if (present(msg3)) call write_msg( " ", trim(msg3) )
-    if (present(msg4)) call write_msg( " ", trim(msg4) )
-    if (present(msg5)) call write_msg( " ", trim(msg5) )
-    if (present(msg6)) call write_msg( " ", trim(msg6) )
-    if (present(msg7)) call write_msg( " ", trim(msg7) )
-    if (present(msg8)) call write_msg( " ", trim(msg8) )
-    if (present(msg9)) call write_msg( " ", trim(msg9) )
-    call end_line
+    character(sl) :: emsg
+    emsg = trim(msg)
+    if (present(msg1)) emsg = trim(emsg)//" "//trim(msg1)
+    if (present(msg2)) emsg = trim(emsg)//" "//trim(msg2)
+    if (present(msg3)) emsg = trim(emsg)//" "//trim(msg3)
+    if (present(msg4)) emsg = trim(emsg)//" "//trim(msg4)
+    if (present(msg5)) emsg = trim(emsg)//" "//trim(msg5)
+    if (present(msg6)) emsg = trim(emsg)//" "//trim(msg6)
+    if (present(msg7)) emsg = trim(emsg)//" "//trim(msg7)
+    if (present(msg8)) emsg = trim(emsg)//" "//trim(msg8)
+    if (present(msg9)) emsg = trim(emsg)//" "//trim(msg9)
+    write(stdout,'(A)') achar(27)//"[1;91mERROR"//achar(27)//"[0m: "//trim(emsg)
+    if (logunit /= 0) write(logunit,'(A)') "ERROR: "//trim(emsg)
     stop
   end subroutine error
 
