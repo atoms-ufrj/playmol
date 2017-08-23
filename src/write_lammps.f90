@@ -278,7 +278,7 @@
         integer,           intent(in) :: permol(me%molecules%N), mol_index(:), natoms(:)
         integer :: i, j, k, kmol, imol, sprev, aprev
         character(sl) :: cstruc
-        if (any(n%mols*permol > 0)) then
+        if (any(structure%multiplicity > 0)) then
           write(unit,'(/,A,/)') title
           k = 0
           aprev = 0
