@@ -1,0 +1,4 @@
+examples/*.xyz
+examples/*.lmp
+examples/*.lammpstrj
+examples/*.log
