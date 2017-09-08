@@ -261,7 +261,7 @@ contains
     do while (associated(pval))
       ptr => me % list % first
       do while (associated(ptr))
-        if (ptr % match_id(pval % id,.false.)) then
+        if (ptr % match_id(pval % id)) then
           imol = str2int( ptr % params )
           total(imol) = total(imol) + str2real( pval % params )
         end if

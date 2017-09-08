@@ -22,7 +22,6 @@
 ! 2) Allow only one asterisk to be used as wildcard.
 ! 3) unlink command: warn if molecule splitting make extra bonds/angles/dihedrals have atoms in
 !    separate molecules and stop if rigid bodies have atoms in separate molecules
-! 4) Check whether it is necessary to maintain the field "two_way" is type StrucList
 
 module mPlaymol
 
@@ -51,23 +50,23 @@ type tPlaymol
   type(tVelocity) :: velocity
 
   type(StrucList) :: atom_type_list      = StrucList( "atom type" )
-  type(StrucList) :: bond_type_list      = StrucList( "bond type", 2, .true. )
-  type(StrucList) :: angle_type_list     = StrucList( "angle type", 3, .true. )
-  type(StrucList) :: dihedral_type_list  = StrucList( "dihedral type", 4, .true. )
+  type(StrucList) :: bond_type_list      = StrucList( "bond type", 2 )
+  type(StrucList) :: angle_type_list     = StrucList( "angle type", 3 )
+  type(StrucList) :: dihedral_type_list  = StrucList( "dihedral type", 4 )
   type(StrucList) :: improper_type_list  = StrucList( "improper type", 4 )
   type(StrucList) :: mass_list           = StrucList( "mass" )
   type(StrucList) :: atom_masses         = StrucList( "atom mass" )
   type(StrucList) :: diameter_list       = StrucList( "diameter" )
   type(StrucList) :: atom_list           = StrucList( "atom" )
   type(StrucList) :: charge_list         = StrucList( "charge" )
-  type(StrucList) :: bond_list           = StrucList( "bond", 2, .true. )
-  type(StrucList) :: link_list           = StrucList( "virtual link", 2, .true. )
-  type(StrucList) :: angle_list          = StrucList( "angle", 3, .true. )
-  type(StrucList) :: dihedral_list       = StrucList( "dihedral", 4, .true. )
-  type(StrucList) :: improper_list       = StrucList( "improper", 4 )
+  type(StrucList) :: bond_list           = StrucList( "bond", 2 )
+  type(StrucList) :: link_list           = StrucList( "virtual link", 2 )
+  type(StrucList) :: angle_list          = StrucList( "angle", 3 )
+  type(StrucList) :: dihedral_list       = StrucList( "dihedral", 4, directed = .true. )
+  type(StrucList) :: improper_list       = StrucList( "improper", 4, directed = .true. )
   type(StrucList) :: body_list           = StrucList( "rigid body" )
   type(StrucList) :: atom_bodies         = StrucList( "atom body" )
-  type(StrucList) :: mixing_rule_list    = StrucList( "mixing rule", 2, .true. )
+  type(StrucList) :: mixing_rule_list    = StrucList( "mixing rule", 2 )
 
   contains
     procedure :: read => tPlaymol_Read
@@ -977,7 +976,7 @@ contains
         if (ptr % used) then
           do i = 1, list%count
             associate (s => structure(i))
-              if (ptr % match_id( s%atom_types, typelist%two_way )) then
+              if (ptr % match_id( s%atom_types )) then
                 n = s%multiplicity + 1
                 allocate( aux(n) )
                 aux = [s%itype, itype]

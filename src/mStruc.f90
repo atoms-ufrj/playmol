@@ -37,7 +37,7 @@ end type Struc
 type StrucList
   character(sl)        :: name = ""
   integer              :: number = 1
-  logical              :: two_way = .false.
+  logical              :: directed = .false.
   integer              :: count = 0
   type(Struc), pointer :: first => null()
   type(Struc), pointer :: last  => null()
@@ -72,17 +72,12 @@ contains
 
   !=================================================================================================
 
-  function Struc_match_id( me, id, two_way ) result( match )
+  function Struc_match_id( me, id ) result( match )
     class(Struc),  intent(in) :: me
     character(sl), intent(in) :: id(:)
-    logical,       intent(in) :: two_way
     logical                   :: match
-    integer :: n
     match = all(match_str( me % id, id ))
-    if (two_way) then
-      n = size(id)
-      if (n > 1) match = match .or. all(match_str( me % id, id(n:1:-1) ))
-    end if
+    if (size(id) > 1) match = match .or. all(match_str( me % id, id(size(id):1:-1) ))
   end function Struc_match_id
 
   !=================================================================================================
@@ -169,7 +164,7 @@ contains
     current => type_list % first
     found = .false.
     do while (associated(current))
-      if (current % match_id( type, .true. )) then
+      if (current % match_id( type )) then
         found = .true.
         current % used = .true.
       end if
@@ -202,7 +197,7 @@ contains
     i = 0
     do while (associated(current).and.(.not.found))
       i = i + 1
-      found = current % match_id( id, .true. )
+      found = current % match_id( id )
       if (.not.found) current => current % next
     end do
     if (found) then

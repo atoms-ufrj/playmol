@@ -98,7 +98,7 @@
         ptr => list % first
         do while (.not.found .and. associated(ptr))
           D = ptr%id
-          if (ptr % match_id(C, two_way = .true.)) found = count(done(index(D))) == m-1
+          if (ptr % match_id(C)) found = count(done(index(D))) == m-1
           ptr => ptr % next
         end do
         if (found .and. (D(m) == iatom)) D = D(m:1:-1)

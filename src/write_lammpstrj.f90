@@ -55,7 +55,7 @@
         do while (associated(atom_type).and.(.not.found))
           if (atom_type % used) then
             itype = itype + 1
-            found = atom_type % match_id( arg, two_way = .false. )
+            found = atom_type % match_id( arg )
           end if
           if (.not.found) atom_type => atom_type % next
         end do
