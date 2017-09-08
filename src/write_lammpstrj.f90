@@ -53,7 +53,7 @@
         itype = 0
         found = .false.
         do while (associated(atom_type).and.(.not.found))
-          if (atom_type % used) then
+          if (atom_type % usable) then
             itype = itype + 1
             found = atom_type % match_id( arg )
           end if

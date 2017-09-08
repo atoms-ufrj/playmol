@@ -28,7 +28,7 @@ type Struc
   character(sl), allocatable :: id(:)
   character(sl)              :: params
   type(Struc), pointer       :: next => null()
-  logical                    :: used = .false.
+  logical                    :: usable = .false.
   contains
     procedure :: init => Struc_init
     procedure :: match_id => Struc_match_id
@@ -37,7 +37,7 @@ end type Struc
 type StrucList
   character(sl)        :: name = ""
   integer              :: number = 1
-  logical              :: directed = .false.
+  logical              :: reversible = .true.
   integer              :: count = 0
   type(Struc), pointer :: first => null()
   type(Struc), pointer :: last  => null()
@@ -82,39 +82,52 @@ contains
 
   !=================================================================================================
 
-  subroutine StrucList_add( me, narg, arg, list, repeatable, silent )
+  subroutine StrucList_add( me, narg, arg, allowedIDs, repeatable, silent )
     class(StrucList),           intent(inout) :: me
     integer,                    intent(in)    :: narg
     character(*),               intent(in)    :: arg(:)
-    class(StrucList), optional, intent(in)    :: list
+    class(StrucList), optional, intent(in)    :: allowedIDs
     logical,          optional, intent(in)    :: repeatable, silent
     integer :: i, n
-    logical :: repeat, print
+    logical :: unique, print
     type(Struc), pointer :: ptr
+    if (present(silent)) then
+      print = .not.silent
+    else
+      print = .true.
+    end if
     n = me % number
-    if (narg < n) call error( "invalid", me%name, "definition" )
-
-    if (present(list)) then
+    if (narg == n) then
+      if (print) call writeln( "Adding", me%name, join(arg(1:n)) )
+    else if (narg > n) then
+      if (print) then
+        call writeln( "Adding", me%name, join(arg(1:n)), "with parameters", join(arg(n+1:narg)) )
+      end if
+    else
+      call error( "invalid definition for", me%name, join(arg(1:narg)) )
+    end if
+    if (present(allowedIDs)) then
       do i = 1, n
-        if (.not. list % find(arg(i:i))) then
-          call error( "undefined", list%name, arg(i), "in", me%name, "definition" )
+        if (.not. allowedIDs % find(arg(i:i))) then
+          call error( "undefined", allowedIDs%name, arg(i), "in", me%name, "definition" )
         end if
       end do
     end if
-
-    repeat = present(repeatable)
-    if (repeat) repeat = repeatable
-    if (.not.repeat) then
+    if (present(repeatable)) then
+      unique = .not.repeatable
+    else
+      unique = .true.
+    end if
+    if (unique) then
       call me % search( arg(1:n), ptr )
       if (associated(ptr)) then
-        if (all(ptr%id == arg(1:n))) then
-          call error( "repeated", me%name, join( arg(1:n) ) )
-        else
-          call error( "conflicts with", me%name, join( arg(1:n) ) )
+        if (me%reversible) then
+          call error( "conflicts with", me%name, join( ptr%id ) )
+        else if (all(match_str( arg(1:n), ptr%id ))) then
+          call error( "conflicts with", me%name, join( ptr%id ) )
         end if
       end if
     end if
-
     if (associated(me % last)) then
       allocate( me % last % next )
       me % last => me % last % next
@@ -122,22 +135,7 @@ contains
       allocate( me % last )
       me % first => me % last
     end if
-    if (present(silent)) then
-      print = .not.silent
-    else
-      print = .true.
-    end if
-    if (print) then
-      call writeln( "Adding ", me%name, join(arg(1:n)), advance = .false. )
-      call me % last % init( narg, arg, me % number )
-      if (me % last % params /= "") then
-        call writeln( " with parameters", me % last % params )
-      else
-        call end_line
-      end if
-    else
-      call me % last % init( narg, arg, me % number )
-    end if
+    call me % last % init( narg, arg, me % number )
     me % count = me % count + 1
   end subroutine StrucList_add
 
@@ -148,37 +146,57 @@ contains
     character(*),               intent(inout) :: id(:)
     class(StrucList), optional, intent(in)    :: id_list, type_list
     integer,                    intent(in)    :: option
-    ! Search for types, mark found types as used, and:
+    ! Search for types, mark found types as usable, and:
     ! option = 1: add, WARN if no types were found
     ! option = 2: STOP if no types were found
     ! option = 3: add only if types were found
     integer :: i, n
     type(Struc), pointer :: current
     character(sl) :: type(me%number)
-    logical :: found
+    logical :: direct, reverse, found_direct, found_reverse, found
     do i = 1, me%number
       call id_list % search( id(i:i), current )
       if (.not.associated(current)) call error( "unknown", id_list % name, id(i) )
       call split( current % params, n, type(i:i) )
     end do
     current => type_list % first
-    found = .false.
+    found_direct = .false.
+    found_reverse = .false.
     do while (associated(current))
-      if (current % match_id( type )) then
-        found = .true.
-        current % used = .true.
+      if (all(match_str( current%id, type ))) then
+        found_direct = .true.
+        current % usable = .true.
+      else if (all(match_str( current%id(me%number:1:-1), type ))) then
+        found_reverse = .true.
+        current % usable = .true.
       end if
       current => current % next
     end do
+    found = found_direct .or. found_reverse
     select case (option)
-    case (1)
-      call me % add( me%number, id )
-      if (.not.found) call warning( "undefined", type_list%name, "for "//trim(id_list%name)//"s", &
-                                    join(id), "( types", join(type), ")" )
-    case (2)
-      if (.not.found) call error( type_list%name, join(type), "required, but not found" )
-    case (3)
-      if (found) call me % add( me%number, id )
+      case (1) ! add, WARN if no types were found
+        if (me%reversible) then
+          call me % add( me%number, id )
+        else
+          if (found_direct.or.(.not.found)) call me % add( me%number, id )
+          if (found_reverse) call me % add( me%number, id(me%number:1:-1) )
+        end if
+        if (.not.found) then
+          call warning("undefined",type_list%name,"for",id_list%name,join(id),"(",join(type),")")
+        end if
+      case (2) ! STOP if no types were found
+        if (.not.found) then
+          call error("undefined",type_list%name,"for",id_list%name,join(id),"(",join(type),")")
+        end if
+      case (3) ! add only if types were found
+        if (found) then
+          if (me%reversible) then
+            call me % add( me%number, id )
+          else
+            if (found_direct) call me % add( me%number, id )
+            if (found_reverse) call me % add( me%number, id(me%number:1:-1) )
+          end if
+        end if
     end select
   end subroutine StrucList_handle
 
@@ -279,7 +297,7 @@ contains
     Nv = 0
     do while (associated(current))
       N = N + 1
-      if (current % used) Nv = Nv + 1
+      if (current % usable) Nv = Nv + 1
       current => current % next
     end do
     if (present(valids_only)) N = Nv
@@ -294,7 +312,7 @@ contains
     current => me % first
     N = 0
     do while (associated(current))
-      if (current % used) N = N + 1
+      if (current % usable) N = N + 1
       current => current % next
     end do
   end function StrucList_count_used
@@ -316,7 +334,7 @@ contains
     if (test_used) test_used = used_only
     current => me % first
     do while (associated(current))
-      if ((.not.test_used).or.(test_used.and.current%used)) then
+      if ((.not.test_used).or.(test_used.and.current%usable)) then
         write(unit,'(A,X,A,X,A)') trim(name), trim(join(current%id)), trim(current%params)
       end if
       current => current % next

@@ -62,8 +62,8 @@ type tPlaymol
   type(StrucList) :: bond_list           = StrucList( "bond", 2 )
   type(StrucList) :: link_list           = StrucList( "virtual link", 2 )
   type(StrucList) :: angle_list          = StrucList( "angle", 3 )
-  type(StrucList) :: dihedral_list       = StrucList( "dihedral", 4, directed = .true. )
-  type(StrucList) :: improper_list       = StrucList( "improper", 4, directed = .true. )
+  type(StrucList) :: dihedral_list       = StrucList( "dihedral", 4, reversible = .false. )
+  type(StrucList) :: improper_list       = StrucList( "improper", 4, reversible = .false. )
   type(StrucList) :: body_list           = StrucList( "rigid body" )
   type(StrucList) :: atom_bodies         = StrucList( "atom body" )
   type(StrucList) :: mixing_rule_list    = StrucList( "mixing rule", 2 )
@@ -259,16 +259,16 @@ contains
 
         call me % atom_type_list % search( arg(3:3), ptr )
         if (.not.associated(ptr)) call error( "atom type", arg(3), "required, but not found")
-        ptr % used = .true.
+        ptr % usable = .true.
 
         call me % mass_list % search( arg(3:3), ptr )
         if (.not.associated(ptr)) call error( "mass of atom type",arg(3), "has not been defined" )
-        ptr % used = .true.
+        ptr % usable = .true.
         arg(3) = ptr % params
         call me % atom_masses % add( 2, arg(2:3), silent = .true. )
 
         call me % charge_list % search( arg(2:2), ptr )
-        if (associated(ptr)) ptr % used = .true.
+        if (associated(ptr)) ptr % usable = .true.
         if (narg == 4) then
           if (associated(ptr)) call error( "an applicable charge has already been defined" )
           arg(3) = arg(4)
@@ -286,7 +286,7 @@ contains
         call me % atomfix % apply( arg(2) )
         call me % charge_list % add( narg-1, arg(2:3) )
         if (.not.is_real(arg(3))) call error( "invalid charge value" )
-        if (me % atom_list % find( arg(2:2) )) me % charge_list % last % used = .true.
+        if (me % atom_list % find( arg(2:2) )) me % charge_list % last % usable = .true.
       end subroutine charge_command
       !---------------------------------------------------------------------------------------------
       subroutine add_bond( atom )
@@ -921,6 +921,7 @@ contains
     integer,           intent(out)              :: total(me%molecules%N)
     type(TypeHolder),  intent(out), allocatable :: type_map(:)
     integer :: i, j, k, m, n, itype, imol, imax, narg
+    logical :: match
     character(sl) :: arg(10)
     type(Struc), pointer :: ptr
     integer, allocatable :: aux(:)
@@ -932,7 +933,7 @@ contains
       m = list%number
       do i = 1, list%count
         associate (s => structure(i))
-          allocate(s%atoms(m), s%ibody(m), s%atom_types(m), s%atom_in_mol(m), s%itype(0) )
+          allocate( s%atoms(m), s%ibody(m), s%atom_types(m), s%atom_in_mol(m), s%itype(0) )
           s%atoms = ptr%id
           call me % get_types( ptr%id, s%atom_types )
           imol = str2int(me % molecules % list % parameters( ptr%id(1:1) ))
@@ -951,8 +952,10 @@ contains
           ptr => ptr%next
         end associate
       end do
+
       ! Sort structures according to the molecules they belong to:
       structure = structure(sorted( structure%mol ))
+
       ! If structure = atom, determine atom_in_mol, body and charge:
       if (.not.present(atom)) then
         imol = 0
@@ -969,14 +972,23 @@ contains
           end associate
         end do
       end if
+
       ! Determine how many times the same structure appears in a molecule:
       total = 0
       ptr => typelist % first
       do itype = 1, typelist % count
-        if (ptr % used) then
+        if (ptr % usable) then
           do i = 1, list%count
             associate (s => structure(i))
-              if (ptr % match_id( s%atom_types )) then
+              if (list%reversible) then
+                match = ptr % match_id( s%atom_types )
+              else
+                match = all(match_str( ptr%id, s%atom_types ))
+                if (match.and.all(match_str( ptr%id(m:1:-1), s%atom_types ))) then
+                  call warning(list%name,join(s%atoms),"assigned with",typelist%name,join(ptr%id))
+                end if
+              end if
+              if (match) then
                 n = s%multiplicity + 1
                 allocate( aux(n) )
                 aux = [s%itype, itype]
@@ -989,6 +1001,7 @@ contains
         end if
         ptr => ptr % next
       end do
+
       ! Create a map for the indices of actually used types:
       imax = maxval([(maxval(structure(i)%itype),i=1,list%count)])
       allocate( aux(imax) )
@@ -996,6 +1009,7 @@ contains
       forall (i=1:list%count, nmols(structure(i)%mol) > 0) aux(structure(i)%itype) = 1
       allocate( type_map(count(aux == 1)) )
       type_map%index = pack([(i,i=1,imax)],aux == 1)
+
       ! Retrieve the parameters of each used type:
       do i = 1, size(type_map)
         ptr => typelist % point_to( type_map(i)%index )
@@ -1010,6 +1024,7 @@ contains
         end if
         if (.not.present(atom)) type_map(i) % mass = me % mass_list % parameters( ptr % id )
       end do
+
       ! Apply an inverse map to the indices:
       aux(type_map%index) = [(i,i=1,size(type_map))]
       forall (i=1:list%count) structure(i)%itype = aux(structure(i)%itype)

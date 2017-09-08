@@ -54,7 +54,7 @@
       call flush_data( unit, "angle", me % angle_list % count )
       call flush_data( unit, "dihedral", me % dihedral_list % count )
       call flush_data( unit, "molecule", me%molecules%N )
-      write(unit,'(/,A)') "Effectively used:"
+      write(unit,'(/,A)') "Effectively usable:"
       call flush_data( unit, "atom type", me % atom_type_list % count_used() )
       call flush_data( unit, "bond type", me % bond_type_list % count_used() )
       call flush_data( unit, "angle type", me % angle_type_list % count_used() )
