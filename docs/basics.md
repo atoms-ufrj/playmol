@@ -19,7 +19,7 @@ fed to Playmol in this first step.
 2. __Chemical topology definition__: atoms are created and explicitly connected via chemical bonds.
 This is all Playmol needs to identify chemical compounds and automatically determine the angles and
 proper dihedrals present in their molecules. Playmol does not automatically detect impropers, but
-one can point them out manually or ask Playmol to search for impropers of some specific kind.
+one can point them out manually.
 
 3. __Instantiation__: chemical compounds identified in the previous step remain as abstract entities
 until actual molecules are positioned in space. The [build] command makes it possible to instantiate
@@ -125,7 +125,7 @@ specific operator for the logical `NOT` in [Table 1]. It is in fact implemented 
 
 <a name="Table_1"></a> **Table 1**: Precedence order of mathematical operators
 
-| Operator                                 | Description                             | Prececence  |
+| Operator                                 | Description                             | Precedence  |
 |:----------------------------------------:|:----------------------------------------|:-----------:|
 | \|                                       | Logical OR                              | 1 (lowest)  |
 | \&                                       | Logical AND                             | 2           |

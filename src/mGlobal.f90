@@ -123,7 +123,7 @@ contains
     if (present(msg7)) wmsg = trim(wmsg)//" "//trim(msg7)
     if (present(msg8)) wmsg = trim(wmsg)//" "//trim(msg8)
     if (present(msg9)) wmsg = trim(wmsg)//" "//trim(msg9)
-    write(stdout,'(A)') achar(27)//"[1;96mWARNING: "//trim(wmsg)//achar(27)//"[0m"
+    write(stdout,'(A)') achar(27)//"[1;93mWARNING: "//trim(wmsg)//achar(27)//"[0m"
     if (logunit /= 0) write(logunit,'(A)') "WARNING: "//trim(wmsg)
     last_warning % msg = wmsg
   end subroutine warning
@@ -135,7 +135,7 @@ contains
     ptr => first_warning
     if (associated(ptr)) then
       call writeln()
-      write(stdout,'(A)') achar(27)//"[1;96m*** SUMMARY OF WARNINGS ***"//achar(27)//"[0m"
+      write(stdout,'(A)') achar(27)//"[1;93m*** SUMMARY OF WARNINGS ***"//achar(27)//"[0m"
       if (logunit /= 0) write(logunit,'("********** SUMMARY OF WARNINGS **********")')
     end if
     do while (associated(ptr))

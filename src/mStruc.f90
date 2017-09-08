@@ -107,14 +107,16 @@ contains
       end do
     end if
 
-    call me % search( arg(1:n), ptr )
-    if (associated(ptr)) then
-      if (all(ptr%id == arg(1:n))) then
-        repeat = present(repeatable)
-        if (repeat) repeat = repeatable
-        if (.not.repeat) call error( "repeated", me%name, join( arg(1:n) ) )
-      else
-        call error( "ambiguous definition of", me%name, join( arg(1:n) ) )
+    repeat = present(repeatable)
+    if (repeat) repeat = repeatable
+    if (.not.repeat) then
+      call me % search( arg(1:n), ptr )
+      if (associated(ptr)) then
+        if (all(ptr%id == arg(1:n))) then
+          call error( "repeated", me%name, join( arg(1:n) ) )
+        else
+          call error( "conflicts with", me%name, join( arg(1:n) ) )
+        end if
       end if
     end if
 
@@ -167,7 +169,7 @@ contains
     current => type_list % first
     found = .false.
     do while (associated(current))
-      if (current % match_id( type, me%two_way )) then
+      if (current % match_id( type, .true. )) then
         found = .true.
         current % used = .true.
       end if
@@ -200,7 +202,7 @@ contains
     i = 0
     do while (associated(current).and.(.not.found))
       i = i + 1
-      found = current % match_id( id, me % two_way )
+      found = current % match_id( id, .true. )
       if (.not.found) current => current % next
     end do
     if (found) then

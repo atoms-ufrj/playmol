@@ -22,6 +22,7 @@
 ! 2) Allow only one asterisk to be used as wildcard.
 ! 3) unlink command: warn if molecule splitting make extra bonds/angles/dihedrals have atoms in
 !    separate molecules and stop if rigid bodies have atoms in separate molecules
+! 4) Check whether it is necessary to maintain the field "two_way" is type StrucList
 
 module mPlaymol
 

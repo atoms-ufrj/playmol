@@ -99,10 +99,12 @@ contains
     else
       call writeln( "Fusing molecule", int2str(imax), "to molecule", int2str(imin) )
       call rename_molecule( trim(int2str(imax)), trim(int2str(imin)) )
-      call writeln( "Lowering indices of molecules", int2str(imax+1), "to", int2str(me%N) )
-      do i = imax+1, me%N
-        call rename_molecule( trim(int2str(i)), trim(int2str(i-1)) )
-      end do
+      if (imax < me%N) then
+        call writeln( "Lowering indices of molecules", int2str(imax+1), "to", int2str(me%N) )
+        do i = imax+1, me%N
+          call rename_molecule( trim(int2str(i)), trim(int2str(i-1)) )
+        end do
+      end if
       me%N = me%N - 1
     end if
     call me % bonds % add( 2, atoms, silent = .true. )

@@ -52,7 +52,7 @@ define
 
 **Description**:
 
-This command defines a variable whose value (a character string) is intended to be substituted in
+This command defines a variable whose value (a character string) is intended for substitution in
 forthcoming commands.
 
 The parameter _variable_ the must be a single character string containing only letters (A-Z or a-z),
@@ -223,9 +223,10 @@ atom_type
 
 **Syntax**:
 
-	atom_type 	<id> <attribute-list>
+	atom_type 	<id> [<model>] <attribute-list>
 
 * _id_ = a name to be assigned to the atom type being defined
+* _model_ (optional) = the name of a non-bonded interaction model
 * _attribute-list_ = a list of attributes related to the atom type being defined
 
 **Description**:
@@ -238,6 +239,12 @@ The parameter _id_ must be a single string with no comment tags (#) and no wildc
 (* or ?). If a type-related [prefix/suffix] has been previously activated, then the actual atom type
 identifier will contain such prefix and/or suffix added to _id_. Distinct atom types cannot have the
 same identifier.
+
+The parameter _model_ is the name of a model for computing non-bonded interactions between atoms of
+type _id_. This parameter is optional, but its presence might be required by other commands. For
+instance, when a [LAMMPS data file] is created using the command [write] with keyword _lmp/models_,
+the parameter _model_ must be present in the definitions of all employed atom types. In this case,
+_model_ must be a [LAMMPS pair style].
 
 The parameter _attribute-list_ can be a sequence of strings containing any characters, except
 comment tags (#). When a [LAMMPS data file] is generated using the command [write], then the content
@@ -358,14 +365,15 @@ bond_type
 
 **Syntax**:
 
-	bond_type	<type-1> <type-2> <attribute-list>
+	bond_type	<type-1> <type-2> [<model>] <attribute-list>
 
 * _type-x_ = identifier of a previously defined atom type
+* _model_ (optional) = the name of a bond stretching model
 * _attribute-list_ = list of attributes related to the bond type being defined
 
 **Description**:
 
-This command defines a bond type and its related attributes. At least one bond type must necessarily
+This command defines a bond type and its related attributes. At least one bond type must
 be defined before any chemical [bond] is created. A bond type is identified by the types of the two
 atoms involved.
 
@@ -375,15 +383,29 @@ _type-1_ _type-2_ or _type-2_ _type-1_ will result in the same bond type. Wildca
 previously activated, then each actual atom type identifier will contain such prefix and/or suffix
 added to _type-x_.
 
+The parameter _model_ is the name of a model for computing bond-stretching interactions between
+bonded atoms of _type-1_ and _type-2_. This parameter is optional, but its presence might be
+required by other commands. For instance, when a [LAMMPS data file] is created using the command
+[write] with keyword _lmp/models_, the parameter _model_ must be present in the definitions of all
+employed bond types. In this case, _model_ must be a [LAMMPS bond style].
+
 The parameter _attribute-list_ can be a sequence of strings containing any characters, except
 comment tags (#). When a [LAMMPS data file] is generated using the command [write], then the content
 of _attribute-list_ is assumed to be the parameters of the [LAMMPS bond style] associated with the
 bond type in question.
 
-It is possible to define multiple identical bond types. This can be done, for instance, when the
-bond stretching potential is modeled as a sum of multiple terms, each one corresponding to a
-different [LAMMPS bond style]. Note that two or more bond types can be defined identically, even
-with the use of wildcard characters. However, they cannot be defined ambiguously.
+Bond types are considered as __identical__ if they are defined by the same identifiers _type-1_ and
+_type-2_, in either order. Playmol accepts definitions of identical bond types, which are applied
+simultaneously to every defined bond that fits into such identifiers. This is useful, for instance,
+when the stretching potential model is a sum of instances of a given [LAMMPS bond style], each one
+with a distinct set of parameter values.
+
+Bond types are considered as __ambiguous__ if, despite not being identical, they can fit to the
+same defined bond due to the presence of wildcard characters. Playmol accepts definitions of
+ambiguous bond types (or ambiguous sets of identical bond types), provided that they do not have
+the same number of wildcard-containing identifiers. If a detected bond fits to multiple ambiguous
+bond types (or sets thereof), Playmol will only apply the one (type or set) with the least number
+of wildcard-containing identifiers.
 
 **Examples**:
 
@@ -405,9 +427,10 @@ angle_type
 
 **Syntax**:
 
-	angle_type	<type-1> <type-2> <type-3> <attribute-list>
+	angle_type	<type-1> <type-2> <type-3> [<model>] <attribute-list>
 
 * _type-x_ = identifier of a previously defined atom type
+* _model_ (optional) = the name of an angle bending model
 * _attribute-list_ = list of attributes related to the bond type being defined
 
 **Description**:
@@ -421,15 +444,16 @@ type. Wildcard characters (? and *) can be used to refer to multiple atom types.
 [prefix/suffix] has been previously activated, then each actual atom type identifier will contain
 such prefix and/or suffix added to _type-x_.
 
+The parameter _model_ is the name of a model for computing angle-bending interactions between bonded
+atoms of _type-1_, _type-2_, and _type-3_. This parameter is optional, but its presence might be
+required by other commands. For instance, when a [LAMMPS data file] is created using the command
+[write] with keyword _lmp/models_, the parameter _model_ must be present in the definitions of all
+employed angle types. In this case, _model_ must be a [LAMMPS angle style].
+
 The parameter _attribute-list_ can be a sequence of strings containing any characters, except
 comment tags (#). When a [LAMMPS data file] is generated using the command [write], then the content
 of _attribute-list_ is assumed to be the parameters of the [LAMMPS angle style] associated with the
 angle type in question.
-
-It is possible to define multiple identical angle types. This can be done, for instance, when the
-angle bending potential is modeled as a sum of multiple terms, each one corresponding to a different
-[LAMMPS angle style]. Note that two or more angle types can be defined identically, even with the
-use of wildcard characters. However, they cannot be defined ambiguously.
 
 Playmol detects angles automatically when chemical bonds are created. If a detected angle fits to a
 previously defined angle type, then Playmol will add it to a list of angles to be used later on, for
@@ -437,6 +461,19 @@ instance, in the creation of a [LAMMPS data file]. If the corresponding angle ty
 the moment a new angle is detected, then Playmol will ignore such angle and produce a warning
 message. Besides the automatic detection, an angle can also be explicitly created using the [extra]
 command.
+
+Angle types are considered as __identical__ if they are defined by the same sequence of identifiers
+_type-1_, _type-2_, and _type-3_, in either the direct or the reverse order. Playmol accepts
+definitions of identical angle types, which are applied simultaneously to every detected angle that
+fits into such sequence. This is useful, for instance, when the bending potential model is a sum of
+instances of a given [LAMMPS angle style], each one with a distinct set of parameter values.
+
+Angle types are considered as __ambiguous__ if, despite not being identical, they can fit to the
+same detected angle due to the presence of wildcard characters. Playmol accepts definitions of
+ambiguous angle types (or ambiguous sets of identical angle types), provided that they do not have
+the same number of wildcard-containing identifiers. If a detected angle fits to multiple ambiguous
+angle types (or sets thereof), Playmol will only apply the one (type or set) with the least number
+of wildcard-containing identifiers.
 
 **Examples**:
 
@@ -459,9 +496,10 @@ dihedral_type
 
 **Syntax**:
 
-	dihedral_type	<type-1> <type-2> <type-3> <type-4> <attribute-list>
+	dihedral_type	<type-1> <type-2> <type-3> <type-4> [<model>] <attribute-list>
 
 * _type-x_ = identifier of a previously defined atom type
+* _model_ (optional) = the name of a tortional (dihedral) angle model
 * _attribute-list_ = list of attributes related to the bond type being defined
 
 **Description**:
@@ -476,15 +514,16 @@ characters (? and *) can be used to refer to multiple atom types. If a type-rela
 has been previously activated, then each actual atom type identifier will contain such prefix and/or
 suffix added to _type-x_.
 
+The parameter _model_ is the name of a model for computing torsional interactions between bonded
+atoms of _type-1_, _type-2_, _type-3_, and _type-4_. This parameter is optional, but its presence
+might be required by other commands. For instance, when a [LAMMPS data file] is created using the
+command [write] with keyword _lmp/models_, the parameter _model_ must be present in the definitions
+of all employed dihedral types. In this case, _model_ must be a [LAMMPS dihedral style].
+
 The parameter _attribute-list_ can be a sequence of strings containing any characters, except
 comment tags (#). When a [LAMMPS data file] is generated using the command [write], then the content
 of _attribute-list_ is assumed to be the parameters of the [LAMMPS dihedral style] associated with
 the dihedral type in question.
-
-It is possible to define multiple identical dihedral types. This can be done, for instance, when the
-torsional potential is modeled as a sum of multiple terms, each one corresponding to a different
-[LAMMPS dihedral style]. Note that two or more dihedral types can be defined identically, even with
-the use of wildcard characters. However, they cannot be defined ambiguously.
 
 Playmol detects dihedrals automatically when chemical bonds are created. If a detected dihedral fits
 to a previously defined dihedral type, then Playmol will add it to a list of dihedrals to be used
@@ -492,6 +531,19 @@ later on, for instance, in the creation of a [LAMMPS data file]. If the correspo
 does not exist at the moment a new dihedral is detected, then Playmol will ignore such dihedral and
 produce a warning message. Besides the automatic detection, a dihedral can also be explicitly
 created using the [extra] command.
+
+Dihedral types are considered as __identical__ if they are defined by the same sequence of
+identifiers _type-1_, _type-2_, _type-3_, and _type-4_. Playmol accepts definitions of identical
+dihedral types, which are applied simultaneously to every detected dihedral that fits into such
+sequence. This is useful, for instance, when the torsional potential model is a sum of instances
+of a given [LAMMPS dihedral style], each one with a distinct set of parameter values.
+
+Dihedral types are considered as __ambiguous__ if, despite not being identical, they can fit to the
+same detected dihedral due to the presence of wildcard characters. Playmol accepts definitions of
+ambiguous dihedral types (or ambiguous sets of identical dihedral types), provided that they do not
+have the same number of wildcard-containing identifiers. If a detected dihedral fits to multiple
+ambiguous dihedral types (or sets thereof), Playmol will only apply the one (type or set) with the
+least number of wildcard-containing identifiers.
 
 **Examples**:
 
@@ -514,9 +566,10 @@ improper_type
 
 **Syntax**:
 
-	improper_type	<type-1> <type-2> <type-3> <type-4> <attribute-list>
+	improper_type	<type-1> <type-2> <type-3> <type-4> [<model>] <attribute-list>
 
 * _type-x_ = identifier of a previously defined atom type
+* _model_ (optional) = the name of an improper dihedral model
 * _attribute-list_ = list of attributes related to the bond type being defined
 
 **Description**:
@@ -531,18 +584,34 @@ characters (? and *) can be used to refer to multiple atom types. If a type-rela
 has been previously activated, then each actual atom type identifier will contain such prefix and/or
 suffix added to _type-x_.
 
+The parameter _model_ is the name of a model for computing improper dihedral interactions between
+bonded atoms of _type-1_, _type-2_, _type-3_, and _type-4_. This parameter is optional, but its
+presence might be required by other commands. For instance, when a [LAMMPS data file] is created
+using the command [write] with keyword _lmp/models_, the parameter _model_ must be present in the
+definitions of all employed improper types. In this case, _model_ must be a [LAMMPS improper style].
+
 The parameter _attribute-list_ can be a sequence of strings containing any characters, except
 comment tags (#). When a [LAMMPS data file] is generated using the command [write], then the content
 of _attribute-list_ is assumed to be the parameters of the [LAMMPS improper style] associated with
 the improper type in question.
 
-It is possible to define multiple identical improper types. This can be done, for instance, when the
-torsional potential is modeled as a sum of multiple terms, each one corresponding to a different
-[LAMMPS improper style]. Note that two or more improper types can be defined identically, even with
-the use of wildcard characters. However, they cannot be defined ambiguously.
+In contrast to angles and proper dihedrals, impropers are not automatically detected as bonds are
+defined. This is so because there are distinct possible definitions of improper dihedrals. Impropers
+must be manually created by using the [improper] command, which requires the previous definition of
+a fitting improper type.
 
-Impropers can be manually created or detected using the command [improper], which requires a
-previously defined improper type.
+Improper types are considered as __identical__ if they are defined by the same sequence of
+identifiers _type-1_, _type-2_, _type-3_, and _type-4_. Playmol accepts definitions of identical
+improper types, which are applied simultaneously to every defined improper that fits into such
+sequence. This is useful, for instance, when the improper potential model is a sum of instances
+of a given [LAMMPS improper style], each one with a distinct set of parameter values.
+
+Improper types are considered as __ambiguous__ if, despite not being identical, they can fit to the
+same defined improper due to the presence of wildcard characters. Playmol accepts definitions of
+ambiguous improper types (or ambiguous sets of identical improper types), provided that they do not
+have the same number of wildcard-containing identifiers. If a defined improper fits to multiple
+ambiguous improper types (or sets thereof), Playmol will only apply the one (type or set) with the
+least number of wildcard-containing identifiers.
 
 **Examples**:
 
@@ -707,9 +776,9 @@ improper
 
 	improper	<atom-1> <atom-2> <atom-3> <atom-4>
 
-or
+<!--or-->
 
-	improper	search
+<!--	improper	search-->
 
 * _atom-x_ = name of a previously defined atom
 
@@ -729,20 +798,20 @@ to _atom-x_.
 When using explicit improper definition (first syntax above), a previously defined [improper_type]
 matching the four atoms in the specified order is required.
 
-Using the keyword _search_ (second syntax above), Playmol will search for impropers composed of any
-four atoms I, J, K, and L in which atom K is simultaneously bonded to atoms I, J, and L. A detected
-improper will only be effectively created if the corresponding [improper_type] has been previously
-defined.
+<!--Using the keyword _search_ (second syntax above), Playmol will search for impropers composed of any-->
+<!--four atoms I, J, K, and L in which atom K is simultaneously bonded to atoms I, J, and L. A detected-->
+<!--improper will only be effectively created if the corresponding [improper_type] has been previously-->
+<!--defined.-->
 
 **Examples**:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 improper_type	HC HC C HC	1.41095 -0.27100 3.14484 0
-improper     	search
+<!--improper     	search-->
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In the example above, an improper type is defined for all-atom methyl groups and then Playmol
-searches for impropers of this type.
+In the example above, an improper type is defined for all-atom methyl groups.
+<!--Then Playmol searches for impropers of this type.-->
 
 **See also**:
 
@@ -875,7 +944,7 @@ provided, with no use of wildcard characters (* or ?). A corresponding structure
 [prefix/suffix] has been previously activated, then the actual atom identifier will contain such
 prefix and/or suffix added to _atom-x_.
 
-__Important__: Playmol does not automatically search for angles and dihedrals when a chemical bond
+__Important__: Playmol DOES NOT automatically search for angles and dihedrals when a chemical bond
 is created with the command [extra].
 
 NOTE: extra structures are only required by some molecular models that define unconventional bonds,
