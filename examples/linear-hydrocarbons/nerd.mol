@@ -22,6 +22,6 @@ atom_type       CH4     lj/cut {148.0*$kB} 3.730 $cutoff # TraPPE parameters
 
 bond_type     CH? CH?         harmonic {96500*$kB/2} $L
 angle_type    CH? CH? CH?     harmonic {62500*$kB/2} $theta
-dihedral_type CH2 CH? CH? CH? opls {355.04*2*$kB} {-68.19*2*$kB} {701.32*2*$kB} 0.0
-dihedral_type CH? CH? CH2 CH2 opls {355.04*2*$kB} {-68.19*2*$kB} {701.32*2*$kB} 0.0
+dihedral_type CH2 CH2 CH2 CH? opls {355.04*2*$kB} {-68.19*2*$kB} {701.32*2*$kB} 0.0
+dihedral_type CH? CH2 CH2 CH? opls BOGUS
 

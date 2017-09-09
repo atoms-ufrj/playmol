@@ -91,7 +91,7 @@ type StrucHolder
   integer :: mol, body
   character(sl) :: charge
   character(sl), allocatable :: atoms(:), atom_types(:)
-  integer, allocatable :: atom_in_mol(:), itype(:), ibody(:)
+  integer, allocatable :: atom_in_mol(:), itype(:), ibody(:), wildcards(:)
 end type StrucHolder
 
 type TypeHolder
@@ -925,6 +925,7 @@ contains
     character(sl) :: arg(10)
     type(Struc), pointer :: ptr
     integer, allocatable :: aux(:)
+    logical, allocatable :: valid(:)
     if (list%count > 0) then
       ! Identify the atoms and types in each structure and
       ! count the number of structures in each molecule:
@@ -933,7 +934,8 @@ contains
       m = list%number
       do i = 1, list%count
         associate (s => structure(i))
-          allocate( s%atoms(m), s%ibody(m), s%atom_types(m), s%atom_in_mol(m), s%itype(0) )
+          allocate( s%atoms(m), s%ibody(m), s%atom_types(m), s%atom_in_mol(m) )
+          allocate( s%itype(0), s%wildcards(0) )
           s%atoms = ptr%id
           call me % get_types( ptr%id, s%atom_types )
           imol = str2int(me % molecules % list % parameters( ptr%id(1:1) ))
@@ -984,16 +986,13 @@ contains
                 match = ptr % match_id( s%atom_types )
               else
                 match = all(match_str( ptr%id, s%atom_types ))
-                if (match.and.all(match_str( ptr%id(m:1:-1), s%atom_types ))) then
-                  call warning(list%name,join(s%atoms),"assigned with",typelist%name,join(ptr%id))
-                end if
               end if
               if (match) then
-                n = s%multiplicity + 1
-                allocate( aux(n) )
                 aux = [s%itype, itype]
                 call move_alloc( aux, s%itype )
-                s%multiplicity = n
+                aux = [s%wildcards, count(has_macros(ptr%id))]
+                call move_alloc( aux, s%wildcards)
+                s%multiplicity = s%multiplicity + 1
                 total(s%mol) = total(s%mol) + 1
               end if
             end associate
@@ -1002,10 +1001,36 @@ contains
         ptr => ptr % next
       end do
 
+      ! Resolve ambiguities:
+      do i = 1, list%count
+        associate (s => structure(i))
+          if (s%multiplicity > 1) then
+            if (any(s%wildcards /= s%wildcards(1))) then
+              valid = s%wildcards == minval(s%wildcards)
+              call warning( "ambiguity resolved for", list%name, join(s%atoms), &
+                            "( types", join(s%atom_types), ")" )
+              aux = pack(s%itype,valid)
+              ptr => typelist % first
+              do itype = 1, typelist % count
+                if (any(s%itype == itype)) then
+                  if (any(aux == itype)) then
+                    call writeln( "-->", typelist%name, join(ptr%id), "assigned" )
+                  else
+                    call writeln( "-->", typelist%name, join(ptr%id), "ignored" )
+                  end if
+                end if
+                ptr => ptr % next
+              end do
+              s%itype = aux
+              s%multiplicity = size(aux)
+            end if
+          end if
+        end associate
+      end do
+
       ! Create a map for the indices of actually used types:
       imax = maxval([(maxval(structure(i)%itype),i=1,list%count)])
-      allocate( aux(imax) )
-      aux = 0
+      aux = [(0,i=1,imax)]
       forall (i=1:list%count, nmols(structure(i)%mol) > 0) aux(structure(i)%itype) = 1
       allocate( type_map(count(aux == 1)) )
       type_map%index = pack([(i,i=1,imax)],aux == 1)
