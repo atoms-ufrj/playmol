@@ -152,23 +152,49 @@ contains
     ! option = 3: add only if types were found
     integer :: i, n
     type(Struc), pointer :: current
-    character(sl) :: type(me%number)
-    logical :: found_direct, found_reverse, found
+    character(sl) :: types(me%number)
+    logical :: direct, reverse, found_direct, found_reverse, found_two_way, found, direct_first
+
     do i = 1, me%number
       call id_list % search( id(i:i), current )
       if (.not.associated(current)) call error( "unknown", id_list % name, id(i) )
-      call split( current % params, n, type(i:i) )
+      call split( current % params, n, types(i:i) )
     end do
+
+    current => type_list % first
+    found = .false.
+    do while (associated(current).and.(.not.found))
+      direct = all(match_str( current%id, types ))
+      reverse = all(match_str( current%id(me%number:1:-1), types ))
+      found = direct .neqv. reverse
+      current => current % next
+    end do
+    direct_first = direct .or. (.not.found)
+
     current => type_list % first
     found_direct = .false.
     found_reverse = .false.
     do while (associated(current))
-      if (all(match_str( current%id, type ))) then
-        found_direct = .true.
-        current % usable = .true.
-      else if (all(match_str( current%id(me%number:1:-1), type ))) then
-        found_reverse = .true.
-        current % usable = .true.
+      direct = all(match_str( current%id, types ))
+      reverse = all(match_str( current%id(me%number:1:-1), types ))
+      if (direct_first) then
+        if (direct) then
+          found_direct = .true.
+          current % usable = .true.
+          found_two_way = reverse
+        else if (reverse) then
+          found_reverse = .true.
+          current % usable = .true.
+        end if
+      else
+        if (reverse) then
+          found_reverse = .true.
+          current % usable = .true.
+          found_two_way = direct
+        else if (direct) then
+          found_direct = .true.
+          current % usable = .true.
+        end if
       end if
       current => current % next
     end do
@@ -180,13 +206,31 @@ contains
         else
           if (found_direct.or.(.not.found)) call me % add( me%number, id )
           if (found_reverse) call me % add( me%number, id(me%number:1:-1) )
+          if (found_direct .and. found_reverse .and. found_two_way) then
+            call warning( "direction conflict for", me%name, join(id), "( types", join(types), ")" )
+            current => type_list % first
+            do while (associated(current))
+              if (current%usable) then
+                direct = all(match_str( current%id, types ))
+                reverse = all(match_str( current%id(me%number:1:-1), types ))
+                if (direct .and. reverse) then
+                  call writeln( "-->", type_list%name, join(current%id), "( two-way )" )
+                else if (direct) then
+                  call writeln( "-->", type_list%name, join(current%id), "( direct  )" )
+                else if (reverse) then
+                  call writeln( "-->", type_list%name, join(current%id), "( reverse )" )
+                end if
+              end if
+              current => current % next
+            end do
+          end if
         end if
         if (.not.found) then
-          call warning("undefined",type_list%name,"for",id_list%name,join(id),"(",join(type),")")
+          call warning("undefined",type_list%name,"for",id_list%name,join(id),"(",join(types),")")
         end if
       case (2) ! STOP if no types were found
         if (.not.found) then
-          call error("undefined",type_list%name,"for",id_list%name,join(id),"(",join(type),")")
+          call error("undefined",type_list%name,"for",id_list%name,join(id),"(",join(types),")")
         end if
       case (3) ! add only if types were found
         if (found) then

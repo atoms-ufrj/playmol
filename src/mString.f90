@@ -298,8 +298,13 @@ contains
   elemental function real2str( a ) result( str )
     real(rb), intent(in) :: a
     character(sl)        :: str
-    write(str,*) a
-!    write(str,*) real(a,4)
+    real(4) :: b
+    b = a
+    if (abs(b) < epsilon(b)) then
+      write(str,*) 0.0_4
+    else
+      write(str,*) b
+    end if
     str = adjustl(str)
   end function real2str
 
