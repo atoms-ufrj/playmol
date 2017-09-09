@@ -153,7 +153,7 @@ contains
     integer :: i, n
     type(Struc), pointer :: current
     character(sl) :: type(me%number)
-    logical :: direct, reverse, found_direct, found_reverse, found
+    logical :: found_direct, found_reverse, found
     do i = 1, me%number
       call id_list % search( id(i:i), current )
       if (.not.associated(current)) call error( "unknown", id_list % name, id(i) )

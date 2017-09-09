@@ -39,7 +39,7 @@ type tMolecule
     procedure :: per_molecule => tMolecule_per_molecule
     procedure :: set_geometry => tMolecule_set_geometry
     procedure :: coordinates => tMolecule_coordinates
-    procedure :: align => tMolecule_align
+    procedure, nopass :: align => tMolecule_align
 end type tMolecule
 
 contains
@@ -415,8 +415,7 @@ contains
 
   !=================================================================================================
 
-  subroutine tMolecule_align( me, N, Mass, Coord, axis )
-    class(tMolecule), intent(inout) :: me
+  subroutine tMolecule_align(  N, Mass, Coord, axis )
     integer,  intent(in)    :: N, axis(3)
     real(rb), intent(in)    :: Mass(N)
     real(rb), intent(inout) :: Coord(3,N)

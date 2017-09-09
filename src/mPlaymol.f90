@@ -920,7 +920,7 @@ contains
     integer,           intent(out)              :: permol(me%molecules%N)
     integer,           intent(out)              :: total(me%molecules%N)
     type(TypeHolder),  intent(out), allocatable :: type_map(:)
-    integer :: i, j, k, m, n, itype, imol, imax, narg
+    integer :: i, j, k, m, itype, imol, imax, narg
     logical :: match
     character(sl) :: arg(10)
     type(Struc), pointer :: ptr

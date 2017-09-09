@@ -76,14 +76,14 @@
     if (me % box % exists()) call write_box_limits
     call write_masses
     if (me % mixing_rule_list % count == 0) then
-      call write_type( "Pair Coeffs", atom_types, me % atom_type_list )
+      call write_type( "Pair Coeffs", atom_types )
     else
       call write_ij_pair_coeffs( atom_types, me % atom_type_list )
     end if
-    call write_type( "Bond Coeffs",     bond_types, me % bond_type_list     )
-    call write_type( "Angle Coeffs",    ang_types,  me % angle_type_list    )
-    call write_type( "Dihedral Coeffs", dih_types,  me % dihedral_type_list )
-    call write_type( "Improper Coeffs", imp_types,  me % improper_type_list )
+    call write_type( "Bond Coeffs",     bond_types )
+    call write_type( "Angle Coeffs",    ang_types  )
+    call write_type( "Dihedral Coeffs", dih_types  )
+    call write_type( "Improper Coeffs", imp_types  )
     call write_atoms( n%atoms )
     call write_structure( "Bonds",     bond, n%bonds, mol_index, n%atoms )
     call write_structure( "Angles",    ang,  n%angs,  mol_index, n%atoms )
@@ -132,7 +132,6 @@
         type(StrucList),   intent(in)    :: list
         integer :: i, j, k, m, ntypes, npairs, narg, found, first
         character(sl) :: rule, arg(20), itype(20), jtype(20)
-        logical :: all_found
         character(sl), allocatable :: pair(:), model(:)
         if (size(types) > 0) then
           ntypes = size(types)
@@ -165,7 +164,7 @@
             end do
           end do
           if (found == 0) then
-            call write_type( "Pair Coeffs", types, list )
+            call write_type( "Pair Coeffs", types )
           else if (found == npairs) then
             if (models) then
               if (any(model(2:) /= model(1))) then
@@ -192,10 +191,9 @@
         end if
       end subroutine write_ij_pair_coeffs
       !---------------------------------------------------------------------------------------------
-      subroutine write_type( title, types, list )
+      subroutine write_type( title, types )
         character(*),      intent(in)    :: title
         type(TypeHolder),  intent(inout) :: types(:)
-        type(StrucList),   intent(in)    :: list
         integer :: i
         if (size(types) > 0) then
           if (models) then
