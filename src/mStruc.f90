@@ -37,7 +37,8 @@ end type Struc
 type StrucList
   character(sl)        :: name = ""
   integer              :: number = 1
-  logical              :: reversible = .true.
+  logical              :: bothways = .true.
+  logical              :: reversible = .false.
   integer              :: count = 0
   type(Struc), pointer :: first => null()
   type(Struc), pointer :: last  => null()
@@ -121,7 +122,7 @@ contains
     if (unique) then
       call me % search( arg(1:n), ptr )
       if (associated(ptr)) then
-        if (me%reversible) then
+        if (me%bothways) then
           call error( "conflicts with", me%name, join( ptr%id ) )
         else if (all(match_str( arg(1:n), ptr%id ))) then
           call error( "conflicts with", me%name, join( ptr%id ) )
@@ -154,94 +155,119 @@ contains
     type(Struc), pointer :: current
     character(sl) :: types(me%number)
     logical :: direct, reverse, found_direct, found_reverse, found_two_way, found, direct_first
-
     do i = 1, me%number
       call id_list % search( id(i:i), current )
       if (.not.associated(current)) call error( "unknown", id_list % name, id(i) )
       call split( current % params, n, types(i:i) )
     end do
-
-    current => type_list % first
     found = .false.
-    do while (associated(current).and.(.not.found))
-      direct = all(match_str( current%id, types ))
-      reverse = all(match_str( current%id(me%number:1:-1), types ))
-      found = direct .neqv. reverse
-      current => current % next
-    end do
-    direct_first = direct .or. (.not.found)
-
     current => type_list % first
-    found_direct = .false.
-    found_reverse = .false.
-    do while (associated(current))
-      direct = all(match_str( current%id, types ))
-      reverse = all(match_str( current%id(me%number:1:-1), types ))
-      if (direct_first) then
-        if (direct) then
-          found_direct = .true.
-          current % usable = .true.
-          found_two_way = reverse
-        else if (reverse) then
-          found_reverse = .true.
+    if (me%bothways) then
+      do while (associated(current))
+        if (current % match_id( types )) then
+          found = .true.
           current % usable = .true.
         end if
-      else
-        if (reverse) then
-          found_reverse = .true.
-          current % usable = .true.
-          found_two_way = direct
-        else if (direct) then
-          found_direct = .true.
-          current % usable = .true.
-        end if
-      end if
-      current => current % next
-    end do
-    found = found_direct .or. found_reverse
-    select case (option)
-      case (1) ! add, WARN if no types were found
-        if (me%reversible) then
-          call me % add( me%number, id )
+        current => current % next
+      end do
+    else if (me%reversible) then
+      do while (associated(current).and.(.not.found))
+        direct = all(match_str( current%id, types ))
+        reverse = all(match_str( current%id(me%number:1:-1), types ))
+        found = direct .neqv. reverse
+        current => current % next
+      end do
+      direct_first = direct .or. (.not.found)
+      current => type_list % first
+      found_direct = .false.
+      found_reverse = .false.
+      do while (associated(current))
+        direct = all(match_str( current%id, types ))
+        reverse = all(match_str( current%id(me%number:1:-1), types ))
+        if (direct_first) then
+          if (direct) then
+            found_direct = .true.
+            found_two_way = reverse
+            current % usable = .true.
+          else if (reverse) then
+            found_reverse = .true.
+            current % usable = .true.
+          end if
         else
+          if (reverse) then
+            found_reverse = .true.
+            found_two_way = direct
+            current % usable = .true.
+          else if (direct) then
+            found_direct = .true.
+            current % usable = .true.
+          end if
+        end if
+        current => current % next
+      end do
+      found = found_direct .or. found_reverse
+    else
+      do while (associated(current))
+        if (all(match_str( current%id, types ))) then
+          found = .true.
+          current % usable = .true.
+        end if
+        current => current % next
+      end do
+    end if
+    if (me%reversible) then
+      select case (option)
+        case (1) ! add, WARN if no types were found
           if (found_direct.or.(.not.found)) call me % add( me%number, id )
           if (found_reverse) call me % add( me%number, id(me%number:1:-1) )
-          if (found_direct .and. found_reverse .and. found_two_way) then
-            call warning( "direction conflict for", me%name, join(id), "( types", join(types), ")" )
-            current => type_list % first
-            do while (associated(current))
-              if (current%usable) then
-                direct = all(match_str( current%id, types ))
-                reverse = all(match_str( current%id(me%number:1:-1), types ))
-                if (direct .and. reverse) then
-                  call writeln( "-->", type_list%name, join(current%id), "( two-way )" )
-                else if (direct) then
-                  call writeln( "-->", type_list%name, join(current%id), "( direct  )" )
-                else if (reverse) then
-                  call writeln( "-->", type_list%name, join(current%id), "( reverse )" )
-                end if
-              end if
-              current => current % next
-            end do
-          end if
-        end if
-        if (.not.found) then
-          call warning("undefined",type_list%name,"for",id_list%name,join(id),"(",join(types),")")
-        end if
-      case (2) ! STOP if no types were found
-        if (.not.found) then
-          call error("undefined",type_list%name,"for",id_list%name,join(id),"(",join(types),")")
-        end if
-      case (3) ! add only if types were found
-        if (found) then
-          if (me%reversible) then
-            call me % add( me%number, id )
-          else
+          if (found_direct .and. found_reverse .and. found_two_way) call direction_conflict()
+          if (.not.found) call warning( message() )
+        case (2) ! STOP if no types were found
+          if (.not.found) call error( message() )
+        case (3) ! add only if types were found
+          if (found) then
             if (found_direct) call me % add( me%number, id )
             if (found_reverse) call me % add( me%number, id(me%number:1:-1) )
+            if (found_direct .and. found_reverse .and. found_two_way) call direction_conflict()
           end if
-        end if
-    end select
+      end select
+    else
+      select case (option)
+        case (1) ! add, WARN if no types were found
+          call me % add( me%number, id )
+          if (.not.found) call warning( message() )
+        case (2) ! STOP if no types were found
+          if (.not.found) call error( message() )
+        case (3) ! add only if types were found
+          if (found) call me % add( me%number, id )
+      end select
+    end if
+    contains
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      subroutine direction_conflict
+        call warning("direction conflict for", me%name, join(id), "( atom types", join(types), ")")
+        current => type_list % first
+        do while (associated(current))
+          if (current%usable) then
+            direct = all(match_str( current%id, types ))
+            reverse = all(match_str( current%id(me%number:1:-1), types ))
+            if (direct .and. reverse) then
+              call writeln( "-->", type_list%name, join(current%id), "( two-way )" )
+            else if (direct) then
+              call writeln( "-->", type_list%name, join(current%id), "( direct  )" )
+            else if (reverse) then
+              call writeln( "-->", type_list%name, join(current%id), "( reverse )" )
+            end if
+          end if
+          current => current % next
+        end do
+      end subroutine direction_conflict
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      character(sl) function message()
+        message = join([character(sl) :: &
+                    type_list%name, "not defined for", me%name, id, "( atom types", types, ")" ])
+      end function message
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   end subroutine StrucList_handle
 
   !=================================================================================================

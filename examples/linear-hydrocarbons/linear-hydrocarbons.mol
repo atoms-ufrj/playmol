@@ -2,7 +2,7 @@ define N     as 5
 define FF    as nerd
 define seed  as 3467
 define nmols as 500
-define rho   as 0.6 # g/cm³
+define rho   as 0.3 # g/cm³
 define temp  as 180 # K
 
 mass CH4 16.04242 # Da

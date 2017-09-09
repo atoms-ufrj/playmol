@@ -62,8 +62,8 @@ type tPlaymol
   type(StrucList) :: bond_list           = StrucList( "bond", 2 )
   type(StrucList) :: link_list           = StrucList( "virtual link", 2 )
   type(StrucList) :: angle_list          = StrucList( "angle", 3 )
-  type(StrucList) :: dihedral_list       = StrucList( "dihedral", 4, reversible = .false. )
-  type(StrucList) :: improper_list       = StrucList( "improper", 4, reversible = .false. )
+  type(StrucList) :: dihedral_list       = StrucList( "dihedral", 4, .false., .true. )
+  type(StrucList) :: improper_list       = StrucList( "improper", 4, .false. )
   type(StrucList) :: body_list           = StrucList( "rigid body" )
   type(StrucList) :: atom_bodies         = StrucList( "atom body" )
   type(StrucList) :: mixing_rule_list    = StrucList( "mixing rule", 2 )
@@ -982,7 +982,7 @@ contains
         if (ptr % usable) then
           do i = 1, list%count
             associate (s => structure(i))
-              if (list%reversible) then
+              if (list%bothways) then
                 match = ptr % match_id( s%atom_types )
               else
                 match = all(match_str( ptr%id, s%atom_types ))
@@ -1008,7 +1008,7 @@ contains
             if (any(s%wildcards /= s%wildcards(1))) then
               valid = s%wildcards == minval(s%wildcards)
               call warning( "ambiguity resolved for", list%name, join(s%atoms), &
-                            "( types", join(s%atom_types), ")" )
+                            "( atom types", join(s%atom_types), ")" )
               aux = pack(s%itype,valid)
               ptr => typelist % first
               do itype = 1, typelist % count

@@ -394,23 +394,17 @@ comment tags (#). When a [LAMMPS data file] is generated using the command [writ
 of _attribute-list_ is assumed to be the parameters of the [LAMMPS bond style] associated with the
 bond type in question.
 
-Bond types are considered as __identical__ if they are defined by the same identifiers _type-1_ and
-_type-2_, in either order. Playmol accepts definitions of identical bond types, which are applied
-simultaneously to every defined bond that fits into such identifiers. This is useful, for instance,
-when the stretching potential model is a sum of instances of a given [LAMMPS bond style], each one
-with a distinct set of parameter values.
-
-Bond types are considered as __ambiguous__ if, despite not being identical, they can fit to the
-same defined bond due to the presence of wildcard characters. Playmol accepts definitions of
-ambiguous bond types (or ambiguous sets of identical bond types), provided that they do not have
-the same number of wildcard-containing identifiers. If a detected bond fits to multiple ambiguous
-bond types (or sets thereof), Playmol will only apply the one (type or set) with the least number
-of wildcard-containing identifiers.
+Playmol is able to resolve __ambiguities__ in definitions of bond types. When several ambiguous
+bond types fit to a defined [bond] or [extra] bond, Playmol will classify them according to the
+number _N_ of wildcard-containing identifiers (_N_ = 0, 1, or 2). Then, it will simultaneously
+assign to the bond all those types with the smallest found value of _N_. Multiple assignments are
+useful, for instance, when the stretching potential model is a sum of instances of a given
+[LAMMPS bond style], each one with a distinct set of parameter values.
 
 **Examples**:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-bond_type	CH* CH* 95.877 1.54
+bond_type	CH* CH* harmonic 95.877 1.54
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, the given attributes will be associated with every bond involving atoms whose
@@ -418,7 +412,7 @@ types have identifiers starting with _CH_.
 
 **See also**:
 
-[atom_type], [bond], [write], [prefix/suffix]
+[atom_type], [bond], [write], [prefix/suffix], [extra]
 
 ----------------------------------------------------------------------------------------------------
 <a name="angle_type"></a>
@@ -462,23 +456,17 @@ the moment a new angle is detected, then Playmol will ignore such angle and prod
 message. Besides the automatic detection, an angle can also be explicitly created using the [extra]
 command.
 
-Angle types are considered as __identical__ if they are defined by the same sequence of identifiers
-_type-1_, _type-2_, and _type-3_, in either the direct or the reverse order. Playmol accepts
-definitions of identical angle types, which are applied simultaneously to every detected angle that
-fits into such sequence. This is useful, for instance, when the bending potential model is a sum of
-instances of a given [LAMMPS angle style], each one with a distinct set of parameter values.
-
-Angle types are considered as __ambiguous__ if, despite not being identical, they can fit to the
-same detected angle due to the presence of wildcard characters. Playmol accepts definitions of
-ambiguous angle types (or ambiguous sets of identical angle types), provided that they do not have
-the same number of wildcard-containing identifiers. If a detected angle fits to multiple ambiguous
-angle types (or sets thereof), Playmol will only apply the one (type or set) with the least number
-of wildcard-containing identifiers.
+Playmol is able to resolve __ambiguities__ in definitions of angle types. When several ambiguous
+angle types fit to a detected angle or defined [extra] angle, Playmol will classify them according
+to the number _N_ of wildcard-containing identifiers (_N_ = 0, 1, 2, or 3). Then, it will
+simultaneously assign to the angle all those types with the smallest found value of _N_. Multiple
+assignments are useful, for instance, when the bending potential model is a sum of instances of
+a given [LAMMPS angle style], each one with a distinct set of parameter values.
 
 **Examples**:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-angle_type	CH3 CH2 CH2 62.0965 114
+angle_type	CH3 CH2 CH2 harmonic 62.0965 114
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, the given attributes will be associated with every detected or specified angle
@@ -509,7 +497,7 @@ the types of the four atoms involved.
 
 The parameters _type-1_, _type-2_, _type-3_, and _type-4_ are identifiers of previously defined atom
 types. The order of such identifiers is relevant in the case of dihedral types, that is, if the same
-identifiers are disposed in the inverse order, they will denote a different dihedral type. Wildcard
+identifiers are disposed in the inverse order, they will denote different dihedral types. Wildcard
 characters (? and *) can be used to refer to multiple atom types. If a type-related [prefix/suffix]
 has been previously activated, then each actual atom type identifier will contain such prefix and/or
 suffix added to _type-x_.
@@ -532,23 +520,33 @@ does not exist at the moment a new dihedral is detected, then Playmol will ignor
 produce a warning message. Besides the automatic detection, a dihedral can also be explicitly
 created using the [extra] command.
 
-Dihedral types are considered as __identical__ if they are defined by the same sequence of
-identifiers _type-1_, _type-2_, _type-3_, and _type-4_. Playmol accepts definitions of identical
-dihedral types, which are applied simultaneously to every detected dihedral that fits into such
-sequence. This is useful, for instance, when the torsional potential model is a sum of instances
-of a given [LAMMPS dihedral style], each one with a distinct set of parameter values.
+Playmol is able to resolve __ambiguities__ in definitions of dihedral types. When several ambiguous
+dihedral types fit to a detected dihedral or defined [extra] dihedral, Playmol will classify them
+according to the number _N_ of wildcard-containing identifiers (_N_ = 0, 1, 2, 3, or 4). Then, it
+will simultaneously assign to the dihedral all those types with the smallest found value of _N_.
+Multiple assignments are useful, for instance, when the torsional potential model is a sum of
+instances of a given [LAMMPS dihedral style], each one with a distinct set of parameter values.
 
-Dihedral types are considered as __ambiguous__ if, despite not being identical, they can fit to the
-same detected dihedral due to the presence of wildcard characters. Playmol accepts definitions of
-ambiguous dihedral types (or ambiguous sets of identical dihedral types), provided that they do not
-have the same number of wildcard-containing identifiers. If a detected dihedral fits to multiple
-ambiguous dihedral types (or sets thereof), Playmol will only apply the one (type or set) with the
-least number of wildcard-containing identifiers.
+__NOTE__: Because the direction of identifiers is relevant in the definition of a dihedral type, a
+__direction conflict__ might occur when multiple dihedral types are simultaneously assigned to a
+detected or defined dihedral. Such a conflict takes place when all the following three conditions
+are met:
+
+1. Some types fit to the dihedral exclusively in the direct order;
+2. Some types fit exclusively in the reverse order;
+3. Some other types can fit in either the direct or reverse order.
+
+Combinations of conditions (1) and (3) are okay. Playmol automatically solves a combination of (2)
+and (3) by flipping the new dihedral before inclusion. It also solves automatically a combination
+of (1) and (2) by including a flipped dihedral in addition to the original one. However, Playmol
+will only throw a warning message when faced with a combination of all three conditions. In this
+case, the user can try to solve the conflict by manually flipping the dihedral types that cause
+condition (2), for instance.
 
 **Examples**:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-dihedral_type	CH3 CH2 CH2 CH2 1.41095 -0.27100 3.14484 0
+dihedral_type	CH3 CH2 CH2 CH2 opls 1.41095 -0.27100 3.14484 0
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, the given attributes will be associated with every detected or specified
@@ -579,7 +577,7 @@ the types of the four atoms involved.
 
 The parameters _type-1_, _type-2_, _type-3_, and _type-4_ are identifiers of previously defined atom
 types. The order of such identifiers is relevant in the case of improper types, that is, if the same
-identifiers are disposed in the inverse order, they will denote a different improper type. Wildcard
+identifiers are disposed in the inverse order, they will denote different improper types. Wildcard
 characters (? and *) can be used to refer to multiple atom types. If a type-related [prefix/suffix]
 has been previously activated, then each actual atom type identifier will contain such prefix and/or
 suffix added to _type-x_.
@@ -600,32 +598,29 @@ defined. This is so because there are distinct possible definitions of improper 
 must be manually created by using the [improper] command, which requires the previous definition of
 a fitting improper type.
 
-Improper types are considered as __identical__ if they are defined by the same sequence of
-identifiers _type-1_, _type-2_, _type-3_, and _type-4_. Playmol accepts definitions of identical
-improper types, which are applied simultaneously to every defined improper that fits into such
-sequence. This is useful, for instance, when the improper potential model is a sum of instances
-of a given [LAMMPS improper style], each one with a distinct set of parameter values.
+Playmol is able to resolve __ambiguities__ in definitions of improper types. When several ambiguous
+improper types fit to a defined improper, Playmol will classify them according to the number _N_
+of wildcard-containing identifiers (_N_ = 0, 1, 2, 3, or 4). Then, it will simultaneously assign
+to the improper all those types with the smallest found value of _N_. Multiple assignments are
+useful, for instance, when the torsional potential model is a sum of instances of a given
+[LAMMPS improper style], each one with a distinct set of parameter values.
 
-Improper types are considered as __ambiguous__ if, despite not being identical, they can fit to the
-same defined improper due to the presence of wildcard characters. Playmol accepts definitions of
-ambiguous improper types (or ambiguous sets of identical improper types), provided that they do not
-have the same number of wildcard-containing identifiers. If a defined improper fits to multiple
-ambiguous improper types (or sets thereof), Playmol will only apply the one (type or set) with the
-least number of wildcard-containing identifiers.
+__NOTE__: Improper types are only assigned to an [improper] if they match the atom types of the
+improper atoms in the exact order they are defined.
 
 **Examples**:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-improper_type	CH3 CH2 CH2 CH2 1.41095 -0.27100 3.14484 0
+improper_type	 c2 c2 na c3 	cvff 1.1 -1 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, the given attributes will be associated with every detected or specified
-improper that involves four consecutive atoms whose type identifiers are _CH3_ _CH2_ _CH2_ _CH2_,
-in this specific order.
+improper that involves four atoms whose type identifiers are _c2_ _c2_ _na_ _c3_, in this specific
+order.
 
 **See also**:
 
-[atom_type], [improper], [write], [prefix/suffix]
+[atom_type], [improper], [write], [prefix/suffix], [extra]
 
 ----------------------------------------------------------------------------------------------------
 <a name="atom"></a>
@@ -936,7 +931,7 @@ or
 **Description**:
 
 This command creates an extra structure (bond, angle, dihedral) involving the specified atoms. In
-the case of an extra angle or extra dihedral, all specified atoms must  belong to the same molecule.
+the case of an extra angle or extra dihedral, all specified atoms must belong to the same molecule.
 
 The parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be
 provided, with no use of wildcard characters (* or ?). A corresponding structure type (that is,

@@ -23,7 +23,11 @@ implicit none
 
 integer,      parameter :: rb = 8      !< Default number of bytes for real numbers
 integer,      parameter :: sl = 256    !< Default character string length
-character(3), parameter :: csl = "256" !< String with default character string length
+character(*), parameter :: csl = "256" !< String with default character string length
+
+character(*), parameter :: yellow = achar(27)//"[1;93m", &
+                           red = achar(27)//"[1;91m",    &
+                           decolor = achar(27)//"[0m"
 
 integer :: stdout = 6                  !< Standard output unit
 integer :: logunit = 0                 !< Output unit for logging
@@ -123,7 +127,7 @@ contains
     if (present(msg7)) wmsg = trim(wmsg)//" "//trim(msg7)
     if (present(msg8)) wmsg = trim(wmsg)//" "//trim(msg8)
     if (present(msg9)) wmsg = trim(wmsg)//" "//trim(msg9)
-    write(stdout,'(A)') achar(27)//"[1;93mWARNING: "//trim(wmsg)//achar(27)//"[0m"
+    write(stdout,'(A)') yellow//"WARNING: "//trim(wmsg)//decolor
     if (logunit /= 0) write(logunit,'(A)') "WARNING: "//trim(wmsg)
     last_warning % msg = wmsg
   end subroutine warning
@@ -135,8 +139,8 @@ contains
     ptr => first_warning
     if (associated(ptr)) then
       call writeln()
-      write(stdout,'(A)') achar(27)//"[1;93m*** SUMMARY OF WARNINGS ***"//achar(27)//"[0m"
-      if (logunit /= 0) write(logunit,'("********** SUMMARY OF WARNINGS **********")')
+      write(stdout,'(A)') yellow//"******** SUMMARY OF WARNINGS ********"//decolor
+      if (logunit /= 0) write(logunit,'("******** SUMMARY OF WARNINGS ********")')
     end if
     do while (associated(ptr))
       call writeln( ">", ptr % msg )
@@ -160,7 +164,7 @@ contains
     if (present(msg7)) emsg = trim(emsg)//" "//trim(msg7)
     if (present(msg8)) emsg = trim(emsg)//" "//trim(msg8)
     if (present(msg9)) emsg = trim(emsg)//" "//trim(msg9)
-    write(stdout,'(A)') achar(27)//"[1;91mERROR"//achar(27)//"[0m: "//trim(emsg)
+    write(stdout,'(A)') red//"ERROR"//decolor//": "//trim(emsg)
     if (logunit /= 0) write(logunit,'(A)') "ERROR: "//trim(emsg)
     stop
   end subroutine error
