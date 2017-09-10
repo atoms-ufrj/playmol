@@ -42,14 +42,16 @@ OBJ  = $(patsubst $(SRCDIR)/%.f90,$(OBJDIR)/%.o,$(SRC))
 
 all: $(BINDIR)/$(exec)
 
-.PHONY: install clean doc
+.PHONY: install clean clean-all doc
 
 doc:
 	make -C $(DOCDIR)
 
 clean:
-	rm -rf $(OBJDIR)
-	rm -rf $(BINDIR)
+	rm -rf $(OBJDIR) $(BINDIR)
+
+clean-all:
+	rm -rf $(OBJDIR) $(BINDIR)
 	cd $(PACKMOL) && make clean
 
 install:
