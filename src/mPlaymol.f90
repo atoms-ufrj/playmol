@@ -823,36 +823,37 @@ contains
     class(tPlaymol), intent(inout) :: me
     integer :: nimp
     type(Struc), pointer :: b1, b2, b3
-    character(sl) :: atom(3,2), central
+    character(sl) :: atom(4), atom_type(3)
+    logical :: found
     call writeln( "Searching for impropers..." )
     nimp = me % improper_list % count
     b1 => me % bond_list % first
     if (.not.associated(b1)) return
     if (.not.associated(b1 % next)) return
     do while (associated(b1 % next % next))
-      atom(1,:) = b1%id
       b2 => b1 % next
       do while (associated(b2 % next))
-        atom(2,:) = b2%id
-        if (any(atom(2,:) == atom(1,1))) then
-          if (atom(2,2) == atom(1,1)) call str_swap( atom(2,1), atom(2,2) )
-        else if (any(atom(2,:) == atom(1,2))) then
-          call str_swap( atom(1,1), atom(1,2) )
-          if (atom(2,2) == atom(1,1)) call str_swap( atom(2,1), atom(2,2) )
+        if (any(b2%id == b1%id(1))) then
+          atom(1:2) = b1%id
+        else if (any(b2%id == b1%id(2))) then
+          atom(1:2) = b1%id(2:1:-1)
+        else
+          atom(1) = ""
         end if
-        if (atom(1,1) == atom(2,1)) then
-          central = atom(1,1)
+        if (atom(1) /= "") then
+          atom(3) = merge(b2%id(1), b2%id(2), b2%id(1) /= atom(1))
           b3 => b2 % next
           do while (associated(b3))
-            atom(3,:) = b3%id
-            if (any(atom(3,:) == central)) then
-              if (atom(3,2) == central) call str_swap( atom(3,1), atom(3,2) )
-              call check_improper( atom(1,2), atom(2,2), central, atom(3,2) )
-              call check_improper( atom(1,2), atom(3,2), central, atom(2,2) )
-              call check_improper( atom(2,2), atom(1,2), central, atom(3,2) )
-              call check_improper( atom(2,2), atom(3,2), central, atom(1,2) )
-              call check_improper( atom(3,2), atom(1,2), central, atom(2,2) )
-              call check_improper( atom(3,2), atom(2,2), central, atom(1,2) )
+            if (any(b3%id == atom(1))) then ! Branch found
+              atom(4) = merge(b3%id(1), b3%id(2), b3%id(1) /= atom(1))
+              call me % get_types( atom(2:4), atom_type )
+              call sort( atom(2:4), atom_type )
+              call check_improper( atom )
+              if (.not.found) call check_improper( atom([1,2,4,3]) )
+              if (.not.found) call check_improper( atom([1,3,2,4]) )
+              if (.not.found) call check_improper( atom([1,3,4,2]) )
+              if (.not.found) call check_improper( atom([1,4,2,3]) )
+              if (.not.found) call check_improper( atom([1,4,3,2]) )
             end if
             b3 => b3 % next
           end do
@@ -864,12 +865,26 @@ contains
     if (me % improper_list % count == nimp) call writeln( "--> no impropers found." )
     contains
       !---------------------------------------------------------------------------------------------
-      subroutine check_improper( a1, a2, a3, a4 )
-        character(sl), intent(in) :: a1, a2, a3, a4
-        character(sl) :: id(4)
-        id = [a1, a2, a3, a4]
-        call me % improper_list % handle( id, me % atom_list, me % improper_type_list, 3 )
+      subroutine check_improper( id )
+        character(sl), intent(in) :: id(4)
+        call me % improper_list % handle( id, me%atom_list, me%improper_type_list, 3, found )
       end subroutine check_improper
+      !---------------------------------------------------------------------------------------------
+      subroutine sort( a, b )
+        character(sl), intent(inout) :: a(3), b(3)
+        if (.not.alphabetical( b(1), b(2) )) then
+          call str_swap( a(1), a(2) )
+          call str_swap( b(1), b(2) )
+        end if
+        if (.not.alphabetical( b(2), b(3) )) then
+          call str_swap( a(2), a(3) )
+          call str_swap( b(2), b(3) )
+        end if
+        if (.not.alphabetical( b(1), b(2) )) then
+          call str_swap( a(1), a(2) )
+          call str_swap( b(1), b(2) )
+        end if
+      end subroutine sort
       !---------------------------------------------------------------------------------------------
   end subroutine tPlaymol_search_impropers
 

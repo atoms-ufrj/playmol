@@ -142,11 +142,12 @@ contains
 
   !=================================================================================================
 
-  subroutine StrucList_handle( me, id, id_list, type_list, option )
-    class(StrucList),           intent(inout) :: me
-    character(*),               intent(inout) :: id(:)
-    class(StrucList), optional, intent(in)    :: id_list, type_list
-    integer,                    intent(in)    :: option
+  subroutine StrucList_handle( me, id, id_list, type_list, option, status )
+    class(StrucList), intent(inout)         :: me
+    character(*),     intent(in)            :: id(:)
+    class(StrucList), intent(in)            :: id_list, type_list
+    integer,          intent(in)            :: option
+    logical,          intent(out), optional :: status
     ! Search for types, mark found types as usable, and:
     ! option = 1: add, WARN if no types were found
     ! option = 2: STOP if no types were found
@@ -242,6 +243,7 @@ contains
           if (found) call me % add( me%number, id )
       end select
     end if
+    if (present(status)) status = found
     contains
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       subroutine direction_conflict

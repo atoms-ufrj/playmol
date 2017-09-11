@@ -595,8 +595,9 @@ the improper type in question.
 
 In contrast to angles and proper dihedrals, impropers are not automatically detected as bonds are
 defined. This is so because there are distinct possible definitions of improper dihedrals. Impropers
-must be manually created by using the [improper] command, which requires the previous definition of
-a fitting improper type.
+can be manually created by using the [improper] command, which requires the previous definition of
+a fitting improper type. Playmol is also able to find all impropers of a specific kind by using the
+keyword _search_ in the [improper] command.
 
 Playmol is able to resolve __ambiguities__ in definitions of improper types. When several ambiguous
 improper types fit to a defined improper, Playmol will classify them according to the number _N_
@@ -771,15 +772,16 @@ improper
 
 	improper	<atom-1> <atom-2> <atom-3> <atom-4>
 
-<!--or-->
+or
 
-<!--	improper	search-->
+	improper	search
 
 * _atom-x_ = name of a previously defined atom
 
 **Description**:
 
-This command creates an improper involving the specified atoms or search for impropers.
+This command either creates an improper involving the specified atoms or search for impropers of a
+specific kind.
 
 __Important__: Unlike angles and proper dihedrals, impropers are not detected automatically when the
 command [bond] is executed. This is so because improper dihedrals can be defined in several distinct
@@ -788,25 +790,43 @@ ways.
 Each parameter _atom-x_ is the identifier of a previously created atom. A unique identifier must be
 provided, with no use of wildcard characters (* or ?). If an atom-related [prefix/suffix] has been
 previously activated, then the actual atom identifier will contain such prefix and/or suffix added
-to _atom-x_.
+to _atom-x_. When an improper is defined explicitly (first syntax above), a previously defined
+[improper_type] matching the four atoms in the specified order is required.
 
-When using explicit improper definition (first syntax above), a previously defined [improper_type]
-matching the four atoms in the specified order is required.
+Using the keyword _search_ (second syntax above), Playmol will search for all molecular
+substructures composed of four atoms `I`, `J`, `K`, and `L` so that atom `I` is simultaneously
+bonded to atoms `J`, `K`, and `L`, such as depicted below.
 
-<!--Using the keyword _search_ (second syntax above), Playmol will search for impropers composed of any-->
-<!--four atoms I, J, K, and L in which atom K is simultaneously bonded to atoms I, J, and L. A detected-->
-<!--improper will only be effectively created if the corresponding [improper_type] has been previously-->
-<!--defined.-->
+       J
+        \
+         I ── L
+        /
+       K
+
+Once Playmol finds a substructure of this type, it will assign the indexes `J`, `K`, and `L` to the
+atoms in accordance with the alphabetical order of their types. Then, it will look for a previously
+defined [improper_type] whose four identifiers fit to the types of these atoms, testing different
+arrangements until the first fitting [improper_type] is found or until all possible arrangements
+have been tested unsuccessfully. The sequence of tests is:
+
+1. `I`, `J`, `K`, `L`
+2. `I`, `J`, `L`, `K`
+3. `I`, `K`, `J`, `L`
+4. `I`, `K`, `L`, `J`
+5. `I`, `L`, `J`, `K`
+6. `I`, `L`, `K`, `J`
+
+An improper will be added only if a fitting [improper_type] is found.
 
 **Examples**:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-improper_type	HC HC C HC	1.41095 -0.27100 3.14484 0
-<!--improper     	search-->
+improper_type   c ca ca oh cvff 1.1 -1 2
+improper     	search
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In the example above, an improper type is defined for all-atom methyl groups.
-<!--Then Playmol searches for impropers of this type.-->
+In the example above, an improper type is defined for atoms of types `c`, `ca`, `ca`, and `oh`.
+After that, Playmol sweeps all molecules searching for impropers of this type.
 
 **See also**:
 

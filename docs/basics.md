@@ -18,8 +18,9 @@ fed to Playmol in this first step.
 
 2. __Chemical topology definition__: atoms are created and explicitly connected via chemical bonds.
 This is all Playmol needs to identify chemical compounds and automatically determine the angles and
-proper dihedrals present in their molecules. Playmol does not automatically detect impropers, but
-one can point them out manually.
+proper dihedrals present in their molecules. Playmol does not detect and add impropers
+automatically, but one can define them manually or ask Playmol to search for a specific kind of
+impropers.
 
 3. __Instantiation__: chemical compounds identified in the previous step remain as abstract entities
 until actual molecules are positioned in space. The [build] command makes it possible to instantiate

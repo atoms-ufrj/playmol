@@ -493,4 +493,38 @@ contains
 
   !=================================================================================================
 
+  function alphabetical( p, q ) result(lexicalLess)
+    character (len = *), intent (in) :: p, q
+    logical :: lexicalLess
+    integer :: kq, k
+    kq = 1
+    do k = 1, max(len_trim(p), len_trim(q))
+      if (UpperCase(p(k:k)) == UpperCase(q(k:k)) ) then
+        cycle
+      else
+        kq = k
+        exit
+      end if
+    end do
+    lexicalLess = UpperCase(p(kq:kq)) < UpperCase(q(kq:kq))
+  end function alphabetical
+
+  !=================================================================================================
+
+  function UpperCase(letter) result(L)
+    character (len = *), intent (in) :: letter
+    character (len = 1) :: L
+    character (len = 26), parameter :: Lower = "abcdefghijklmnopqrstuvwxyz", &
+       Upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    integer :: k
+    k = index(Lower, letter)
+    if (k > 0) then
+      L = Upper(k:k)
+    else
+      L = letter
+    end if
+  end function UpperCase
+
+  !=================================================================================================
+
 end module mString
