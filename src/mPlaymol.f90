@@ -1023,6 +1023,7 @@ contains
               end do
               s%itype = aux
               s%multiplicity = size(aux)
+              total(s%mol) = total(s%mol) - size(valid) + count(valid)
             end if
           end if
         end associate

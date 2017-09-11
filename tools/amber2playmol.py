@@ -5,6 +5,7 @@ import datetime
 
 atoms = {}
 mass = {}
+note = {}
 params = {}
 
 bond = []
@@ -36,32 +37,33 @@ for line in fileinput.input():
     elif (block == 'atom'):
         word = string.split()
         mass[word[0]] = word[1]
+        note[word[0]] = ' '.join(word[3:])
 
     elif (block == 'bond'):
         types = string[0:5].replace('-',' ')
-        bond.append(' '.join(['bond_type\t',types,'\t$bond_style',string[5:22]]))
+        bond.append('\t'.join(['bond_type',types,'$bond_style',string[5:22]]))
 
     elif (block == 'angle'):
         types = string[0:8].replace('-',' ')
-        angle.append(' '.join(['angle_type\t',types,'\t$angle_style',string[8:28]]))
+        angle.append('\t'.join(['angle_type',types,'$angle_style',string[8:28]]))
 
     elif (block == 'dihedral'):
         types = string[0:11].replace('-',' ').replace('X','*')
         IDIVF, PK, PHASE, PN = string[11:54].split()
-        K = str(float(PK)/float(IDIVF))
+        K = '{'+PK+'/'+IDIVF+'}'
         n = str(abs(int(float(PN))))
-        d = str(float(PHASE))
-        dihedral.append(' '.join(['dihedral_type\t',types,'\t$dihedral_style',K,n,d,'1.0']))
+        d = str(int(float(PHASE)))
+        dihedral.append('\t'.join(['dihedral_type',types,'$dihedral_style',K,n,d,'0']))
 
     elif (block == 'improper'):
-        types = string[0:11].replace('-',' ').replace('X','*')
+        types = (string[6:9] + string[0:6] + string[9:11]).replace('-',' ').replace('X','*')
         PK, PHASE, PN = string[11:54].split()
         K = str(float(PK)/float(IDIVF))
         n = str(abs(int(float(PN))))
-        if (float(PHASE) == 0.0):
-            improper.append(' '.join(['improper_type\t',types,'\t$improper_style',K,'1',n]))
-        elif (float(PHASE) == 180.0):
-            improper.append(' '.join(['improper_type\t',types,'\t$improper_style',K,'-1',n]))
+        if (abs(float(PHASE)) < 0.01):
+            improper.append('\t'.join(['improper_type',types,'$improper_style',K,' 1',n]))
+        elif (abs(float(PHASE) - 180.0) < 0.01):
+            improper.append('\t'.join(['improper_type',types,'$improper_style',K,'-1',n]))
         else:
             exit('ERROR: unsupported improper type')
 
@@ -77,7 +79,7 @@ for line in fileinput.input():
 
     elif (block == 'params'):
         word = string.split()
-        params[word[0]] = word[1] + ' ' + word[2]
+        params[word[0]] = '\t'.join(word[1:3])
 
 print '#', title
 print
@@ -92,7 +94,7 @@ print 'define\timproper_style as cvff'
 
 print '\n# Atom types:'
 for key, value in params.iteritems():
-    print 'atom_type\t', key, '\t$pair_style', value
+    print '\t'.join(['atom_type', key, '$pair_style', value, '# '+note[key]])
 
 print '\n# Masses:'
 for key, value in mass.iteritems():
