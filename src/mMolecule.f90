@@ -616,7 +616,7 @@ contains
       if (imin == imax) then
         b = [1,2,3]
       else
-        b = [imin,6-imin-imax,imax]
+        b = [imax,6-imin-imax,imin]
       end if
     end function sort_vector
     !-----------------------------------------------------------------------------------------------

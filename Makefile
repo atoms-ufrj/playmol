@@ -31,8 +31,6 @@ GTKDIR  = ./highlight
 
 PACKMOL = ./lib
 
-exec = playmol
-
 src = $(addprefix $(SRCDIR)/, $(addsuffix .f90, $(1)))
 obj = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(1)))
 SRC  = $(call src, mBox mFix mMixingRule mMolecule mParser mString mCodeFlow mGlobal \
@@ -40,7 +38,7 @@ SRC  = $(call src, mBox mFix mMixingRule mMolecule mParser mString mCodeFlow mGl
 AUX  = $(call src, write_emdee write_lammps write_lammpstrj write_summary write_internals)
 OBJ  = $(patsubst $(SRCDIR)/%.f90,$(OBJDIR)/%.o,$(SRC))
 
-all: $(BINDIR)/$(exec)
+all: $(BINDIR)/playmol $(BINDIR)/playmoltools $(BINDIR)/packmol
 
 .PHONY: install clean clean-all doc
 
@@ -55,13 +53,20 @@ clean-all:
 	cd $(PACKMOL) && make clean
 
 install:
-	cp -f $(BINDIR)/$(exec) /usr/local/bin
-	cp -f $(PACKMOL)/packmol/packmol /usr/local/bin
+	cp -f $(BINDIR)/* /usr/local/bin
 	bash $(GTKDIR)/install.sh
 
-$(BINDIR)/$(exec): $(OBJ) $(PACKMOL)/libpackmol.a
+$(BINDIR)/playmol: $(OBJ) $(PACKMOL)/libpackmol.a
 	mkdir -p $(BINDIR)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -o $@ $^
+
+$(BINDIR)/playmoltools: $(SRCDIR)/playmoltools.py
+	mkdir -p $(BINDIR)
+	cp -f $< $@
+
+$(BINDIR)/packmol: $(PACKMOL)/packmol/packmol
+	mkdir -p $(BINDIR)
+	cp -f $< $@
 
 $(PACKMOL)/libpackmol.a:
 	cd $(PACKMOL) && make

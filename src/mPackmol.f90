@@ -230,7 +230,11 @@ contains
       end do
       call retrieve_coordinates( mixfile )
       call delete_files( [inputfile, mixfile, trim(mixfile)//"_FORCED", molfile, logfile] )
-      call writeln( "Packmol converged with scaling factor", real2str(scaling) )
+      if (scaling == 1.0_rb) then
+        call writeln( "Packmol converged with scaling factor", real2str(scaling) )
+      else
+        call warning( "Packmol converged with scaling factor", real2str(scaling) )
+      end if
 
     end if
 

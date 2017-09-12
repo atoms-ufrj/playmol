@@ -244,7 +244,7 @@ contains
       subroutine diameter_command
         if (narg /= 3) call error( "invalid diameter command" )
         call me % typefix % apply( arg(2) )
-        call me % diameter_list % add( narg-1, arg(2:narg) )
+        call me % diameter_list % add( narg-1, arg(2:narg), me % atom_type_list, .true. )
         if (str2real(arg(3)) < 0.0_rb) call error( "invalid diameter value" )
       end subroutine diameter_command
       !---------------------------------------------------------------------------------------------
