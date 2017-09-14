@@ -1,3 +1,4 @@
+# Typification
 define N     as 5
 define FF    as nerd
 define seed  as 3467
@@ -5,12 +6,9 @@ define nmols as 500
 define rho   as 0.3 # g/cm³
 define temp  as 180 # K
 
-mass CH4 16.04242 # Da
-mass CH3 15.03450 # Da
-mass CH2 14.02658 # Da
-
 include $FF.mol
 
+# Chemical topology definition
 if {$N == 1} then
   atom C1 CH4
 else
@@ -23,6 +21,7 @@ else
   bond C$N C{$N-1}
 endif
 
+# Instantiation 
 if {$N > 3} then
   build
     $N
@@ -34,10 +33,12 @@ if {$N > 3} then
     next
 endif
 
+# Replication and packing
 box      density {0.602214*$rho} # Da/Å³
 align    mol(C1) x y
 packmol  seed $seed retry 0.95 copy mol(C1) $nmols action execute
 
+# Formatting and storage
 write    lmp/models C${N}_$FF.lmp
 write    lammpstrj C${N}_$FF.lammpstrj
 write    xyz C${N}_$FF.xyz
