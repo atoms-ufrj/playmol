@@ -1,0 +1,34 @@
+#These are the parameters to use for For the TIP4/Ice model (J Chem Phys, 122, 234511 (2005); http://dx.doi.org/10.1063/1.1931662)
+#http://lammps.sandia.gov/doc/Section_howto.html#tip4p-water-model
+
+define LJ_H             as  lj/cut/tip4p/long 0.0000 0.0000
+define LJ_O             as  lj/cut/tip4p/long 0.21084 3.1668
+
+atom_type   HW       $LJ_H
+atom_type   OW       $LJ_O
+
+mass        HW       1.008
+mass        OW       15.9994
+
+#This command defines the electric charge (total or partial) of an atom.
+#The presence of wildcards makes a charge value applicable to atoms defined either beforehand or afterwards.
+charge      HW*      0.5897
+charge      OW*      -1.1794
+
+define bond_OH_l0       as  0.9572
+define bond_OH_k       as  450.00
+define bond_OH          as  harmonic $bond_OH_k $bond_OH_l0
+
+define angle_HOH_theta0 as  104.52
+define angle_HOH_k as  55.00
+define angle_HOH        as  harmonic $angle_HOH_k $angle_HOH_theta0
+
+bond_type   HW OW    $bond_OH
+angle_type  HW OW HW $angle_HOH
+
+#Additional info for lammps input:
+#For each TIP4P water molecule in your system, the atom IDs for the O and 2 H atoms must be consecutive, with the O atom first.
+#pair_Style lj/cut/tip4p/long otype htype btype atype qdist  cutoff (cutoff2)
+#pair_style lj/cut/tip4p/long 2     1     1     1     0.1577 8.5   8.5
+
+
