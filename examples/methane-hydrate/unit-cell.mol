@@ -1,25 +1,19 @@
-define      model as TIP4P
-define      density as .7 # g/cm³
-define          N as 500
-
+# Typification
+define      model as TIP4P-ice
 include     $model.mol
 
-atom_type   HW       $LJ_H
-atom_type   OW       $LJ_O
+##OPLS-UA methane
+##J. Chem. Phys. 133, 064507 (2010); doi: 10.1063/1.3466751
+define      kB      as 1.987E-3 # kcal/mol.K
+define      LJ_CH4    as  lj/cut/tip4p/long  147.5*$kB 3.73
+atom_type   CH4       $LJ_CH4
+mass        CH4       16.0427
 
-atom_type   CH4       0 #XXX
-mass        CH4       16 #XXX
-
-mass        HW       1.008
-mass        OW       15.9994
-
-bond_type   HW OW    $bond_OH
-angle_type  HW OW HW $angle_HOH
-
+# Chemical topology definition
 for i from 1 to 46
-  atom        H1_W_$i HW    $charge_H
-  atom        O_W_$i  OW    $charge_O
-  atom        H2_W_$i HW    $charge_H
+  atom        H1_W_$i HW    
+  atom        O_W_$i  OW    
+  atom        H2_W_$i HW    
   bond        O_W_$i  H1_W_$i H2_W_$i
 next
 
@@ -27,13 +21,32 @@ for i from 1 to 8
   atom        CH4_$i CH4    0
 next
 
-box         density {0.602214*$density} # Da/Å³
-
+# Instantiation 
 build uc-water.mol
 build uc-methane.mol
 
+# Replication and packing
+define a as 12.03 # lattice constant
+box lengths $a $a $a
+
+# Formatting and storage
 write       lmp/models water_$model.lmp
 write       lammpstrj water_$model.lammpstrj
 write       xyz water_$model.xyz
 
 write    summary
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
