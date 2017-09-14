@@ -1,5 +1,5 @@
 # Typification
-define      model as TIP3P
+define      model as TIP3P-long
 include     $model.mol
 
 # Chemical topology definition
