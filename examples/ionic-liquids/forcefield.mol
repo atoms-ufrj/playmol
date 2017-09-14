@@ -54,6 +54,7 @@ dihedral_type	CW NA CT CT	-1.7097	 1.4595	 0.1897	 0.0000
 dihedral_type	CR NA CT CT	-1.2593	 0.0000	 0.0000	 0.0000
 dihedral_type	NA CT CT CT	-1.7877	 0.7563	-0.2874	 0.0000
 dihedral_type	NA CT CT HC	 0.0000	 0.0000	 0.0877	 0.0000
+dihedral_type	CR NA CT HC	 0.0000	 0.0000	 0.0000	 0.0000 #missing REF?
 
 improper_type	C? C? NA CT	 0.0000	 2.0005	 0.0000	 0.0000
 improper_type	*  *  C? *	 0.0000	 2.1989	 0.0000	 0.0000
