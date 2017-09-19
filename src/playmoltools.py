@@ -134,7 +134,7 @@ def amber2playmol( inp, out ):
 
 #---------------------------------------------------------------------------------------------------
 
-def pdb2playmol( inp, out, prep ):
+def pdb2playmol( inp, out, prepfile ):
 
   atoms = []
   bonds = []
@@ -168,11 +168,20 @@ def pdb2playmol( inp, out, prep ):
         if (([i,j] not in bonds) and ([j,i] not in bonds)):
           bonds.append([i,j])
 
+  if (prepfile):
+    prep = prep_dict( prepfile )
+
   print >>out, "# Atom definitions:"
   for atom in atoms:
     if namecount[atom[1]] > 1:
-      atom[1] = atom[0]
-    print >>out, '\t'.join(["atom", atom[1], atom[-1]])
+      atomname = atom[0]
+    else:
+      atomname = atom[1]
+    if (prepfile):
+      prepitem = prep[atom[2]][atom[1]]
+      print >>out, '\t'.join(["atom", atomname, prepitem[0], prepitem[-1]])
+    else:
+      print >>out, '\t'.join(["atom", atomname, atom[-1]])
 
   print >>out, "\n# Bond definitions:"
   for bond in bonds:
@@ -241,6 +250,29 @@ def pqr2playmol( inp, out ):
   print >>out, "\n# Diameters for packing:"
   for key, value in diameter.iteritems():
     print >>out, '\t'.join(["diameter", key, value])
+
+
+#---------------------------------------------------------------------------------------------------
+
+def prep_dict( prepfile ):
+  input = open(prepfile,'r')
+  prep = {}
+  waiting = True
+  for line in input:
+    word = line.split()
+    if waiting and word:
+      residue = word[0]
+      prep[residue] = {}
+      waiting = False
+    elif word:
+      if word[0] == "DONE":
+        waiting = True
+      elif word[0] == "STOP":
+        return prep
+      elif word[0].isdigit() and int(word[0]) > 3:
+        prep[residue][word[1]] = word[2:]
+  input.close()
+  return prep
 
 #---------------------------------------------------------------------------------------------------
 # MAIN PROGRAM
