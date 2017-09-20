@@ -461,15 +461,19 @@ contains
 
   !=================================================================================================
 
-  subroutine StrucList_destroy( me )
-    class(StrucList), intent(inout) :: me
+  subroutine StrucList_destroy( me, silent )
+    class(StrucList), intent(inout)        :: me
+    logical,          intent(in), optional :: silent
     type(Struc), pointer :: current, aux
+    logical :: print
+    print = .not.present(silent)
+    if (.not.print) print = .not.silent
     current => me % first
-    if (associated(current)) call writeln( "Deleting ", me%name, "list..." )
+    if (print .and. associated(current)) call writeln( "Deleting ", me%name, "list..." )
     do while (associated(current))
       aux => current
       current => current % next
-      call writeln( "Deleting ", me%name, join(aux % id) )
+      if (print) call writeln( "Deleting ", me%name, join(aux % id) )
       deallocate(aux)
     end do
     me % first => null()
