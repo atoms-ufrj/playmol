@@ -110,11 +110,21 @@ def amber2playmol( inp, out ):
     if key in params:
       print >>out, '\t'.join(['atom_type', key, '$pair_style', params[key], '# '+note[key]])
     else:
-      print >>out, '\t'.join(['atom_type', key, '$pair_style', "UNDEFINED", '# '+note[key]])
+      print >>out, '\t'.join(['atom_type', key, '$pair_style', 'UNDEFINED', '# '+note[key]])
 
   print >>out, '\n# Masses:'
   for key, value in mass.iteritems():
     print >>out, 'mass\t', key, '\t', value
+
+  print >>out, '\n# Diameters:'
+  for key, value in mass.iteritems():
+    if key in params:
+      word = params[key].split()
+      if float(word[1]) < 2.0:
+        word[1] = "2.0"
+      print >>out, '\t'.join(['diameter', key, word[1]])
+    else:
+      print >>out, '\t'.join(['#diameter', key, 'UNDEFINED'])
 
   print >>out, '\n# Bond types:'
   for item in bond:
@@ -173,26 +183,28 @@ def pdb2playmol( inp, out, prepfile ):
 
   print >>out, "# Atom definitions:"
   for atom in atoms:
-    if namecount[atom[1]] > 1:
-      atomname = atom[0]
-    else:
-      atomname = atom[1]
+    if namecount[atom[1]] == 1:
+      atom[0] = atom[1]
     if (prepfile):
       prepitem = prep[atom[2]][atom[1]]
-      print >>out, '\t'.join(["atom", atomname, prepitem[0], prepitem[-1]])
+      if prepitem:
+        print >>out, '\t'.join(["atom", atom[0], prepitem[0], prepitem[-1]])
+      else:
+        print >>sys.stderr, "Error: residue " + atom[2] + " not found in prep file"
+        exit()
     else:
       print >>out, '\t'.join(["atom", atomname, atom[-1]])
 
   print >>out, "\n# Bond definitions:"
   for bond in bonds:
     i, j = bond
-    print >>out, '\t'.join(["bond", atoms[i][1], atoms[j][1]])
+    print >>out, '\t'.join(["bond", atoms[i][0], atoms[j][0]])
 
   print >>out, "\n# Molecular structure (xyz):"
   print >>out, "\nbuild"
   print >>out, len(atoms)
   for atom in atoms:
-    print >>out, atom[1], atom[4], atom[5], atom[6]
+    print >>out, atom[0], atom[4], atom[5], atom[6]
 
 #---------------------------------------------------------------------------------------------------
 
@@ -260,7 +272,7 @@ def prep_dict( prepfile ):
   waiting = True
   for line in input:
     word = line.split()
-    if waiting and word:
+    if waiting and word and len(word[0]) == 3:
       residue = word[0]
       prep[residue] = {}
       waiting = False
