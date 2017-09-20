@@ -932,7 +932,7 @@ contains
     integer,           intent(out)              :: total(me%molecules%N)
     type(TypeHolder),  intent(out), allocatable :: type_map(:)
     integer :: i, j, k, m, itype, imol, imax, narg
-    logical :: match, is_atom
+    logical :: match, is_atom, is_bond
     character(sl) :: arg(10)
     type(Struc), pointer :: ptr
     integer, allocatable :: aux(:)
@@ -940,7 +940,8 @@ contains
     if (list%count > 0) then
       ! Identify the atoms and types in each structure and
       ! count the number of structures in each molecule:
-      is_atom = .not.present(atom)
+      is_atom = list%name == "atom"
+      is_bond = list%name == "bond"
       permol = 0
       ptr => list%first
       m = list%number
@@ -1046,6 +1047,20 @@ contains
         end associate
       end do
 
+      ! If structure = bond, add bonds that lie inside rigid bodies:
+      if (is_bond .and. any(structure%body /= 0)) then
+        do i = 1, list%count
+          associate (s => structure(i))
+            if (s%body /= 0) then
+              s%multiplicity = 1
+              s%itype = [typelist%count + 1]
+              s%wildcards = [0]
+              total(s%mol) = total(s%mol) + 1
+            end if
+          end associate
+        end do
+      end if
+
       ! Create a map for the indices of actually used types:
       imax = maxval([(maxval(structure(i)%itype),i=1,list%count)])
       aux = [(0,i=1,imax)]
@@ -1055,17 +1070,24 @@ contains
 
       ! Retrieve the parameters of each used type:
       do i = 1, size(type_map)
-        ptr => typelist % point_to( type_map(i)%index )
-        type_map(i) % types = join(ptr % id)
-        if (models) then
-          call split( ptr % params, narg, arg )
-          type_map(i) % model = arg(1)
-          type_map(i) % params = join(arg(2:narg))
+        k = type_map(i)%index
+        if (k <= typelist%count) then
+          ptr => typelist % point_to( k )
+          type_map(i) % types = join(ptr % id)
+          if (models) then
+            call split( ptr % params, narg, arg )
+            type_map(i) % model = arg(1)
+            type_map(i) % params = join(arg(2:narg))
+          else
+            type_map(i) % model = ""
+            type_map(i) % params = ptr % params
+          end if
+          if (is_atom) type_map(i) % mass = me % mass_list % parameters( ptr % id )
         else
-          type_map(i) % model = ""
-          type_map(i) % params = ptr % params
+          type_map(i) % types = "* *"
+          type_map(i) % model = "zero"
+          type_map(i) % params = ""
         end if
-        if (.not.present(atom)) type_map(i) % mass = me % mass_list % parameters( ptr % id )
       end do
 
       ! Apply an inverse map to the indices:

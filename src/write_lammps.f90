@@ -234,7 +234,7 @@
         if (Na > 0) then
           write(unit,'(/,"Atoms",/)')
           m = maxval(n%atoms,n%mols > 0)
-          allocate( iatom(m), catom(m), xyz(m), atom_mass(Na), body(Na) )
+          allocate( iatom(m), catom(Na), xyz(m), atom_mass(Na), body(Na) )
           type_mass = me % atom_masses % convert_to_real()
           patom => me % molecules % xyz % first
           katom = 0
@@ -242,7 +242,7 @@
             imol = mol_index(kmol)
             prev = sum(natoms(1:imol-1))
             m = natoms(imol)
-            forall (j=1:m) catom(j) = atom(prev+j)%atoms(1)
+            forall (j=1:m) catom(katom+j) = atom(prev+j)%atoms(1)
             do j = 1, m
               iatom(j:j) = pack([(k,k=1,m)],catom(1:m) == patom%id(1))
               xyz(j) = patom%params
@@ -253,34 +253,34 @@
               katom = katom + 1
               i = prev + j
               cstruc = join(int2str([katom, kmol, atom(i)%itype]))
-              write(unit,'(A)') trim(join([cstruc, atom(i)%charge, xyz(j), "#", catom(j)]))
+              write(unit,'(A)') trim(join([cstruc, atom(i)%charge, xyz(j), "#", catom(katom)]))
               atom_mass(katom) = type_mass(atom(i)%itype(1))
               body(katom) = atom(i)%body
             end do
           end do
           if (any(body /= 0)) then
             write(unit,'(/,"BodyTags",/)')
-            prev = 0
+            katom = 0
             ibody = 0
             do kmol = 1, size(mol_index)
               m = natoms(mol_index(kmol))
               allocate( atom_body(m) )
               do i = 1, m
-                k = body(prev+i)
-                if ((k == 0).or.all(body(prev+1:prev+i-1) /= k)) then
+                k = body(katom+i)
+                if ((k == 0).or.all(body(katom+1:katom+i-1) /= k)) then
                   ibody = ibody + 1
                   atom_body(i) = ibody
                 else
                   j = 1
-                  do while (body(prev+j) /= k)
+                  do while (body(katom+j) /= k)
                     j = j + 1
                   end do
                   atom_body(i) = atom_body(j)
                 end if
               end do
               do i = 1, m
-                prev = prev + 1
-                write(unit,'(A)') trim(join(int2str([prev,atom_body(i)])))
+                katom = katom + 1
+                write(unit,'(A)') trim(join([int2str([katom,atom_body(i)]),"#",catom(katom)]))
               end do
               deallocate( atom_body )
             end do
@@ -288,11 +288,11 @@
           if (me%velocity%active) then
             write(unit,'(/,"Velocities",/)')
             V = velocities( sum(n%mols*total%atoms), me%velocity%seed, me%velocity%kT, atom_mass )
-            katom = 0
+            k = 0
             do kmol = 1, size(mol_index)
               do j = 1, natoms(mol_index(kmol))
-                katom = katom + 1
-                write(unit,'(A)') trim(join([int2str(katom),real2str(V(:,katom)), "#", catom(j)]))
+                k = k + 1
+                write(unit,'(A)') trim(join([int2str(k),real2str(V(:,k)), "#", catom(k)]))
               end do
             end do
           end if
