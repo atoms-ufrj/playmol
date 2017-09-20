@@ -40,7 +40,7 @@ function(hljs) {
       'define as for from in to downto next if then else endif atom_type mass ' +
       'diameter bond_type angle_type dihedral_type improper_type atom charge ' +
       'bond link unlink build align include shell aspect packmol seed retry ' +
-      'nloops fix copy pack velocity body mixing_rule geometric arithmetic',
+      'nloops fix copy pack velocity rigid_body mixing_rule geometric arithmetic',
     built_in:
       'not abs exp log ln sqrt sinh cosh tanh sin cos tan asin acos atan ' +
       'int nint ceil floor mol'

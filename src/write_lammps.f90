@@ -225,15 +225,16 @@
       subroutine write_atoms( natoms )
         integer, intent(in) :: natoms(:)
         type(Struc), pointer :: patom
-        integer :: i, j, k, m, katom, imol, kmol, prev
+        integer :: i, j, k, m, Na, katom, imol, kmol, prev, ibody
         character(sl) :: cstruc
-        integer,  allocatable :: iatom(:)
+        integer,  allocatable :: iatom(:), body(:), atom_body(:)
         real(rb), allocatable :: V(:,:), atom_mass(:), type_mass(:)
         character(sl), allocatable :: catom(:), xyz(:)
-        if (any(n%mols*n%atoms > 0)) then
+        Na = sum(n%mols*total%atoms)
+        if (Na > 0) then
           write(unit,'(/,"Atoms",/)')
           m = maxval(n%atoms,n%mols > 0)
-          allocate( iatom(m), catom(m), xyz(m), atom_mass(sum(n%mols*total%atoms)) )
+          allocate( iatom(m), catom(m), xyz(m), atom_mass(Na), body(Na) )
           type_mass = me % atom_masses % convert_to_real()
           patom => me % molecules % xyz % first
           katom = 0
@@ -254,8 +255,36 @@
               cstruc = join(int2str([katom, kmol, atom(i)%itype]))
               write(unit,'(A)') trim(join([cstruc, atom(i)%charge, xyz(j), "#", catom(j)]))
               atom_mass(katom) = type_mass(atom(i)%itype(1))
+              body(katom) = atom(i)%body
             end do
           end do
+          if (any(body /= 0)) then
+            write(unit,'(/,"BodyTags",/)')
+            prev = 0
+            ibody = 0
+            do kmol = 1, size(mol_index)
+              m = natoms(mol_index(kmol))
+              allocate( atom_body(m) )
+              do i = 1, m
+                k = body(prev+i)
+                if ((k == 0).or.all(body(prev+1:prev+i-1) /= k)) then
+                  ibody = ibody + 1
+                  atom_body(i) = ibody
+                else
+                  j = 1
+                  do while (body(prev+j) /= k)
+                    j = j + 1
+                  end do
+                  atom_body(i) = atom_body(j)
+                end if
+              end do
+              do i = 1, m
+                prev = prev + 1
+                write(unit,'(A)') trim(join(int2str([prev,atom_body(i)])))
+              end do
+              deallocate( atom_body )
+            end do
+          end if
           if (me%velocity%active) then
             write(unit,'(/,"Velocities",/)')
             V = velocities( sum(n%mols*total%atoms), me%velocity%seed, me%velocity%kT, atom_mass )
