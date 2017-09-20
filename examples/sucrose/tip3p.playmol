@@ -1,0 +1,14 @@
+atom		HW1   HW   0.417
+atom		OW    OW  -0.834
+atom		HW2   HW   0.417
+
+bond		OW HW1 HW2
+
+diameter	HW 2.4
+diameter	OW 3.1
+
+build
+3
+HW1	0.0 0.0 0.0
+OW	HW1 0.9572
+HW2	OW  0.9572 HW1 104.52
