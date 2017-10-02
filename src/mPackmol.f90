@@ -308,7 +308,7 @@ contains
         character(*), intent(in) :: mixfile
         integer :: mix, narg, natoms, iatom
         character(sl) :: line, arg(4)
-        call lcoord % destroy
+        call lcoord % destroy( silent = .true. )
         open( newunit = mix, file = mixfile, status = "old" )
         read(mix,'(I12,/)') natoms
         do iatom = 1, natoms

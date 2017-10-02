@@ -68,7 +68,7 @@
       <keyword>atom</keyword>
       <keyword>charge</keyword>
       <keyword>bond</keyword>
-      <keyword>body</keyword>
+      <keyword>rigid_body</keyword>
       <keyword>mixing_rule</keyword>
       <keyword>geometric</keyword>
       <keyword>arithmetic</keyword>

@@ -1,0 +1,811 @@
+# GLYCAM_06_H PARAMETERS (FOR AMBER 11.0, RESP 0.010), COPYRIGHT CCRC 2011
+
+# Model definition:
+define	pair_style     as lj/cut/coul/long
+define	bond_style     as harmonic
+define	angle_style    as harmonic
+define	dihedral_style as charmm
+define	improper_style as cvff
+
+# Atom types:
+atom_type	Sm	$pair_style	0.2104	3.06647	# carbohydrate linkage (-CH2-S-CH2-)
+atom_type	HW	$pair_style	0.0000	0.0	# TIP3P water
+atom_type	Ng	$pair_style	0.1700	3.25	# N amide group
+atom_type	3C	$pair_style	UNDEFINED	# aliphatic C with three (tres) heavy atoms copied from ff12SB
+atom_type	O2	$pair_style	0.2100	2.95992	# carboxyl group
+atom_type	Hp	$pair_style	0.0157	1.95998	# bonded to C next to positively charged group
+atom_type	Ho	$pair_style	0.0300	0.35636	# hydroxyl group
+atom_type	Hc	$pair_style	0.0157	2.64953	# aliph. bond. to C without electrwd. groups
+atom_type	Ha	$pair_style	0.0150	2.59964	# aliph. bond. to C in alkenes eg Ck
+atom_type	NT	$pair_style	0.1700	3.25	# N amine group
+atom_type	C	$pair_style	0.0860	3.39967	# C carbonyl group
+atom_type	Oh	$pair_style	0.2104	3.06647	# hydroxyl group
+atom_type	H	$pair_style	0.0157	1.06908	# Bonded to nitrogen atoms
+atom_type	O	$pair_style	0.2100	2.95992	# carbonyl group
+atom_type	P	$pair_style	0.2000	3.74177	# in phosphates
+atom_type	S	$pair_style	0.2500	3.56359	# in sulphates
+atom_type	CX	$pair_style	UNDEFINED	# C-alpha (new to ff10) copied from parm10
+atom_type	Oy	$pair_style	0.1700	3.00001	# ether - for sialic acid only!
+atom_type	2C	$pair_style	UNDEFINED	# aliphatic C with two (duo) heavy atoms copied from ff12SB
+atom_type	N3	$pair_style	0.1700	3.25	# N for charged amino groups (Lys, phospholipids, etc)
+atom_type	Os	$pair_style	0.1700	3.00001	# ether
+atom_type	CT	$pair_style	UNDEFINED	# C aliphatic
+atom_type	Ck	$pair_style	0.0860	3.39967	# C alkenes
+atom_type	Cj	$pair_style	0.0860	3.39967	# C alkenes for adjacent double bonds
+atom_type	H2	$pair_style	0.0157	2.29317	# aliph. bond. to C with 2 electrwd. groups
+atom_type	H1	$pair_style	0.0157	2.47135	# aliph. bond. to C with 1 electrwd. groups
+atom_type	Cg	$pair_style	0.1094	3.39967	# sp3 C aliphatic
+atom_type	Cy	$pair_style	0.1094	3.39967	# C aliphatic - for sialic acid only!
+atom_type	OW	$pair_style	0.1520	3.15075	# TIP3P water
+atom_type	Cp	$pair_style	0.1094	3.39967	# C aliphatic - carbon atom bonded to an oxygen atom bonded to a phosphorus atom
+
+# Masses:
+mass	Sm 	32.06
+mass	HW 	1.008
+mass	Ng 	14.01
+mass	3C 	12.01
+mass	O2 	16.00
+mass	Hp 	1.008
+mass	Ho 	1.008
+mass	Hc 	1.008
+mass	Ha 	1.008
+mass	NT 	14.01
+mass	C 	12.01
+mass	Oh 	16.00
+mass	H 	1.008
+mass	O 	16.00
+mass	P 	30.97
+mass	S 	32.06
+mass	CX 	12.01
+mass	Oy 	16.00
+mass	2C 	12.01
+mass	N3 	14.01
+mass	Os 	16.00
+mass	CT 	12.01
+mass	Ck 	12.01
+mass	Cj 	12.01
+mass	H2 	1.008
+mass	H1 	1.008
+mass	Cg 	12.01
+mass	Cy 	12.01
+mass	OW 	16.00
+mass	Cp 	12.01
+
+# Diameters:
+diameter	Sm	3.06647
+diameter	HW	2.0
+diameter	Ng	3.25
+#diameter	3C	UNDEFINED
+diameter	O2	2.95992
+diameter	Hp	2.0
+diameter	Ho	2.0
+diameter	Hc	2.64953
+diameter	Ha	2.59964
+diameter	NT	3.25
+diameter	C	3.39967
+diameter	Oh	3.06647
+diameter	H	2.0
+diameter	O	2.95992
+diameter	P	3.74177
+diameter	S	3.56359
+#diameter	CX	UNDEFINED
+diameter	Oy	3.00001
+#diameter	2C	UNDEFINED
+diameter	N3	3.25
+diameter	Os	3.00001
+#diameter	CT	UNDEFINED
+diameter	Ck	3.39967
+diameter	Cj	3.39967
+diameter	H2	2.29317
+diameter	H1	2.47135
+diameter	Cg	3.39967
+diameter	Cy	3.39967
+diameter	OW	3.15075
+diameter	Cp	3.39967
+
+# Bond types:
+#bond_type	Cg N 	$bond_style	  337.0    1.450 
+bond_type	CT Os	$bond_style	  320.0    1.410 
+bond_type	2C Os	$bond_style	  320.0    1.410 
+bond_type	3C Os	$bond_style	  320.0    1.410 
+bond_type	S  Ng	$bond_style	  238.0    1.675 
+bond_type	Cg Sm	$bond_style	  237.0    1.810 
+bond_type	N3 H 	$bond_style	  434.0    1.010 
+bond_type	N3 Cg	$bond_style	  355.0    1.490 
+bond_type	Cj Ck	$bond_style	  350.9    1.467 
+bond_type	Os Cj	$bond_style	  454.5    1.359 
+bond_type	Os Ck	$bond_style	  454.5    1.359 
+bond_type	Cj Cj	$bond_style	  629.0    1.337 
+bond_type	Ck Ck	$bond_style	  629.0    1.337 
+bond_type	Cg Cj	$bond_style	  324.0    1.514 
+bond_type	Cg Ck	$bond_style	  324.0    1.514 
+bond_type	Cj Ha	$bond_style	  360.0    1.095 
+bond_type	Ck Ha	$bond_style	  360.0    1.095 
+bond_type	Cg Hp	$bond_style	  360.0    1.095 
+bond_type	NT H 	$bond_style	  434.0    1.010 
+bond_type	NT Cg	$bond_style	  352.0    1.470 
+bond_type	Cg Cp	$bond_style	  310.0    1.520 
+bond_type	Cp H2	$bond_style	  340.0    1.090 
+bond_type	Cp H1	$bond_style	  340.0    1.090 
+bond_type	Cp Os	$bond_style	  285.0    1.460 
+bond_type	P  Os	$bond_style	  230.0    1.610 
+bond_type	P  O2	$bond_style	  525.0    1.480 
+bond_type	S  Os	$bond_style	  206.0    1.589 
+bond_type	S  O2	$bond_style	  620.0    1.440 
+bond_type	C  Os	$bond_style	  450.0    1.323 
+bond_type	OW HW	$bond_style	  553.0    0.9572
+bond_type	HW HW	$bond_style	  553.0    1.5136
+bond_type	Cg Cg	$bond_style	  310.0    1.520 
+bond_type	Cg Hc	$bond_style	  340.0    1.090 
+bond_type	Cg H1	$bond_style	  340.0    1.090 
+bond_type	Cg H2	$bond_style	  340.0    1.090 
+bond_type	Cg Oh	$bond_style	  320.0    1.430 
+bond_type	Cg C 	$bond_style	  220.0    1.530 
+bond_type	Cg Ng	$bond_style	  337.0    1.450 
+bond_type	C  O 	$bond_style	  570.0    1.229 
+bond_type	C  Ng	$bond_style	  490.0    1.335 
+bond_type	C  O2	$bond_style	  656.0    1.250 
+bond_type	C  Hc	$bond_style	  331.0    1.090 
+bond_type	C  H1	$bond_style	  410.0    1.092 
+bond_type	Oh Ho	$bond_style	  553.0    0.960 
+bond_type	Ng H 	$bond_style	  434.0    1.010 
+bond_type	Cy Oh	$bond_style	  320.0    1.410 
+bond_type	Cg Os	$bond_style	  285.0    1.460 
+bond_type	Cg Oy	$bond_style	  320.0    1.410 
+bond_type	Cy Cg	$bond_style	  310.0    1.520 
+bond_type	Cy Os	$bond_style	  320.0    1.410 
+bond_type	Cy Oy	$bond_style	  320.0    1.410 
+bond_type	Cy C 	$bond_style	  220.0    1.530 
+
+# Angle types:
+#angle_type	H  N  Cg	$angle_style	     30.00    118.00
+#angle_type	Os Cg N 	$angle_style	    106.90    107.90
+#angle_type	Cg Cg N 	$angle_style	     80.00    109.70
+#angle_type	H2 Cg N 	$angle_style	     50.00    109.50
+#angle_type	C  N  Cg	$angle_style	     50.00    120.00
+angle_type	CT Os Cy	$angle_style	     50.00    111.60
+angle_type	H1 CT Os	$angle_style	     50.0     109.5 
+angle_type	H1 2C Os	$angle_style	     50.0     109.5 
+angle_type	H1 3C Os	$angle_style	     50.0     109.5 
+angle_type	CT CT Os	$angle_style	     50.0     109.5 
+angle_type	CX CT Os	$angle_style	     50.0     109.5 
+angle_type	CT 3C Os	$angle_style	     50.0     109.5 
+angle_type	CX 2C Os	$angle_style	     50.0     109.5 
+angle_type	CX 3C Os	$angle_style	     50.0     109.5 
+angle_type	S  Ng Cg	$angle_style	     31.0     110.0 
+angle_type	O2 S  Ng	$angle_style	     84.0     108.0 
+angle_type	S  Ng H 	$angle_style	     37.5     121.2 
+angle_type	H2 Cg Sm	$angle_style	     41.5     109.6 
+angle_type	Os Cg Sm	$angle_style	     68.0     108.3 
+angle_type	Cg Cg Sm	$angle_style	     50.0     108.6 
+angle_type	Cg Sm Cg	$angle_style	     50.0     109.5 
+angle_type	H1 Cg Sm	$angle_style	     50.0     109.5 
+angle_type	Hc Cg Sm	$angle_style	     50.0     109.5 
+angle_type	H  N3 Cg	$angle_style	     45.5     109.2 
+angle_type	H  N3 H 	$angle_style	     35.0     109.5 
+angle_type	N3 Cg Hp	$angle_style	     57.0     109.6 
+angle_type	Cj Cg Ck	$angle_style	     46.7     111.5 
+angle_type	Ck Cg Ck	$angle_style	     46.7     111.5 
+angle_type	Cj Cg Cj	$angle_style	     46.7     111.5 
+angle_type	Os Cj Ha	$angle_style	     65.1     107.5 
+angle_type	Os Ck Ha	$angle_style	     65.1     107.5 
+angle_type	Cg Os Cj	$angle_style	     38.0     107.0 
+angle_type	Cg Os Ck	$angle_style	     38.0     107.0 
+angle_type	Os Cj Cj	$angle_style	     59.5     119.0 
+angle_type	Os Ck Ck	$angle_style	     59.5     119.0 
+angle_type	Cg Cj Cg	$angle_style	     46.1     115.6 
+angle_type	Cg Ck Cg	$angle_style	     46.1     115.6 
+angle_type	Ck Cj Ha	$angle_style	     32.7     126.4 
+angle_type	Cj Ck Ha	$angle_style	     32.7     126.4 
+angle_type	Ck Cj Cj	$angle_style	     49.4     127.7 
+angle_type	Ck Ck Cj	$angle_style	     49.4     127.7 
+angle_type	Ha Cj Ha	$angle_style	     31.3     117.4 
+angle_type	Ha Ck Ha	$angle_style	     31.3     117.4 
+angle_type	Ha Cj Cj	$angle_style	     38.2     121.3 
+angle_type	Ha Ck Ck	$angle_style	     38.2     121.3 
+angle_type	H1 Cg Cj	$angle_style	     56.0     111.5 
+angle_type	H1 Cg Ck	$angle_style	     56.0     111.5 
+angle_type	Hc Cg Cj	$angle_style	     41.4     114.0 
+angle_type	Hc Cg Ck	$angle_style	     41.4     114.0 
+angle_type	Ha Cj Cg	$angle_style	     50.0     114.0 
+angle_type	Ha Ck Cg	$angle_style	     50.0     114.0 
+angle_type	Cg Cj Cj	$angle_style	     47.9     122.5 
+angle_type	Cg Ck Ck	$angle_style	     47.9     122.5 
+angle_type	Cg Cg Cj	$angle_style	     43.0     112.0 
+angle_type	Cg Cg Ck	$angle_style	     43.0     112.0 
+angle_type	Oh Cg Cj	$angle_style	     70.0     107.5 
+angle_type	Oh Cg Ck	$angle_style	     70.0     107.5 
+angle_type	Hp Cg Hp	$angle_style	     40.0     109.5 
+angle_type	Hp Cg Cp	$angle_style	     45.0     112.6 
+angle_type	Hp Cg Cg	$angle_style	     45.0     112.6 
+angle_type	Cp Os Cg	$angle_style	     50.00    111.60
+angle_type	Cp Cg Ng	$angle_style	     80.00    109.70
+angle_type	Cg N3 Cg	$angle_style	     54.0     111.1
+angle_type	N3 Cg Cp	$angle_style	     67.0     111.6 
+angle_type	N3 Cg Cg	$angle_style	     67.0     111.6 
+angle_type	H  NT H 	$angle_style	     35.0     109.5 
+angle_type	H  NT Cg	$angle_style	     49.0     109.2 
+angle_type	NT Cg H1	$angle_style	     64.0     109.6 
+angle_type	NT Cg Cg	$angle_style	     67.0     111.6 
+angle_type	Cg NT Cg	$angle_style	     54.0     108.1 
+angle_type	H1 Cp H1	$angle_style	     45.00    109.50
+angle_type	Cp Cg H1	$angle_style	     45.00    111.00
+angle_type	Cg Cp H1	$angle_style	     45.00    111.00
+angle_type	Cg Cp Cg	$angle_style	     45.00    113.50
+angle_type	Cp Cg Cg	$angle_style	     45.00    113.50
+angle_type	Os Cp Cg	$angle_style	     70.00    108.50
+angle_type	Os Cg Cp	$angle_style	     70.00    108.50
+angle_type	H2 Cp Os	$angle_style	     60.00    110.00
+angle_type	H1 Cp Os	$angle_style	     60.00    110.00
+angle_type	Os P  Os	$angle_style	     45.0     109.6 
+angle_type	P  Os Cp	$angle_style	     50.0     119.0 
+angle_type	O2 P  Os	$angle_style	    100.0     108.23
+angle_type	O2 P  O2	$angle_style	    140.0     119.9 
+angle_type	O2 S  O2	$angle_style	    123.0     113.91
+angle_type	S  Os Cg	$angle_style	     50.0     118.88
+angle_type	O2 S  Os	$angle_style	    104.0     106.87
+angle_type	Oh Cg C 	$angle_style	     63.00    112.36
+angle_type	Cg Os C 	$angle_style	     60.0     117.00
+angle_type	Os C  O 	$angle_style	     80.0     125.00
+angle_type	Os C  Cg	$angle_style	     95.0     110.80
+angle_type	HW OW HW	$angle_style	    100.      104.52
+angle_type	HW HW OW	$angle_style	      0.      127.74
+angle_type	Hc Cg Hc	$angle_style	     40.00    109.50
+angle_type	H1 Cg H1	$angle_style	     45.00    109.50
+angle_type	H2 Cg H2	$angle_style	     45.00    109.50
+angle_type	Cg Cg Hc	$angle_style	     45.00    112.60
+angle_type	Cg Cg H1	$angle_style	     45.00    111.00
+angle_type	Cg Cp H2	$angle_style	     45.00    111.00
+angle_type	Cg Cg H2	$angle_style	     45.00    111.00
+angle_type	Cg Cg Cg	$angle_style	     45.00    113.50
+angle_type	Oh Cg Cg	$angle_style	     70.00    107.50
+angle_type	H1 Cg Oh	$angle_style	     60.00    110.00
+angle_type	H2 Cg Oh	$angle_style	     60.00    110.00
+angle_type	Cg Oh Ho	$angle_style	     55.00    109.50
+angle_type	Cy Oh Ho	$angle_style	     55.00    109.50
+angle_type	Cg Os Cg	$angle_style	     50.00    111.60
+angle_type	CT Os Cg	$angle_style	     50.00    111.60
+angle_type	2C Os Cg	$angle_style	     50.00    111.60
+angle_type	3C Os Cg	$angle_style	     50.00    111.60
+angle_type	Os Cg Cg	$angle_style	     70.00    108.50
+angle_type	Oy Cg Cg	$angle_style	     70.00    108.50
+angle_type	H1 Cg Os	$angle_style	     60.00    110.00
+angle_type	H1 Cg Oy	$angle_style	     60.00    110.00
+angle_type	H2 Cg Os	$angle_style	     60.00    110.00
+angle_type	H1 C  O 	$angle_style	     60.00    110.00
+angle_type	H1 C  Ng	$angle_style	     55.00    112.40
+angle_type	Os Cp Os	$angle_style	    100.00    112.00
+angle_type	Os Cg Os	$angle_style	    100.00    112.00
+angle_type	Oh Cg Os	$angle_style	    100.00    112.00
+angle_type	O2 C  O2	$angle_style	     80.00    126.00
+angle_type	O2 C  Cg	$angle_style	     70.00    115.00
+angle_type	Cg C  Ng	$angle_style	     70.00    115.60
+angle_type	Cg C  O 	$angle_style	     80.00    121.70
+angle_type	Ng C  O 	$angle_style	     80.00    122.90
+angle_type	Ng Cg Hc	$angle_style	     50.00    110.10
+angle_type	Os Cg Ng	$angle_style	    106.90    107.90
+angle_type	Cg Cg Ng	$angle_style	     80.00    109.70
+angle_type	H1 Cg Ng	$angle_style	     50.00    109.50
+angle_type	H2 Cg Ng	$angle_style	     50.00    109.50
+angle_type	C  Cg Cg	$angle_style	     63.00    111.10
+angle_type	C  Cg Hc	$angle_style	     50.00    109.50
+angle_type	C  Cg H1	$angle_style	     50.00    109.50
+angle_type	C  Cg H2	$angle_style	     50.00    109.50
+angle_type	C  Ng Cg	$angle_style	     50.00    120.00
+angle_type	Cg Ng Cg	$angle_style	     50.00    118.00
+angle_type	H  Ng Cg	$angle_style	     30.00    118.00
+angle_type	C  Ng H 	$angle_style	     50.00    120.00
+angle_type	H  Ng H 	$angle_style	     35.00    120.00
+angle_type	H2 C  Ng	$angle_style	     55.00    112.40
+angle_type	H2 C  O 	$angle_style	     55.00    122.20
+angle_type	Os Cg C 	$angle_style	     63.00    112.36
+angle_type	O2 C  Oh	$angle_style	     80.0     126.00
+angle_type	Os Cy Cg	$angle_style	     70.00    108.50
+angle_type	Oh Cy Cg	$angle_style	     70.00    108.50
+angle_type	Oy Cy Cg	$angle_style	     70.00    108.50
+angle_type	Oh Cy C 	$angle_style	     63.00    112.36
+angle_type	Os Cy C 	$angle_style	     63.00    112.36
+angle_type	Oy Cy C 	$angle_style	     63.00    112.36
+angle_type	Oy Cy Oh	$angle_style	    100.00    112.00
+angle_type	Oy Cy Os	$angle_style	    100.00    112.00
+angle_type	Cg Cy C 	$angle_style	     63.00    111.10
+angle_type	Cg Os Cy	$angle_style	     50.00    111.60
+angle_type	Cg Oy Cy	$angle_style	     50.00    111.60
+angle_type	O2 C  Cy	$angle_style	     70.00    115.00
+angle_type	Hc Cg Cy	$angle_style	     45.00    112.60
+angle_type	Cg Cg Cy	$angle_style	     45.00    113.50
+
+# Dihedral types:
+dihedral_type	Oy Cy Os CT	$dihedral_style	{0.30/1}	1	0	0
+dihedral_type	Oy Cy Os CT	$dihedral_style	{1.27/1}	2	0	0
+dihedral_type	Oy Cy Os CT	$dihedral_style	{0.37/1}	3	0	0
+dihedral_type	CT Os Cy Cg	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	CT Os Cy C 	$dihedral_style	{1.90/1}	1	0	0
+dihedral_type	Cy Os CT CT	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	Cy Os CT H1	$dihedral_style	{0.27/1}	3	0	0
+dihedral_type	O2 S  Ng H 	$dihedral_style	{-0.10/1}	6	0	0
+dihedral_type	O2 S  Ng Cg	$dihedral_style	{0.11/1}	3	0	0
+dihedral_type	O2 S  Ng Cg	$dihedral_style	{0.0/1}	2	0	0
+dihedral_type	O2 S  Ng Cg	$dihedral_style	{0.0/1}	1	0	0
+dihedral_type	S  Ng Cg H1	$dihedral_style	{2.00/1}	1	0	0
+dihedral_type	S  Ng Cg Cg	$dihedral_style	{0.0/1}	3	0	0
+dihedral_type	S  Ng Cg Cg	$dihedral_style	{0.50/1}	2	0	0
+dihedral_type	S  Ng Cg Cg	$dihedral_style	{0.50/1}	1	0	0
+dihedral_type	Cg Os Cg Sm	$dihedral_style	{0.67/1}	3	0	0
+dihedral_type	Cg Os Cg Sm	$dihedral_style	{1.90/1}	2	0	0
+dihedral_type	Cg Os Cg Sm	$dihedral_style	{1.14/1}	1	0	0
+dihedral_type	Os Cg Sm Cg	$dihedral_style	{1.03/1}	3	0	0
+dihedral_type	Os Cg Sm Cg	$dihedral_style	{1.44/1}	2	0	0
+dihedral_type	Os Cg Sm Cg	$dihedral_style	{0.27/1}	1	0	0
+dihedral_type	H2 Cg Sm Cg	$dihedral_style	{0.0/1}	1	0	0
+dihedral_type	Sm Cg Cg H2	$dihedral_style	{0.28/1}	3	0	0
+dihedral_type	Sm Cg Cg H2	$dihedral_style	{0.04/1}	2	0	0
+dihedral_type	Sm Cg Cg H2	$dihedral_style	{-0.21/1}	1	0	0
+dihedral_type	Sm Cg Cg Os	$dihedral_style	{0.03/1}	3	0	0
+dihedral_type	Sm Cg Cg Os	$dihedral_style	{0.18/1}	2	0	0
+dihedral_type	Sm Cg Cg Os	$dihedral_style	{-1.03/1}	1	0	0
+dihedral_type	Cg Sm Cg H1	$dihedral_style	{0.33/1}	3	0	0
+dihedral_type	Cg Cg Sm Cg	$dihedral_style	{0.32/1}	3	0	0
+dihedral_type	Cg Cg Sm Cg	$dihedral_style	{0.35/1}	2	0	0
+dihedral_type	Cg Cg Sm Cg	$dihedral_style	{0.35/1}	1	0	0
+dihedral_type	Sm Cg Cg Hc	$dihedral_style	{0.08/1}	3	0	0
+dihedral_type	Sm Cg Cg H1	$dihedral_style	{0.15/1}	3	0	0
+dihedral_type	Sm Cg Cg H1	$dihedral_style	{-0.05/1}	2	0	0
+dihedral_type	Sm Cg Cg H1	$dihedral_style	{0.04/1}	1	0	0
+dihedral_type	Sm Cg Cg Oh	$dihedral_style	{0.02/1}	3	0	0
+dihedral_type	Sm Cg Cg Oh	$dihedral_style	{0.20/1}	1	0	0
+dihedral_type	Cg Cg Cg Sm	$dihedral_style	{0.01/1}	3	0	0
+dihedral_type	Cg Cg Cg Sm	$dihedral_style	{0.20/1}	2	0	0
+dihedral_type	Cg Cg Cg Sm	$dihedral_style	{0.51/1}	1	0	0
+#dihedral_type	NH Cg Cg Sm	$dihedral_style	{0.45/1}	3	0	0
+#dihedral_type		NH Cg Cg S	$dihedral_style	{0.25/1}	2	0	0
+dihedral_type	H  N3 Cg Hp	$dihedral_style	{0.13/1}	3	0	0
+dihedral_type	H  N3 Cg Cg	$dihedral_style	{0.13/1}	3	0	0
+dihedral_type	Ck Cg Cg Ng	$dihedral_style	{0.18/1}	3	0	0
+dihedral_type	Ck Cg Cg Ng	$dihedral_style	{0.03/1}	2	0	0
+dihedral_type	Ck Cg Cg Ng	$dihedral_style	{-0.22/1}	1	0	0
+dihedral_type	Cj Cg Cg Ng	$dihedral_style	{0.18/1}	3	0	0
+dihedral_type	Cj Cg Cg Ng	$dihedral_style	{0.03/1}	2	0	0
+dihedral_type	Cj Cg Cg Ng	$dihedral_style	{-0.22/1}	1	0	0
+dihedral_type	C  Cg Cg Cj	$dihedral_style	{-0.42/1}	3	0	0
+dihedral_type	C  Cg Cg Cj	$dihedral_style	{0.33/1}	2	0	0
+dihedral_type	C  Cg Cg Cj	$dihedral_style	{0.40/1}	1	0	0
+dihedral_type	C  Cg Cg Ck	$dihedral_style	{-0.42/1}	3	0	0
+dihedral_type	C  Cg Cg Ck	$dihedral_style	{0.33/1}	2	0	0
+dihedral_type	C  Cg Cg Ck	$dihedral_style	{0.40/1}	1	0	0
+dihedral_type	H1 Cg Cg Ck	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	H1 Cg Cg Cj	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	Oh Cg Cg Ck	$dihedral_style	{-0.11/1}	3	0	0
+dihedral_type	Oh Cg Cg Ck	$dihedral_style	{-0.16/1}	2	0	0
+dihedral_type	Oh Cg Cg Ck	$dihedral_style	{-1.06/1}	1	0	0
+dihedral_type	Oh Cg Cg Cj	$dihedral_style	{-0.11/1}	3	0	0
+dihedral_type	Oh Cg Cg Cj	$dihedral_style	{-0.16/1}	2	0	0
+dihedral_type	Oh Cg Cg Cj	$dihedral_style	{-1.06/1}	1	0	0
+dihedral_type	Os Cj Cj Cg	$dihedral_style	{-13.00/1}	2	0	0
+dihedral_type	Os Ck Ck Cg	$dihedral_style	{-13.00/1}	2	0	0
+dihedral_type	Ck Cj Cj Ha	$dihedral_style	{-15.00/1}	2	0	0
+dihedral_type	Cj Ck Ck Ha	$dihedral_style	{-15.00/1}	2	0	0
+dihedral_type	Cg Os Cj Ha	$dihedral_style	{0.08/1}	3	0	0
+dihedral_type	Cg Os Cj Ha	$dihedral_style	{0.22/1}	2	0	0
+dihedral_type	Cg Os Cj Ha	$dihedral_style	{0.40/1}	1	0	0
+dihedral_type	Cg Os Ck Ha	$dihedral_style	{0.08/1}	3	0	0
+dihedral_type	Cg Os Ck Ha	$dihedral_style	{0.22/1}	2	0	0
+dihedral_type	Cg Os Ck Ha	$dihedral_style	{0.40/1}	1	0	0
+dihedral_type	Os Cj Cj Ha	$dihedral_style	{-20.00/1}	2	0	0
+dihedral_type	Os Ck Ck Ha	$dihedral_style	{-20.00/1}	2	0	0
+dihedral_type	H1 Cg Os Cj	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	H1 Cg Os Ck	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	Cg Cg Os Cj	$dihedral_style	{-0.01/1}	3	0	0
+dihedral_type	Cg Cg Os Cj	$dihedral_style	{-0.42/1}	2	0	0
+dihedral_type	Cg Cg Os Cj	$dihedral_style	{0.22/1}	1	0	0
+dihedral_type	Cg Cg Os Ck	$dihedral_style	{-0.01/1}	3	0	0
+dihedral_type	Cg Cg Os Ck	$dihedral_style	{-0.42/1}	2	0	0
+dihedral_type	Cg Cg Os Ck	$dihedral_style	{0.22/1}	1	0	0
+dihedral_type	Cg Os Cj Cj	$dihedral_style	{-0.87/1}	3	0	0
+dihedral_type	Cg Os Cj Cj	$dihedral_style	{-3.99/1}	2	0	0
+dihedral_type	Cg Os Cj Cj	$dihedral_style	{-0.25/1}	1	0	0
+dihedral_type	Cg Os Ck Ck	$dihedral_style	{-0.87/1}	3	0	0
+dihedral_type	Cg Os Ck Ck	$dihedral_style	{-3.99/1}	2	0	0
+dihedral_type	Cg Os Ck Ck	$dihedral_style	{-0.25/1}	1	0	0
+dihedral_type	Cj Ck Ck Cj	$dihedral_style	{-2.00/1}	2	0	0
+dihedral_type	Ck Cj Cj Ck	$dihedral_style	{-2.00/1}	2	0	0
+dihedral_type	Ck Cg Ck Ck	$dihedral_style	{-0.04/1}	3	0	0
+dihedral_type	Ck Cg Ck Ck	$dihedral_style	{-0.68/1}	2	0	0
+dihedral_type	Ck Cg Ck Ck	$dihedral_style	{-0.21/1}	1	0	0
+dihedral_type	Cj Cg Ck Ck	$dihedral_style	{-0.04/1}	3	0	0
+dihedral_type	Cj Cg Ck Ck	$dihedral_style	{-0.68/1}	2	0	0
+dihedral_type	Cj Cg Ck Ck	$dihedral_style	{-0.21/1}	1	0	0
+dihedral_type	Ck Cg Cj Cj	$dihedral_style	{-0.04/1}	3	0	0
+dihedral_type	Ck Cg Cj Cj	$dihedral_style	{-0.68/1}	2	0	0
+dihedral_type	Ck Cg Cj Cj	$dihedral_style	{-0.21/1}	1	0	0
+dihedral_type	Cj Cg Cj Cj	$dihedral_style	{-0.04/1}	3	0	0
+dihedral_type	Cj Cg Cj Cj	$dihedral_style	{-0.68/1}	2	0	0
+dihedral_type	Cj Cg Cj Cj	$dihedral_style	{-0.21/1}	1	0	0
+dihedral_type	Ck Cg Ck Ha	$dihedral_style	{0.31/1}	3	0	0
+dihedral_type	Ck Cg Ck Ha	$dihedral_style	{0.03/1}	2	0	0
+dihedral_type	Ck Cg Ck Ha	$dihedral_style	{0.05/1}	1	0	0
+dihedral_type	Cj Cg Ck Ha	$dihedral_style	{0.31/1}	3	0	0
+dihedral_type	Cj Cg Ck Ha	$dihedral_style	{0.03/1}	2	0	0
+dihedral_type	Cj Cg Ck Ha	$dihedral_style	{0.05/1}	1	0	0
+dihedral_type	Ck Cg Cj Ha	$dihedral_style	{0.31/1}	3	0	0
+dihedral_type	Ck Cg Cj Ha	$dihedral_style	{0.03/1}	2	0	0
+dihedral_type	Ck Cg Cj Ha	$dihedral_style	{0.05/1}	1	0	0
+dihedral_type	Cj Cg Cj Ha	$dihedral_style	{0.31/1}	3	0	0
+dihedral_type	Cj Cg Cj Ha	$dihedral_style	{0.03/1}	2	0	0
+dihedral_type	Cj Cg Cj Ha	$dihedral_style	{0.05/1}	1	0	0
+dihedral_type	Cj Ck Ck Cg	$dihedral_style	{-3.50/1}	2	0	0
+dihedral_type	Ck Cj Cj Cg	$dihedral_style	{-3.50/1}	2	0	0
+dihedral_type	Cg Cg Cj Cg	$dihedral_style	{-0.01/1}	3	0	0
+dihedral_type	Cg Cg Cj Cg	$dihedral_style	{-0.34/1}	2	0	0
+dihedral_type	Cg Cg Cj Cg	$dihedral_style	{0.29/1}	1	0	0
+dihedral_type	Cg Cg Ck Cg	$dihedral_style	{-0.01/1}	3	0	0
+dihedral_type	Cg Cg Ck Cg	$dihedral_style	{-0.34/1}	2	0	0
+dihedral_type	Cg Cg Ck Cg	$dihedral_style	{0.29/1}	1	0	0
+dihedral_type	Hc Cg Cj Cg	$dihedral_style	{0.0/1}	1	0	0
+dihedral_type	Hc Cg Ck Cg	$dihedral_style	{0.0/1}	1	0	0
+dihedral_type	Ha Ck Cj Ha	$dihedral_style	{0.69/1}	3	0	0
+dihedral_type	Ha Ck Cj Ha	$dihedral_style	{-1.75/1}	2	0	0
+dihedral_type	Ha Ck Cj Ha	$dihedral_style	{0.92/1}	1	0	0
+dihedral_type	Ha Cj Ck Ck	$dihedral_style	{0.17/1}	3	0	0
+dihedral_type	Ha Cj Ck Ck	$dihedral_style	{0.40/1}	2	0	0
+dihedral_type	Ha Cj Ck Ck	$dihedral_style	{0.69/1}	1	0	0
+dihedral_type	Ha Ck Cj Cj	$dihedral_style	{0.17/1}	3	0	0
+dihedral_type	Ha Ck Cj Cj	$dihedral_style	{0.40/1}	2	0	0
+dihedral_type	Ha Ck Cj Cj	$dihedral_style	{0.69/1}	1	0	0
+dihedral_type	Cj Cj Ck Ck	$dihedral_style	{0.69/1}	3	0	0
+dihedral_type	Cj Cj Ck Ck	$dihedral_style	{-1.75/1}	2	0	0
+dihedral_type	Cj Cj Ck Ck	$dihedral_style	{0.92/1}	1	0	0
+dihedral_type	Oh Cg Cj Cj	$dihedral_style	{-0.50/1}	3	0	0
+dihedral_type	Oh Cg Cj Cj	$dihedral_style	{-1.00/1}	2	0	0
+dihedral_type	Oh Cg Cj Cj	$dihedral_style	{-0.50/1}	1	0	0
+dihedral_type	Oh Cg Ck Ck	$dihedral_style	{-0.50/1}	3	0	0
+dihedral_type	Oh Cg Ck Ck	$dihedral_style	{-1.00/1}	2	0	0
+dihedral_type	Oh Cg Ck Ck	$dihedral_style	{-0.50/1}	1	0	0
+dihedral_type	Oh Cg Cj Ha	$dihedral_style	{0.0/1}	1	0	0
+dihedral_type	Oh Cg Ck Ha	$dihedral_style	{0.0/1}	1	0	0
+dihedral_type	Ho Oh Cg Cj	$dihedral_style	{0.20/1}	3	0	0
+dihedral_type	Ho Oh Cg Cj	$dihedral_style	{0.58/1}	2	0	0
+dihedral_type	Ho Oh Cg Cj	$dihedral_style	{0.38/1}	1	0	0
+dihedral_type	Ho Oh Cg Ck	$dihedral_style	{0.20/1}	3	0	0
+dihedral_type	Ho Oh Cg Ck	$dihedral_style	{0.58/1}	2	0	0
+dihedral_type	Ho Oh Cg Ck	$dihedral_style	{0.38/1}	1	0	0
+dihedral_type	Cg Cg Cg Cj	$dihedral_style	{0.0/1}	3	0	0
+dihedral_type	Cg Cg Cg Ck	$dihedral_style	{0.0/1}	3	0	0
+dihedral_type	Cg Cg Cj Cj	$dihedral_style	{-0.5/1}	3	0	0
+dihedral_type	Cg Cg Cj Cj	$dihedral_style	{-0.4/1}	2	0	0
+dihedral_type	Cg Cg Ck Ck	$dihedral_style	{-0.5/1}	3	0	0
+dihedral_type	Cg Cg Ck Ck	$dihedral_style	{-0.4/1}	2	0	0
+dihedral_type	Cg Cg Cj Ha	$dihedral_style	{0.0/1}	1	0	0
+dihedral_type	Cg Cg Ck Ha	$dihedral_style	{0.0/1}	1	0	0
+dihedral_type	Cg Cj Cj Cg	$dihedral_style	{-15.0/1}	2	0	0
+dihedral_type	Cg Cj Cj Cg	$dihedral_style	{0.5/1}	1	0	0
+dihedral_type	Cg Ck Ck Cg	$dihedral_style	{-15.0/1}	2	0	0
+dihedral_type	Cg Ck Ck Cg	$dihedral_style	{0.5/1}	1	0	0
+dihedral_type	Hc Cg Cg Cj	$dihedral_style	{0.1/1}	3	0	0
+dihedral_type	Hc Cg Cg Ck	$dihedral_style	{0.1/1}	3	0	0
+dihedral_type	H1 Cg Cj Cj	$dihedral_style	{-0.33/1}	3	0	0
+dihedral_type	H1 Cg Ck Ck	$dihedral_style	{-0.33/1}	3	0	0
+dihedral_type	Hc Cg Cj Cj	$dihedral_style	{-0.34/1}	3	0	0
+dihedral_type	Hc Cg Cj Cj	$dihedral_style	{-0.1/1}	2	0	0
+dihedral_type	Hc Cg Cj Cj	$dihedral_style	{0.1/1}	1	0	0
+dihedral_type	Hc Cg Ck Ck	$dihedral_style	{-0.34/1}	3	0	0
+dihedral_type	Hc Cg Ck Ck	$dihedral_style	{-0.1/1}	2	0	0
+dihedral_type	Hc Cg Ck Ck	$dihedral_style	{0.1/1}	1	0	0
+dihedral_type	Hc Cg Cj Ha	$dihedral_style	{0.0/1}	3	0	0
+dihedral_type	Hc Cg Ck Ha	$dihedral_style	{0.0/1}	3	0	0
+dihedral_type	H1 Cg Cj Ha	$dihedral_style	{0.0/1}	3	0	0
+dihedral_type	H1 Cg Ck Ha	$dihedral_style	{0.0/1}	3	0	0
+dihedral_type	Ha Cj Cj Cg	$dihedral_style	{-21.0/1}	2	0	0
+dihedral_type	Ha Ck Ck Cg	$dihedral_style	{-21.0/1}	2	0	0
+dihedral_type	Ha Cj Cj Ha	$dihedral_style	{-8.5/1}	2	0	0
+dihedral_type	Ha Ck Ck Ha	$dihedral_style	{-8.5/1}	2	0	0
+dihedral_type	Hp Cg Cp Os	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	Hp Cg Cg Os	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	Hp Cg Cp H1	$dihedral_style	{0.13/1}	3	0	0
+dihedral_type	Hp Cg Cg H1	$dihedral_style	{0.13/1}	3	0	0
+dihedral_type	Hp Cg Cg Hc	$dihedral_style	{0.13/1}	3	0	0
+dihedral_type	Hp Cg Cg Cg	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	Cg N3 Cg Cp	$dihedral_style	{0.1/1}	3	0	0
+dihedral_type	Cg N3 Cg Cp	$dihedral_style	{-0.2/1}	2	0	0
+dihedral_type	Cg N3 Cg Cp	$dihedral_style	{0.1/1}	1	0	0
+dihedral_type	Cg N3 Cg Cg	$dihedral_style	{0.1/1}	3	0	0
+dihedral_type	Cg N3 Cg Cg	$dihedral_style	{-0.2/1}	2	0	0
+dihedral_type	Cg N3 Cg Cg	$dihedral_style	{0.1/1}	1	0	0
+dihedral_type	Cg NT Cg Cg	$dihedral_style	{0.1/1}	3	0	0
+dihedral_type	Cg NT Cg Cg	$dihedral_style	{-0.2/1}	2	0	0
+dihedral_type	Cg NT Cg Cg	$dihedral_style	{0.1/1}	1	0	0
+dihedral_type	N3 Cg Cg Cg	$dihedral_style	{0.3/1}	3	0	0
+dihedral_type	N3 Cg Cg Cg	$dihedral_style	{-0.1/1}	2	0	0
+dihedral_type	N3 Cg Cg Cg	$dihedral_style	{0.1/1}	1	0	0
+dihedral_type	NT Cg Cg Cg	$dihedral_style	{0.3/1}	3	0	0
+dihedral_type	NT Cg Cg Cg	$dihedral_style	{-0.1/1}	2	0	0
+dihedral_type	NT Cg Cg Cg	$dihedral_style	{0.1/1}	1	0	0
+dihedral_type	NT Cg Cg Hc	$dihedral_style	{0.1/1}	3	0	0
+dihedral_type	N3 Cg Cg Hc	$dihedral_style	{0.1/1}	3	0	0
+dihedral_type	NT Cg Cg H1	$dihedral_style	{0.1/1}	3	0	0
+dihedral_type	N3 Cg Cp H1	$dihedral_style	{0.1/1}	3	0	0
+dihedral_type	N3 Cg Cg H1	$dihedral_style	{0.1/1}	3	0	0
+dihedral_type	NT Cg Cg Os	$dihedral_style	{1.5/1}	3	0	0
+dihedral_type	NT Cg Cg Os	$dihedral_style	{0.5/1}	2	0	0
+dihedral_type	NT Cg Cg Os	$dihedral_style	{-0.5/1}	1	0	0
+dihedral_type	N3 Cg Cp Os	$dihedral_style	{1.5/1}	3	0	0
+dihedral_type	N3 Cg Cp Os	$dihedral_style	{0.5/1}	2	0	0
+dihedral_type	N3 Cg Cp Os	$dihedral_style	{-0.5/1}	1	0	0
+dihedral_type	N3 Cg Cg Os	$dihedral_style	{1.5/1}	3	0	0
+dihedral_type	N3 Cg Cg Os	$dihedral_style	{0.5/1}	2	0	0
+dihedral_type	N3 Cg Cg Os	$dihedral_style	{-0.5/1}	1	0	0
+dihedral_type	NT Cg Cg Oh	$dihedral_style	{0.6/1}	3	0	0
+dihedral_type	NT Cg Cg Oh	$dihedral_style	{0.5/1}	2	0	0
+dihedral_type	NT Cg Cg Oh	$dihedral_style	{-1.0/1}	1	0	0
+dihedral_type	N3 Cg Cg Oh	$dihedral_style	{0.6/1}	3	0	0
+dihedral_type	N3 Cg Cg Oh	$dihedral_style	{0.5/1}	2	0	0
+dihedral_type	N3 Cg Cg Oh	$dihedral_style	{-1.0/1}	1	0	0
+dihedral_type	Hp Cg N3 Cg	$dihedral_style	{0.25/1}	3	0	0
+dihedral_type	H1 Cg NT Cg	$dihedral_style	{0.25/1}	3	0	0
+dihedral_type	Hc Cg NT Cg	$dihedral_style	{0.25/1}	3	0	0
+dihedral_type	Os C  Cg Cg	$dihedral_style	{0.20/1}	3	0	0
+dihedral_type	Cg Cg NT H 	$dihedral_style	{0.2/1}	3	0	0
+dihedral_type	H1 Cg NT H 	$dihedral_style	{0.17/1}	3	0	0
+dihedral_type	Cp Cg Os C 	$dihedral_style	{-0.04/1}	3	0	0
+dihedral_type	Cp Cg Os C 	$dihedral_style	{0.47/1}	1	0	0
+dihedral_type	H1 Cg Cp H1	$dihedral_style	{0.17/1}	3	0	0
+dihedral_type	H1 Cg Cp Cg	$dihedral_style	{0.15/1}	3	0	0
+dihedral_type	H1 Cg Cg Cp	$dihedral_style	{0.15/1}	3	0	0
+dihedral_type	H1 Cp Cg Cg	$dihedral_style	{0.15/1}	3	0	0
+dihedral_type	Os Cg Cp Cg	$dihedral_style	{-0.27/1}	1	0	0
+dihedral_type	Os Cp Cg Cg	$dihedral_style	{-0.27/1}	1	0	0
+dihedral_type	Os Cg Cg Cp	$dihedral_style	{-0.27/1}	1	0	0
+dihedral_type	Cg Os Cp Cg	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	Cg Os Cg Cp	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	Cp Os Cg Cg	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	Oh Cg Cg Hp	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	Os Cg Cp Os	$dihedral_style	{0.40/1}	2	0	0
+dihedral_type	H1 Cp Cg Os	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	H1 Cg Cp Os	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	Ng C  Cg Cg	$dihedral_style	{0.20/1}	3	0	0
+dihedral_type	Ng C  Cg Cg	$dihedral_style	{-0.70/1}	2	0	0
+dihedral_type	Ng C  Cg Cg	$dihedral_style	{0.05/1}	1	0	0
+dihedral_type	O  C  Cg Cg	$dihedral_style	{0.50/1}	3	0	0
+dihedral_type	O  C  Cg Cg	$dihedral_style	{-0.10/1}	2	0	0
+dihedral_type	O  C  Cg Cg	$dihedral_style	{-0.05/1}	1	0	0
+dihedral_type	CT Os Cg Cg	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	2C Os Cg Cg	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	3C Os Cg Cg	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	C  Cg Oh Ho	$dihedral_style	{0.9/1}	2	0	0
+dihedral_type	O  C  Cg H1	$dihedral_style	{0.0/1}	3	0	0
+dihedral_type	Ng C  Cg H1	$dihedral_style	{0.0/1}	3	0	0
+dihedral_type	Ng C  Cg Oh	$dihedral_style	{0.20/1}	3	0	0
+dihedral_type	Ng C  Cg Oh	$dihedral_style	{-2.21/1}	2	0	0
+dihedral_type	Ng C  Cg Oh	$dihedral_style	{2.24/1}	1	0	0
+dihedral_type	O  C  Cg Oh	$dihedral_style	{0.0/1}	3	0	0
+dihedral_type	H1 Cp Os P 	$dihedral_style	{0.07/1}	3	0	0
+dihedral_type	Os P  Os Cp	$dihedral_style	{0.50/1}	3	0	0
+dihedral_type	Os P  Os Cp	$dihedral_style	{0.70/1}	2	0	0
+dihedral_type	O2 P  Os Cp	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	O2 P  Os Cp	$dihedral_style	{-0.50/1}	2	0	0
+dihedral_type	O2 P  Os Cp	$dihedral_style	{0.10/1}	1	0	0
+dihedral_type	P  Os Cp Cg	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	P  Os Cp Cg	$dihedral_style	{0.05/1}	2	0	0
+dihedral_type	P  Os Cp Cg	$dihedral_style	{-1.20/1}	1	0	0
+dihedral_type	H2 Cp Os P 	$dihedral_style	{0.07/1}	3	0	0
+dihedral_type	Os Cp Os P 	$dihedral_style	{0.40/1}	3	0	0
+dihedral_type	Os Cp Os P 	$dihedral_style	{0.40/1}	2	0	0
+dihedral_type	Os Cp Os P 	$dihedral_style	{-0.50/1}	1	0	0
+dihedral_type	Cg Os S  O2	$dihedral_style	{0.18/1}	3	0	0
+dihedral_type	H1 Cg Os S 	$dihedral_style	{0.17/1}	3	0	0
+dihedral_type	Cg Cg Os S 	$dihedral_style	{-1.20/1}	1	0	0
+dihedral_type	Os Cg Cg C 	$dihedral_style	{-0.1/1}	3	0	0
+dihedral_type	Os Cg Cg C 	$dihedral_style	{0.1/1}	2	0	0
+dihedral_type	Os Cg Cg C 	$dihedral_style	{-1.0/1}	1	0	0
+dihedral_type	Oh Cg Cg C 	$dihedral_style	{0.1/1}	3	0	0
+dihedral_type	Oh Cg Cg C 	$dihedral_style	{0.2/1}	2	0	0
+dihedral_type	Oh Cg Cg C 	$dihedral_style	{-2.5/1}	1	0	0
+dihedral_type	Cg Cg Os C 	$dihedral_style	{-0.01/1}	3	0	0
+dihedral_type	Cg Cg Os C 	$dihedral_style	{0.04/1}	2	0	0
+dihedral_type	Cg Cg Os C 	$dihedral_style	{0.12/1}	1	0	0
+dihedral_type	Cg Os C  O 	$dihedral_style	{0.0/1}	3	0	0
+dihedral_type	Cg Os C  O 	$dihedral_style	{-2.90/1}	2	0	0
+dihedral_type	Cg Os C  O 	$dihedral_style	{0.60/1}	1	0	0
+dihedral_type	Cg C  Os Cg	$dihedral_style	{0.0/1}	3	0	0
+dihedral_type	Cg C  Os Cg	$dihedral_style	{-2.90/1}	2	0	0
+dihedral_type	Cg C  Os Cg	$dihedral_style	{-0.60/1}	1	0	0
+dihedral_type	H1 Cg Os C 	$dihedral_style	{0.0/1}	3	0	0
+dihedral_type	Os C  Cg Hc	$dihedral_style	{0.0/1}	3	0	0
+dihedral_type	Hc Cg Cg Hc	$dihedral_style	{0.13/1}	3	0	0
+dihedral_type	H1 Cg Cg Hc	$dihedral_style	{0.17/1}	3	0	0
+dihedral_type	H2 Cg Cg Hc	$dihedral_style	{0.17/1}	3	0	0
+dihedral_type	H1 Cg Cg H1	$dihedral_style	{0.17/1}	3	0	0
+dihedral_type	H1 Cg Cp H2	$dihedral_style	{0.17/1}	3	0	0
+dihedral_type	H1 Cg Cg H2	$dihedral_style	{0.17/1}	3	0	0
+dihedral_type	Hc Cg Cg Cg	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	H1 Cg Cg Cg	$dihedral_style	{0.15/1}	3	0	0
+dihedral_type	H2 Cp Cg Cg	$dihedral_style	{0.15/1}	3	0	0
+dihedral_type	H2 Cg Cg Cg	$dihedral_style	{0.15/1}	3	0	0
+dihedral_type	Ho Oh Cg H1	$dihedral_style	{0.18/1}	3	0	0
+dihedral_type	Ho Oh Cg H2	$dihedral_style	{0.18/1}	3	0	0
+dihedral_type	Ho Oh Cy Oy	$dihedral_style	{0.18/1}	3	0	0
+dihedral_type	Ho Oh Cy C 	$dihedral_style	{0.18/1}	3	0	0
+dihedral_type	Ho Oh Cy Cg	$dihedral_style	{0.18/1}	3	0	0
+dihedral_type	Ho Oh Cg Cg	$dihedral_style	{0.18/1}	3	0	0
+dihedral_type	Cg Cg Cp Cg	$dihedral_style	{0.45/1}	1	0	0
+dihedral_type	Cg Cg Cg Cp	$dihedral_style	{0.45/1}	1	0	0
+dihedral_type	Cg Cg Cg Cg	$dihedral_style	{0.45/1}	1	0	0
+dihedral_type	Oh Cg Cg Hc	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	Oh Cg Cg H1	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	Oh Cg Cg H2	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	Oh Cg Cg Cp	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	Oh Cg Cg Cg	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	Os Cg Cg Cg	$dihedral_style	{-0.27/1}	1	0	0
+dihedral_type	Os Cg Cg Cy	$dihedral_style	{-0.27/1}	1	0	0
+dihedral_type	Oy Cg Cg Cg	$dihedral_style	{-0.27/1}	1	0	0
+dihedral_type	H1 Cg Os Cp	$dihedral_style	{0.27/1}	3	0	0
+dihedral_type	H1 Cg Os Cg	$dihedral_style	{0.27/1}	3	0	0
+dihedral_type	Cg Os Cg Cg	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	Oh Cg Cg Oh	$dihedral_style	{-0.10/1}	1	0	0
+dihedral_type	Oh Cg Cg Oh	$dihedral_style	{0.95/1}	2	0	0
+dihedral_type	Oh Cg Cg Oh	$dihedral_style	{0.55/1}	3	0	0
+dihedral_type	Oh Cg Cg Os	$dihedral_style	{-1.10/1}	1	0	0
+dihedral_type	Oh Cg Cg Os	$dihedral_style	{0.25/1}	2	0	0
+dihedral_type	Oh Cg Cg Oy	$dihedral_style	{-1.10/1}	1	0	0
+dihedral_type	Oh Cg Cg Oy	$dihedral_style	{0.25/1}	2	0	0
+dihedral_type	H1 Cg Cg Oy	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	Os Cg Cg Os	$dihedral_style	{0.40/1}	2	0	0
+dihedral_type	Os Cg Cg Oy	$dihedral_style	{0.82/1}	2	0	0
+dihedral_type	Os Cg Oh Ho	$dihedral_style	{0.18/1}	3	0	0
+dihedral_type	Os Cp Os Cg	$dihedral_style	{0.96/1}	3	0	0
+dihedral_type	Os Cp Os Cg	$dihedral_style	{1.38/1}	2	0	0
+dihedral_type	Os Cp Os Cg	$dihedral_style	{1.08/1}	1	0	0
+dihedral_type	Os Cg Os Cg	$dihedral_style	{0.96/1}	3	0	0
+dihedral_type	Os Cg Os Cg	$dihedral_style	{1.38/1}	2	0	0
+dihedral_type	Os Cg Os Cg	$dihedral_style	{1.08/1}	1	0	0
+dihedral_type	Oh Cg Os Cg	$dihedral_style	{0.96/1}	3	0	0
+dihedral_type	Oh Cg Os Cg	$dihedral_style	{1.38/1}	2	0	0
+dihedral_type	Oh Cg Os Cg	$dihedral_style	{1.08/1}	1	0	0
+dihedral_type	H2 Cp Os Cg	$dihedral_style	{0.60/1}	2	0	0
+dihedral_type	H2 Cp Os Cg	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	H2 Cg Os Cg	$dihedral_style	{0.60/1}	2	0	0
+dihedral_type	H2 Cg Os Cg	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	H2 Cg Os CT	$dihedral_style	{0.60/1}	2	0	0
+dihedral_type	H2 Cg Os CT	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	H2 Cg Os 2C	$dihedral_style	{0.60/1}	2	0	0
+dihedral_type	H2 Cg Os 2C	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	H2 Cg Os 3C	$dihedral_style	{0.60/1}	2	0	0
+dihedral_type	H2 Cg Os 3C	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	Hc Cg Cg Os	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	Hc CT 3C Os	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	H1 Cg Cg Os	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	H2 Cg Cg Os	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	H  Ng C  H1	$dihedral_style	{-2.50/1}	2	0	0
+dihedral_type	H  Ng C  Cg	$dihedral_style	{0.00/1}	1	0	0
+dihedral_type	Hc Cg C  O 	$dihedral_style	{0.00/1}	3	0	0
+dihedral_type	Hc Cg C  Ng	$dihedral_style	{0.00/1}	3	0	0
+#dihedral_type	Cg Os Cg N 	$dihedral_style	{-0.90/1}	1	0	0
+dihedral_type	Cg Os Cg Ng	$dihedral_style	{-0.90/1}	1	0	0
+dihedral_type	Os Cp Cg Ng	$dihedral_style	{-1.30/1}	1	0	0
+dihedral_type	Os Cg Cg Ng	$dihedral_style	{-1.30/1}	1	0	0
+dihedral_type	Oy Cg Cg Ng	$dihedral_style	{-1.30/1}	1	0	0
+#dihedral_type	Oh Cg Cg N 	$dihedral_style	{-1.50/1}	1	0	0
+dihedral_type	Oh Cg Cg Ng	$dihedral_style	{-1.50/1}	1	0	0
+dihedral_type	Cp Cg Cg Ng	$dihedral_style	{0.40/1}	1	0	0
+#dihedral_type	Cg Cg Cg N 	$dihedral_style	{0.40/1}	1	0	0
+dihedral_type	Cg Cg Cg Ng	$dihedral_style	{0.40/1}	1	0	0
+dihedral_type	Hc Cg Cg Ng	$dihedral_style	{0.10/1}	3	0	0
+#dihedral_type	H1 Cg Cg N 	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	H1 Cg Cg Ng	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	H2 Cp Cg Ng	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	H2 Cg Cg Ng	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	Ng Cg Cg Ng	$dihedral_style	{0.00/1}	1	0	0
+#dihedral_type	N  Cg Cg Ng	$dihedral_style	{0.00/1}	1	0	0
+dihedral_type	Hc Cg Cg C 	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	H1 Cg Cg C 	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	Cg Cg Cg C 	$dihedral_style	{0.45/1}	1	0	0
+dihedral_type	Cp Cg Ng C 	$dihedral_style	{0.00/1}	3	0	0
+#dihedral_type	Cg Cg N  C 	$dihedral_style	{0.00/1}	3	0	0
+dihedral_type	Cg Cg Ng C 	$dihedral_style	{0.00/1}	3	0	0
+#dihedral_type	Os Cg N  C 	$dihedral_style	{2.03/1}	2	0	0
+#dihedral_type		Os Cg N  C	$dihedral_style	{1.00/1}	1	0	0
+dihedral_type	Os Cg Ng C 	$dihedral_style	{2.03/1}	2	0	0
+dihedral_type	Os Cg Ng C 	$dihedral_style	{1.00/1}	1	0	0
+#dihedral_type	Os Cg N  H 	$dihedral_style	{-0.43/1}	2	0	0
+#dihedral_type		Os Cg N  H	$dihedral_style	{1.52/1}	1	0	0
+dihedral_type	Os Cg Ng H 	$dihedral_style	{-0.43/1}	2	0	0
+dihedral_type	Os Cg Ng H 	$dihedral_style	{1.52/1}	1	0	0
+dihedral_type	Cp Cg Ng H 	$dihedral_style	{0.10/1}	3	0	0
+#dihedral_type	Cg Cg N  H 	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	Cg Cg Ng H 	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	H1 Cg Ng Cg	$dihedral_style	{0.00/1}	3	0	0
+dihedral_type	H2 Cg Ng Cg	$dihedral_style	{0.00/1}	3	0	0
+dihedral_type	H1 Cg Ng H 	$dihedral_style	{1.00/1}	1	0	0
+#dihedral_type	H2 Cg N  H 	$dihedral_style	{1.00/1}	1	0	0
+dihedral_type	H2 Cg Ng H 	$dihedral_style	{1.00/1}	1	0	0
+dihedral_type	H1 Cg Ng C 	$dihedral_style	{-1.00/1}	1	0	0
+#dihedral_type	H2 Cg N  C 	$dihedral_style	{-1.00/1}	1	0	0
+dihedral_type	H2 Cg Ng C 	$dihedral_style	{-1.00/1}	1	0	0
+dihedral_type	Cg Ng C  O 	$dihedral_style	{-2.80/1}	2	0	0
+dihedral_type	Cg Ng C  Cg	$dihedral_style	{-2.70/1}	2	0	0
+dihedral_type	Hc Cg C  O2	$dihedral_style	{0.00/2}	1	0	0
+dihedral_type	Cg Cg C  O2	$dihedral_style	{0.02/2}	3	0	0
+dihedral_type	Cg Cg C  O2	$dihedral_style	{-0.82/2}	2	0	0
+dihedral_type	Cg Cg C  O2	$dihedral_style	{0.01/2}	1	0	0
+dihedral_type	H1 Cg C  O2	$dihedral_style	{0.00/2}	1	0	0
+dihedral_type	H2 Cg C  O2	$dihedral_style	{0.00/2}	1	0	0
+dihedral_type	Os Cg C  O2	$dihedral_style	{0.04/2}	3	0	0
+dihedral_type	Os Cg C  O2	$dihedral_style	{-1.45/2}	2	0	0
+dihedral_type	Os Cg C  O2	$dihedral_style	{0.04/2}	1	0	0
+dihedral_type	Cg Os Cg C 	$dihedral_style	{0.32/1}	3	0	0
+dihedral_type	Cg Os Cg C 	$dihedral_style	{0.45/1}	2	0	0
+dihedral_type	Cg Os Cg C 	$dihedral_style	{-0.60/1}	1	0	0
+dihedral_type	H1 CT Os Cg	$dihedral_style	{0.27/1}	3	0	0
+dihedral_type	H1 2C Os Cg	$dihedral_style	{0.27/1}	3	0	0
+dihedral_type	H1 3C Os Cg	$dihedral_style	{0.27/1}	3	0	0
+dihedral_type	Cg Os CT CT	$dihedral_style	{0.16/1}	3	0	0
+#dihedral_type	Cg Os CT C*	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	Cg Os 3C CT	$dihedral_style	{0.16/1}	3	0	0
+#dihedral_type	Cg Os 2C C*	$dihedral_style	{0.16/1}	3	0	0
+#dihedral_type	Cg Os 3C C*	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	Os Cg Os CT	$dihedral_style	{0.30/1}	1	0	0
+dihedral_type	Os Cg Os CT	$dihedral_style	{1.27/1}	2	0	0
+dihedral_type	Os Cg Os CT	$dihedral_style	{0.37/1}	3	0	0
+dihedral_type	Os Cg Os 2C	$dihedral_style	{0.30/1}	1	0	0
+dihedral_type	Os Cg Os 2C	$dihedral_style	{1.27/1}	2	0	0
+dihedral_type	Os Cg Os 2C	$dihedral_style	{0.37/1}	3	0	0
+dihedral_type	Os Cg Os 3C	$dihedral_style	{0.30/1}	1	0	0
+dihedral_type	Os Cg Os 3C	$dihedral_style	{1.27/1}	2	0	0
+dihedral_type	Os Cg Os 3C	$dihedral_style	{0.37/1}	3	0	0
+dihedral_type	Cg Ng C  CT	$dihedral_style	{0.00/1}	2	0	0
+dihedral_type	Oy Cy Os Cg	$dihedral_style	{0.30/1}	1	0	0
+dihedral_type	Oy Cy Os Cg	$dihedral_style	{1.27/1}	2	0	0
+dihedral_type	Oy Cy Os Cg	$dihedral_style	{0.37/1}	3	0	0
+dihedral_type	Oh Cy Oy Cg	$dihedral_style	{0.30/1}	1	0	0
+dihedral_type	Oh Cy Oy Cg	$dihedral_style	{1.27/1}	2	0	0
+dihedral_type	Oh Cy Oy Cg	$dihedral_style	{0.37/1}	3	0	0
+dihedral_type	Os Cy Oy Cg	$dihedral_style	{0.30/1}	1	0	0
+dihedral_type	Os Cy Oy Cg	$dihedral_style	{1.27/1}	2	0	0
+dihedral_type	Os Cy Oy Cg	$dihedral_style	{0.37/1}	3	0	0
+dihedral_type	Oh Cy Cg Cg	$dihedral_style	{-0.27/1}	1	0	0
+dihedral_type	Os Cy Cg Cg	$dihedral_style	{-0.27/1}	1	0	0
+dihedral_type	Oy Cy Cg Cg	$dihedral_style	{-0.27/1}	1	0	0
+dihedral_type	Oh Cy Cg Hc	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	Os Cy Cg Hc	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	Oy Cy Cg Hc	$dihedral_style	{0.05/1}	3	0	0
+dihedral_type	Cg Os Cy Cg	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	Cg Oy Cy Cg	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	Oh Cy C  O2	$dihedral_style	{-2.25/2}	2	0	0
+dihedral_type	Os Cy C  O2	$dihedral_style	{-2.25/2}	2	0	0
+dihedral_type	Oy Cy C  O2	$dihedral_style	{-2.25/2}	2	0	0
+dihedral_type	Cg Cy C  O2	$dihedral_style	{-1.50/2}	2	0	0
+dihedral_type	Cg Os Cy C 	$dihedral_style	{1.90/1}	1	0	0
+dihedral_type	Cg Oy Cy C 	$dihedral_style	{0.00/1}	1	0	0
+dihedral_type	Hc Cg Cy C 	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	Cg Cg Cy C 	$dihedral_style	{0.45/1}	3	0	0
+dihedral_type	Cy Os Cg Cg	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	Cy Oy Cg Cg	$dihedral_style	{0.16/1}	3	0	0
+dihedral_type	Cy Os Cg H1	$dihedral_style	{0.27/1}	3	0	0
+dihedral_type	Cy Oy Cg H1	$dihedral_style	{0.27/1}	3	0	0
+dihedral_type	Cy Cg Cg Cg	$dihedral_style	{0.45/1}	1	0	0
+dihedral_type	Cy Cg Cg Hc	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	Cy Cg Cg H1	$dihedral_style	{0.15/1}	3	0	0
+dihedral_type	Cy Cg Cg Oh	$dihedral_style	{0.10/1}	3	0	0
+dihedral_type	H  Ng C  O 	$dihedral_style	{2.50/1}	2	180	0
+dihedral_type	H  Ng C  O 	$dihedral_style	{2.00/1}	1	0	0
+#dihedral_type	HC CT 3C Os	$dihedral_style	{0.000/1}	3	0	0
+#dihedral_type		HC CT 3C O	$dihedral_style	{0.250/1}	1	0	0
+
+# Improper types:
+improper_type	C  Cg Os O 	$improper_style	10.5	-1	2
+improper_type	C  Cg Ng O 	$improper_style	10.5	-1	2
+improper_type	C  Os Ng O 	$improper_style	10.5	-1	2
+improper_type	C  Ng H2 O 	$improper_style	10.5	-1	2
+improper_type	C  Cg H1 O 	$improper_style	10.5	-1	2
+improper_type	C  Os H2 O 	$improper_style	10.5	-1	2
+improper_type	C  Cg O2 O2	$improper_style	10.5	-1	2
+improper_type	C  Cy O2 O2	$improper_style	10.5	-1	2
+improper_type	C  Cg O2 Oh	$improper_style	10.5	-1	2
+improper_type	C  Cy O2 Oh	$improper_style	10.5	-1	2
+improper_type	Ng C  H  Cg	$improper_style	1.5	-1	2
+improper_type	Ng H  H  Cg	$improper_style	1.5	-1	2
+improper_type	Ng S  Cg H 	$improper_style	5.5	-1	2
+improper_type	Ng S  H  H 	$improper_style	5.5	-1	2
+improper_type	Ng Cg S  H 	$improper_style	5.5	-1	2
+
+# Generated by playmoltools on 2017-09-20 17:50:18.660675

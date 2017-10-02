@@ -87,7 +87,7 @@ type tPlaymol
 end type tPlaymol
 
 type StrucHolder
-  integer :: multiplicity = 0
+  integer :: multiplicity
   integer :: mol, body
   character(sl) :: charge
   character(sl), allocatable :: atoms(:), atom_types(:)
@@ -128,7 +128,7 @@ contains
         case ("atom"); call atom_command
         case ("charge"); call charge_command
         case ("bond"); call bond_command
-        case ("body"); call body_command
+        case ("rigid_body"); call rigid_body_command
         case ("mixing_rule"); call mixing_rule_command
         case ("link"); call link_command
         case ("unlink"); call unlink_command
@@ -310,28 +310,24 @@ contains
         end do
       end subroutine bond_command
       !---------------------------------------------------------------------------------------------
-      subroutine body_command
+      subroutine rigid_body_command
         integer :: nbodies, i, j
         character(sl) :: imol, jmol
         type(Struc), pointer :: ptr
-        if (narg < 3) call error( "invalid body command" )
+        if (narg < 3) call error( "invalid rigid_body command" )
         nbodies = me % body_list % count + 1
         arg(1) = int2str(nbodies)
         call me % atomfix % apply( arg(2:narg) )
         call me % body_list % add( narg, arg )
         if (any(has_macros(arg(2:narg)))) call error( "atom names cannot contain macros" )
-        do i = 2, narg-1
-          do j = i+1, narg
-            if (arg(i) == arg(j)) call error( "repeated atom name", arg(i) )
-          end do
-        end do
         do i = 2, narg
+          if (any(arg(i+1:narg) == arg(i))) call error( "repeated atom name", arg(i) )
           call me % atom_bodies % search( arg(i:i), ptr )
           if (.not.associated(ptr)) call error( "there is no atom identified as", arg(i) )
           if (ptr%params == "0") then
             ptr%params = int2str(nbodies)
           else
-            call error( "atom", arg(i), "has already been added to body", ptr%params )
+            call error( "atom", arg(i), "has already been added to rigid body", ptr%params )
           end if
         end do
         imol = me % molecules % list % parameters( arg(2:2) )
@@ -339,7 +335,7 @@ contains
           jmol = me % molecules % list % parameters( arg(i:i) )
           if (jmol /= imol) call error( "not all atoms are in the same molecule" )
         end do
-      end subroutine body_command
+      end subroutine rigid_body_command
       !---------------------------------------------------------------------------------------------
       subroutine mixing_rule_command
         call me % typefix % apply( arg(2:3) )
@@ -936,7 +932,7 @@ contains
     integer,           intent(out)              :: total(me%molecules%N)
     type(TypeHolder),  intent(out), allocatable :: type_map(:)
     integer :: i, j, k, m, itype, imol, imax, narg
-    logical :: match
+    logical :: match, is_atom, is_bond
     character(sl) :: arg(10)
     type(Struc), pointer :: ptr
     integer, allocatable :: aux(:)
@@ -944,6 +940,8 @@ contains
     if (list%count > 0) then
       ! Identify the atoms and types in each structure and
       ! count the number of structures in each molecule:
+      is_atom = list%name == "atom"
+      is_bond = list%name == "bond"
       permol = 0
       ptr => list%first
       m = list%number
@@ -951,12 +949,13 @@ contains
         associate (s => structure(i))
           allocate( s%atoms(m), s%ibody(m), s%atom_types(m), s%atom_in_mol(m) )
           allocate( s%itype(0), s%wildcards(0) )
+          s%multiplicity = 0
           s%atoms = ptr%id
           call me % get_types( ptr%id, s%atom_types )
           imol = str2int(me % molecules % list % parameters( ptr%id(1:1) ))
           s%mol = imol
           permol(imol) = permol(imol) + 1
-          if (present(atom)) then
+          if (.not.is_atom) then
             do j = 1, m
               k = 1
               do while (atom(k)%atoms(1) /= s%atoms(j))
@@ -965,6 +964,8 @@ contains
               s%atom_in_mol(j) = atom(k)%atom_in_mol(1)
               s%ibody(j) = atom(k)%body
             end do
+            k = s%ibody(1)
+            s%body = merge(k,0,all(s%ibody == k).and.(k /= 0))
           end if
           ptr => ptr%next
         end associate
@@ -974,7 +975,7 @@ contains
       structure = structure(sorted( structure%mol ))
 
       ! If structure = atom, determine atom_in_mol, body and charge:
-      if (.not.present(atom)) then
+      if (is_atom) then
         imol = 0
         do i = 1, list%count
           associate(s => structure(i))
@@ -997,18 +998,20 @@ contains
         if (ptr % usable) then
           do i = 1, list%count
             associate (s => structure(i))
-              if (list%bothways) then
-                match = ptr % match_id( s%atom_types )
-              else
-                match = all(match_str( ptr%id, s%atom_types ))
-              end if
-              if (match) then
-                aux = [s%itype, itype]
-                call move_alloc( aux, s%itype )
-                aux = [s%wildcards, count(has_macros(ptr%id))]
-                call move_alloc( aux, s%wildcards)
-                s%multiplicity = s%multiplicity + 1
-                total(s%mol) = total(s%mol) + 1
+              if (is_atom .or. (s%body == 0)) then
+                if (list%bothways) then
+                  match = ptr % match_id( s%atom_types )
+                else
+                  match = all(match_str( ptr%id, s%atom_types ))
+                end if
+                if (match) then
+                  aux = [s%itype, itype]
+                  call move_alloc( aux, s%itype )
+                  aux = [s%wildcards, count(has_macros(ptr%id))]
+                  call move_alloc( aux, s%wildcards )
+                  s%multiplicity = s%multiplicity + 1
+                  total(s%mol) = total(s%mol) + 1
+                end if
               end if
             end associate
           end do
@@ -1044,6 +1047,20 @@ contains
         end associate
       end do
 
+      ! If structure = bond, add bonds that lie inside rigid bodies:
+      if (is_bond .and. any(structure%body /= 0)) then
+        do i = 1, list%count
+          associate (s => structure(i))
+            if (s%body /= 0) then
+              s%multiplicity = 1
+              s%itype = [typelist%count + 1]
+              s%wildcards = [0]
+              total(s%mol) = total(s%mol) + 1
+            end if
+          end associate
+        end do
+      end if
+
       ! Create a map for the indices of actually used types:
       imax = maxval([(maxval(structure(i)%itype),i=1,list%count)])
       aux = [(0,i=1,imax)]
@@ -1053,17 +1070,24 @@ contains
 
       ! Retrieve the parameters of each used type:
       do i = 1, size(type_map)
-        ptr => typelist % point_to( type_map(i)%index )
-        type_map(i) % types = join(ptr % id)
-        if (models) then
-          call split( ptr % params, narg, arg )
-          type_map(i) % model = arg(1)
-          type_map(i) % params = join(arg(2:narg))
+        k = type_map(i)%index
+        if (k <= typelist%count) then
+          ptr => typelist % point_to( k )
+          type_map(i) % types = join(ptr % id)
+          if (models) then
+            call split( ptr % params, narg, arg )
+            type_map(i) % model = arg(1)
+            type_map(i) % params = join(arg(2:narg))
+          else
+            type_map(i) % model = ""
+            type_map(i) % params = ptr % params
+          end if
+          if (is_atom) type_map(i) % mass = me % mass_list % parameters( ptr % id )
         else
-          type_map(i) % model = ""
-          type_map(i) % params = ptr % params
+          type_map(i) % types = "* *"
+          type_map(i) % model = "zero"
+          type_map(i) % params = ""
         end if
-        if (.not.present(atom)) type_map(i) % mass = me % mass_list % parameters( ptr % id )
       end do
 
       ! Apply an inverse map to the indices:
