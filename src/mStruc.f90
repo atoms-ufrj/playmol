@@ -46,6 +46,7 @@ type StrucList
     procedure :: add => StrucList_add
     procedure :: handle => StrucList_handle
     procedure :: search => StrucList_search
+    procedure :: search_exact => StrucList_search_exact
     procedure :: parameters => StrucList_params_from_id
     procedure :: point_to => StrucList_point_to
     procedure :: index => StrucList_index
@@ -298,6 +299,33 @@ contains
       if (present(ptr)) ptr => null()
     end if
   end subroutine StrucList_search
+
+  !=================================================================================================
+
+  subroutine StrucList_search_exact( me, id, ptr, index )
+    class(StrucList),     intent(in)            :: me
+    character(*),         intent(in)            :: id(:)
+    type(Struc), pointer, intent(out), optional :: ptr
+    integer,              intent(out), optional :: index
+    logical :: found
+    integer :: i
+    type(Struc), pointer :: current
+    found = .false.
+    current => me % first
+    i = 0
+    do while (associated(current).and.(.not.found))
+      i = i + 1
+      found = all(current % id == id).or.all(current % id == id(me%number:1:-1))
+      if (.not.found) current => current % next
+    end do
+    if (found) then
+      if (present(index)) index = i
+      if (present(ptr)) ptr => current
+    else
+      if (present(index)) index = 0
+      if (present(ptr)) ptr => null()
+    end if
+  end subroutine StrucList_search_exact
 
   !=================================================================================================
 

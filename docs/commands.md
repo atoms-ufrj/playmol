@@ -911,6 +911,11 @@ attribute, otherwise [Playmol] will stop and throw an error message. The possibl
 
 * _arithmetic_: an arithmetic mead is computed for the corresponding [atom_type] attributes.
 
+__NOTE__: When analyzing a pair of atom types in order to apply a mixing rule, Playmol will
+initially try to find an exact match of atom types (that is, without considering wildcards)
+in the specified mixing rules, and then apply the first found rule. If it fails to find one,
+it will try again, but now considering the presence of wildcards during the search.
+
 **Examples**:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

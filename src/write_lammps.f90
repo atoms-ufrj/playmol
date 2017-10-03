@@ -133,6 +133,7 @@
         integer :: i, j, k, m, ntypes, npairs, narg, found, first
         character(sl) :: rule, arg(20), itype(20), jtype(20)
         character(sl), allocatable :: pair(:), model(:)
+        type(Struc), pointer :: ptr
         if (size(types) > 0) then
           ntypes = size(types)
           npairs = ntypes*(ntypes - 1)/2 + ntypes
@@ -151,8 +152,12 @@
               call split( list % parameters( [types(j)%types] ), narg, jtype )
               jtype(narg+1:) = ""
               k = k + 1
-              rule = me % mixing_rule_list % parameters( [types(i)%types,types(j)%types] )
-              if (rule /= "") then
+              call me % mixing_rule_list % search_exact( [types(i)%types,types(j)%types], ptr )
+              if (.not.associated(ptr)) then
+                call me % mixing_rule_list % search( [types(i)%types,types(j)%types], ptr )
+              end if
+              if (associated(ptr)) then
+                rule = ptr % params
                 found = found + 1
                 pair(k) = ""
                 call split( rule, narg, arg )
