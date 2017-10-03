@@ -911,10 +911,8 @@ attribute, otherwise [Playmol] will stop and throw an error message. The possibl
 
 * _arithmetic_: an arithmetic mead is computed for the corresponding [atom_type] attributes.
 
-__NOTE__: When analyzing a pair of atom types in order to apply a mixing rule, Playmol will
-initially try to find an exact match of atom types (that is, without considering wildcards)
-in the specified mixing rules, and then apply the first found rule. If it fails to find one,
-it will try again, but now considering the presence of wildcards during the search.
+__NOTE__: If several mixing rules fit to a given pair of atom types, Playmol will select the
+first mixing rule with the minimum number of type identifiers containing wildcards.
 
 **Examples**:
 
@@ -1589,7 +1587,7 @@ write		lammps system.data
 
 The example above uses Packmol to create a random packing of molecules with density equal to
 0.602214 Da/Å³ (1.0 g/cm³) in which one copy of molecule 1 is centered at the origin and 1000 copies
-of molecule 2 are packed with random positions and random orientations. The desired mininum
+of molecule 2 are packed with random positions and random orientations. The desired minimum
 intermolecular atomic distance is initially set to 3.0 Å, but Packmol will keep reducing the
 tolerance in 90% until the packing is successful. Finally, a [LAMMPS data file] is generated.
 
