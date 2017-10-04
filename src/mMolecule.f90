@@ -273,10 +273,11 @@ contains
 
   !=================================================================================================
 
-  subroutine tMolecule_set_geometry( me, data, ndata )
-    class(tMolecule), intent(inout) :: me
-    character(sl),    intent(in)    :: data(:,:)
-    integer,          intent(in)    :: ndata(size(data,1))
+  subroutine tMolecule_set_geometry( me, data, ndata, silent )
+    class(tMolecule), intent(inout)        :: me
+    character(sl),    intent(in)           :: data(:,:)
+    integer,          intent(in)           :: ndata(size(data,1))
+    logical,          intent(in), optional :: silent
     integer       :: N, i, j, k, narg, imol, imolprev, iatom, ind(3), atomsInMolecule
     character(sl) :: arg(size(data,2)), catom
     integer :: natoms(me%N)
@@ -285,10 +286,13 @@ contains
     character(sl), allocatable :: prev(:), name(:), molAtoms(:)
     real(rb), allocatable :: R(:,:)
     real(rb) :: L, theta, phi, R1(3), R2(3), R3(3), x(3), y(3), z(3)
+    logical :: print
+    print = .not.present(silent)
+    if (.not.print) print = .not.silent
     natoms = me % number_of_atoms()
     allocate( prev(maxval(natoms)) )
     N = size(ndata)
-    call writeln( "Number of provided geometric data: ", int2str(N) )
+    if (print) call writeln( "Number of provided geometric data: ", int2str(N) )
     allocate( name(N), R(3,N) )
     new_molecule = .true.
     atomsInMolecule = 0
@@ -306,7 +310,7 @@ contains
       if (new_molecule) then
         imol = str2int(atom%params)
         iatom = 1
-        call writeln( "Processing", int2str(natoms(imol)), &
+        if (print) call writeln( "Processing", int2str(natoms(imol)), &
                       "geometric data for molecule", trim(int2str(imol))//":" )
         if (imol /= imolprev) then
           deallocate( molAtoms )
@@ -328,7 +332,7 @@ contains
       else
         iatom = iatom + 1
       end if
-      call writeln( "Data provided for atom", catom, ":", join(arg(2:narg)) )
+      if (print) call writeln( "Data provided for atom", catom, ":", join(arg(2:narg)) )
       name(i) = catom
       select case (narg)
         case (1) ! Atom at origin
@@ -380,7 +384,7 @@ contains
             k = k - 1
           end do
           arg(2:4) = real2str(R(:,k))
-          call me % xyz % add( 4, arg(1:4), me % list, repeatable = .true. )
+          call me % xyz % add( 4, arg(1:4), me % list, repeatable = .true., silent = .not.print )
         end do
         atomsInMolecule = 0
       end if

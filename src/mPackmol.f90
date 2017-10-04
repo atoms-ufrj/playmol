@@ -215,7 +215,11 @@ contains
       if (stat == 0) then
         call retrieve_coordinates( mixfile )
         call delete_files( [inputfile, mixfile, molfile, logfile] )
-        call writeln( "Packmol converged with scaling factor", real2str(scaling) )
+        if (scaling == 1.0_rb) then
+          call writeln( "Converged!" )
+        else
+          call warning( "Packmol converged only with scaling factor", real2str(scaling) )
+        end if
       else
         call delete_files( [inputfile, mixfile, trim(mixfile)//"_FORCED", molfile] )
         call error( "Packmol did not converge! See file packmol.log for additional info.")
@@ -321,7 +325,7 @@ contains
           data(iatom,:) = arg
         end do
         close( mix, status = "delete" )
-        call mol % set_geometry( data, ndata )
+        call mol % set_geometry( data, ndata, silent = .true. )
       end subroutine retrieve_coordinates
       !---------------------------------------------------------------------------------------------
   end subroutine tPackmol_run
