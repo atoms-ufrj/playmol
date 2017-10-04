@@ -277,13 +277,12 @@ contains
     class(tMolecule), intent(inout) :: me
     character(sl),    intent(in)    :: data(:,:)
     integer,          intent(in)    :: ndata(size(data,1))
-    integer       :: N, i, j, narg, imol, iatom, ind(3)
+    integer       :: N, i, j, k, narg, imol, imolprev, iatom, ind(3), atomsInMolecule
     character(sl) :: arg(size(data,2)), catom
     integer :: natoms(me%N)
     logical :: new_molecule
-    type(Struc), pointer :: atom
-    character(sl), allocatable :: prev(:)
-    character(sl), allocatable :: name(:)
+    type(Struc), pointer :: atom, ptr
+    character(sl), allocatable :: prev(:), name(:), molAtoms(:)
     real(rb), allocatable :: R(:,:)
     real(rb) :: L, theta, phi, R1(3), R2(3), R3(3), x(3), y(3), z(3)
     natoms = me % number_of_atoms()
@@ -292,7 +291,11 @@ contains
     call writeln( "Number of provided geometric data: ", int2str(N) )
     allocate( name(N), R(3,N) )
     new_molecule = .true.
+    atomsInMolecule = 0
+    imolprev = 0
+    allocate( molAtoms(0) )
     do i = 1, N
+      atomsInMolecule = atomsInMolecule + 1
       narg = ndata(i)
       arg = data(i,:)
       if ((narg < 1).or.(narg == 2).or.(narg == 6).or.(narg > 7)) &
@@ -305,6 +308,19 @@ contains
         iatom = 1
         call writeln( "Processing", int2str(natoms(imol)), &
                       "geometric data for molecule", trim(int2str(imol))//":" )
+        if (imol /= imolprev) then
+          deallocate( molAtoms )
+          allocate( molAtoms(natoms(imol)) )
+          ptr => me % list % first
+          j = 0
+          do while (associated(ptr))
+            if (str2int(ptr%params) == imol) then
+              j = j + 1
+              molAtoms(j) = ptr % id(1)
+            end if
+            ptr => ptr % next
+          end do
+        end if
       else if (trim(atom%params) /= trim(int2str(imol))) then
         call error( "atom", catom, "does not belong to molecule", int2str(imol) )
       else if (any(str_find([catom],prev(1:iatom)) > 0)) then
@@ -354,10 +370,20 @@ contains
         case default
           call error( "invalid geometric info" )
       end select
-      arg(2:4) = real2str(R(:,i))
-      call me % xyz % add( 4, arg(1:4), me % list, repeatable = .true. )
       prev(iatom) = catom
       new_molecule = iatom == natoms(imol)
+      if (new_molecule) then
+        do j = 1, atomsInMolecule
+          arg(1) = molAtoms(j)
+          k = i
+          do while (name(k) /= arg(1))
+            k = k - 1
+          end do
+          arg(2:4) = real2str(R(:,k))
+          call me % xyz % add( 4, arg(1:4), me % list, repeatable = .true. )
+        end do
+        atomsInMolecule = 0
+      end if
     end do
     if (.not.new_molecule) then
       call error( "geometric info for molecule", int2str(imol), "is incomplete" )
@@ -376,7 +402,7 @@ contains
             end do
             ind(j) = k
           else
-            call error( "no coordinates defined for atom", atom(j) )
+            call error( "no coordinates have been defined for atom", atom(j) )
           end if
         end do
       end subroutine

@@ -666,8 +666,7 @@ contains
           mass = me % molecules % per_molecule( me % atom_masses )
           call me % box % compute( me % packmol % total_mass( mass, me % molecules ) )
           call writeln( "Box lengths are ", join(real2str(me % box % length)))
-          call me % packmol % run( me % molecules, me % molecules % xyz, &
-                                   me % atom_list, me % diameter_list,   &
+          call me % packmol % run( me % molecules, me % atom_list, me % diameter_list, &
                                    me % box % length )
         end if
       end subroutine packmol_command

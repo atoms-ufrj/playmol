@@ -1085,6 +1085,10 @@ constructs. No other commands are permitted until all _N_ assignments have been 
 assignments consists of an [atom] identifier followed by some fields separated by spaces and/or
 tabs. Only the following formats are valid:
 
+Allocation of _atom-I_ at the origin:
+
+	<atom-I>
+
 Coordinates _x_, _y_, and _z_ of _atom-I_:
 
 	<atom-I>  <x>  <y>  <z>
