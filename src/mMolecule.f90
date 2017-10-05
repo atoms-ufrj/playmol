@@ -464,11 +464,13 @@ contains
         call add_inertia( inertia, Mass(i), delta(:,i) )
       end do
       ! Diagonalize the inertia tensor and compute rotation matrix:
-      MoI(axis) = eigenvalues( inertia )
-      A = eigenvectors( inertia, MoI )
-      A = transpose(A(:,sort_vector(MoI)))
+      call diagonalization( inertia, A, MoI )
       ! Recalculate positions in the body-fixed frame:
-      Coord = matmul( A, delta )
+      Coord(axis,:) = matmul( transpose(A), delta )
+      ! Invert one axis if necessary:
+      if (all(axis == [1,3,2]).or.all(axis == [2,1,3]).or.all(axis == [3,2,1])) then
+        Coord(1,:) = -Coord(1,:)
+      end if
     end if
     contains
     !-----------------------------------------------------------------------------------------------
@@ -485,196 +487,206 @@ contains
       inertia(3,1) = inertia(1,3)
       inertia(3,2) = inertia(2,3)
     end subroutine add_inertia
-    !-----------------------------------------------------------------------------------------------
-    function eigenvalues( Matrix ) result( Lambda )
-      real(rb), intent(in) :: Matrix(3,3)
-      real(rb)             :: Lambda(3)
-      real(rb), parameter :: SQRT3 = 1.7320508075688773_rb
-      real(rb) :: A(3,3), M, C1, C0
-      real(rb) :: DE, DD, EE, FF
-      real(rb) :: P, SQRTP, Q, C, S, PHI
-      A = Matrix
-      DE = A(1,2)*A(2,3)
-      DD = A(1,2)**2
-      EE = A(2,3)**2
-      FF = A(1,3)**2
-      M  = A(1,1) + A(2,2) + A(3,3)
-      C1 = ( A(1,1)*A(2,2) + A(1,1)*A(3,3) + A(2,2)*A(3,3) ) - (DD + EE + FF)
-      C0 = A(3,3)*DD + A(1,1)*EE + A(2,2)*FF - A(1,1)*A(2,2)*A(3,3) - 2.0_rb * A(1,3)*DE
-      P = M**2 - 3.0_rb * C1
-      Q = M*(P - 1.5_rb*C1) - 13.5_rb*C0
-      SQRTP = sqrt(abs(P))
-      PHI = 27.0_rb*(0.25_rb * C1**2 * (P - C1) + C0 * (Q + 6.75_rb*C0))
-      PHI = atan2(sqrt(abs(PHI)),Q)/3.0_rb
-      C = SQRTP*cos(PHI)
-      S = SQRTP*sin(PHI)/SQRT3
-      Lambda(2) = (M - C)/3.0_rb
-      Lambda(3) = Lambda(2) + S
-      Lambda(1) = Lambda(2) + C
-      Lambda(2) = Lambda(2) - S
-    end function eigenvalues
-    !-----------------------------------------------------------------------------------------------
-    function eigenvectors( Matrix, W ) result( Q )
-      real(rb), intent(in) :: Matrix(3,3), W(3)
-      real(rb)             :: Q(3,3)
-      real(rb), parameter :: EPS = 2.2204460492503131e-16_rb
-      real(rb) :: A(3,3), NORM, N1, N2, N1TMP, N2TMP
-      real(rb) :: THRESH, ERROR, WMAX, F, T
-      integer :: I, J
-      logical :: SUCCESS
-      A = Matrix
-      WMAX   = max(abs(W(1)), abs(W(2)), abs(W(3)))
-      THRESH = (8.0_rb * EPS * WMAX)**2
-      N1TMP = A(1,2)**2 + A(1,3)**2
-      N2TMP = A(1,2)**2 + A(2,3)**2
-      Q(1,1) = A(1,2) * A(2,3) - A(1,3) * A(2,2)
-      Q(1,2) = Q(1,1)
-      Q(2,1) = A(1,3) * A(1,2) - A(2,3) * A(1,1)
-      Q(2,2) = Q(2,1)
-      Q(3,2) = A(1,2)**2
-      A(1,1) = A(1,1) - W(1)
-      A(2,2) = A(2,2) - W(1)
-      Q(1,1) = Q(1,2) + A(1,3) * W(1)
-      Q(2,1) = Q(2,2) + A(2,3) * W(1)
-      Q(3,1) = A(1,1) * A(2,2) - Q(3,2)
-      NORM = Q(1,1)**2 + Q(2,1)**2 + Q(3,1)**2
-      N1 = N1TMP + A(1,1)**2
-      N2 = N2TMP + A(2,2)**2
-      ERROR = N1 * N2
-      if (N1 <= THRESH) then
-        Q(:,1) = [1.0_rb,0.0_rb,0.0_rb]
-      else if (N2 <= THRESH) then
-        Q(:,1) = [0.0_rb,1.0_rb,0.0_rb]
-      else if (NORM < (64.0_rb * EPS)**2 * ERROR) then
-        T = abs(A(1,2))
-        F = -A(1,1) / A(1,2)
-        if (abs(A(2,2)) > T) then
-          T = abs(A(2,2))
-          F = -A(1,2) / A(2,2)
-        end if
-        if (abs(A(2,3)) < T) then
-          F = -A(1,3) / A(2,3)
-        end if
-        NORM = 1.0_rb / sqrt(1.0_rb + F**2)
-        Q(:,1) = [NORM,F*NORM,0.0_rb]
-      else
-        NORM = sqrt(1.0_rb / NORM)
-        Q(:,1) = Q(:,1) * NORM
-      end if
-      T = W(1) - W(2)
-      if (abs(T) < 8.0_rb * EPS * WMAX) then
-        A(1,1) = A(1,1) + T
-        A(2,2) = A(2,2) + T
-        Q(1,2) = Q(1,2) + A(1,3) * W(2)
-        Q(2,2) = Q(2,2) + A(2,3) * W(2)
-        Q(3,2) = A(1,1) * A(2,2) - Q(3,2)
-        NORM = Q(1,2)**2 + Q(2,2)**2 + Q(3,2)**2
-        N1 = N1TMP + A(1,1)**2
-        N2 = N2TMP + A(2,2)**2
-        ERROR = N1 * N2
-        if (N1 <= THRESH) then
-          Q(:,2) = [1.0_rb,0.0_rb,0.0_rb]
-        else if (N2 <= THRESH) then
-          Q(:,2) = [0.0_rb,1.0_rb,0.0_rb]
-        else if (NORM < (64.0_rb * EPS)**2 * ERROR) then
-          T = abs(A(1,2))
-          F = -A(1,1) / A(1,2)
-          if (abs(A(2,2)) > T) then
-            T = abs(A(2,2))
-            F = -A(1,2) / A(2,2)
-          end if
-          if (abs(A(2,3)) > T) then
-            F = -A(1,3) / A(2,3)
-          end if
-          NORM = 1.0_rb / sqrt(1.0_rb + F**2)
-          Q(:,2) = [NORM,F*NORM,0.0_rb]
-        else
-          NORM = sqrt(1.0_rb / NORM)
-          Q(:,2) = Q(:,2) * NORM
-        end if
-      else
-        A(2,1) = A(1,2)
-        A(3,1) = A(1,3)
-        A(3,2) = A(2,3)
-        A(1,1) = A(1,1) + W(1)
-        A(2,2) = A(2,2) + W(1)
-        do I = 1, 3
-          A(I,I) = A(I,I) - W(2)
-          N1 = A(1,I)**2 + A(2,I)**2 + A(3,I)**2
-          if (N1 > THRESH) then
-            Q(1,2) = Q(2,1) * A(3,I) - Q(3,1) * A(2,I)
-            Q(2,2) = Q(3,1) * A(1,I) - Q(1,1) * A(3,I)
-            Q(3,2) = Q(1,1) * A(2,I) - Q(2,1) * A(1,I)
-            NORM = Q(1,2)**2 + Q(2,2)**2 + Q(3,2)**2
-            SUCCESS = NORM <= (256.0_rb * EPS)**2 * N1
-            if (.not.SUCCESS) then
-              NORM = sqrt(1.0_rb / NORM)
-              Q(:, 2) = Q(:, 2) * NORM
-              exit
-            end if
-          end if
-        end do
-        if (SUCCESS) then
-          do J = 1, 3
-            if (Q(J,1) <= 0.0_rb) then
-              I = 1 + mod(J,3)
-              NORM = 1.0_rb / sqrt(Q(J,1)**2 + Q(I,1)**2)
-              Q(J,2) = Q(I,1) * NORM
-              Q(I,2) = -Q(J,1) * NORM
-              Q(I,2) = 0.0_rb
-              exit
-            end if
-          end do
-        end if
-      end if
-      Q(:,3) = cross_product(Q(:,1),Q(:,2))
-    end function eigenvectors
-    !-----------------------------------------------------------------------------------------------
-    function determinant( A ) result( det )
-      real(rb), intent(in) :: A(3,3)
-      real(rb)             :: det
-      det = A(1,1)*A(2,2)*A(3,3) - A(1,1)*A(2,3)*A(3,2) - A(1,2)*A(2,1)*A(3,3) + &
-            A(1,2)*A(2,3)*A(3,1) + A(1,3)*A(2,1)*A(3,2) - A(1,3)*A(2,2)*A(3,1)
-    end function determinant
-    !-----------------------------------------------------------------------------------------------
-    function sort_vector( a ) result( b )
-      real(rb), intent(in) :: a(3)
-      integer              :: b(3)
-      integer :: imin, imax
-      imin = minloc(a,dim=1)
-      imax = maxloc(a,dim=1)
-      if (imin == imax) then
-        b = [1,2,3]
-      else
-        b = [imax,6-imin-imax,imin]
-      end if
-    end function sort_vector
-    !-----------------------------------------------------------------------------------------------
-    pure function cross_product(a, b) result( c )
-      real(rb), intent(in) :: a(3), b(3)
-      real(rb)             :: c(3)
-      c = [ a(2)*b(3) - a(3)*b(2), a(3)*b(1) - a(1)*b(3), a(1)*b(2) - a(2)*b(1) ]
-    end function cross_product
-    !-----------------------------------------------------------------------------------------------
-    function inv3x3( A ) result( AINV )
-      real(rb), intent(in) :: A(3,3)
-      real(rb)             :: AINV(3,3)
-      real(rb), parameter :: EPS = 1.0E-10_rb
-      real(rb) :: DET, COFACTOR(3,3)
-      DET = determinant( A )
-      if (abs(DET) <= EPS) call error( "could not invert 3x3 matrix" )
-      COFACTOR(1,1) = +(A(2,2)*A(3,3)-A(2,3)*A(3,2))
-      COFACTOR(1,2) = -(A(2,1)*A(3,3)-A(2,3)*A(3,1))
-      COFACTOR(1,3) = +(A(2,1)*A(3,2)-A(2,2)*A(3,1))
-      COFACTOR(2,1) = -(A(1,2)*A(3,3)-A(1,3)*A(3,2))
-      COFACTOR(2,2) = +(A(1,1)*A(3,3)-A(1,3)*A(3,1))
-      COFACTOR(2,3) = -(A(1,1)*A(3,2)-A(1,2)*A(3,1))
-      COFACTOR(3,1) = +(A(1,2)*A(2,3)-A(1,3)*A(2,2))
-      COFACTOR(3,2) = -(A(1,1)*A(2,3)-A(1,3)*A(2,1))
-      COFACTOR(3,3) = +(A(1,1)*A(2,2)-A(1,2)*A(2,1))
-      AINV = transpose(COFACTOR) / DET
-    end function inv3x3
-    !-----------------------------------------------------------------------------------------------
+!---------------------------------------------------------------------------------------------------
   end subroutine  tMolecule_align
+
   !=================================================================================================
+  ! Numerical diagonalization of 3x3 matrcies
+  ! Copyright (C) 2006  Joachim Kopp
+  !=================================================================================================
+
+  pure subroutine diagonalization( matrix, q, w )
+    real(rb), intent(in)  :: matrix(3,3)
+    real(rb), intent(out) :: q(3,3), w(3)
+
+    ! ----------------------------------------------------------------------------
+    ! Calculates the eigenvalues and normalized eigenvectors of a symmetric 3x3
+    ! matrix A using Cardano's method for the eigenvalues and an analytical
+    ! method based on vector cross products for the eigenvectors.
+    ! Only the diagonal and upper triangular parts of A need to contain
+    ! meaningful values. However, all of A may be used as temporary storage
+    ! and may hence be destroyed.
+    ! ----------------------------------------------------------------------------
+    ! Parameters:
+    !   matrix: The symmetric input matrix
+    !   q: Storage buffer for eigenvectors
+    !   w: Storage buffer for eigenvalues
+    ! ----------------------------------------------------------------------------
+
+    real(rb), parameter :: zero = 0.0_rb, one = 1.0_rb, two = 2.0_rb, three = 3.0_rb
+    real(rb), parameter :: half = one/two, third = one/three
+    real(rb), parameter :: eps = epsilon(one)
+    real(rb), parameter :: sqrt3 = sqrt(3.0_rb)
+
+    integer  :: i, j
+    real(rb) :: a(3,3), norm, n1, n2, w1, w2, w3, thresh, t, wmax8eps
+    real(rb) :: m, c1, c0, de, dd, ee, ff, p, sqrtp, r, c, s, phi
+    logical  :: success
+
+    a = matrix
+
+    ! Calculate the eigenvalues of a symmetric 3x3 matrix a using Cardano's
+    ! analytical algorithm. Only the diagonal and upper triangular parts of A are
+    ! accessed. The access is read-only.
+    de = a(1,2)*a(2,3)
+    dd = a(1,2)**2
+    ee = a(2,3)**2
+    ff = a(1,3)**2
+    m  = a(1,1) + a(2,2) + a(3,3)
+    c1 = (a(1,1)*a(2,2) + a(1,1)*a(3,3) + a(2,2)*a(3,3)) - (dd + ee + ff)
+    c0 = 27.0_rb*(a(3,3)*dd + a(1,1)*ee + a(2,2)*ff - a(1,1)*a(2,2)*a(3,3) - two*a(1,3)*de)
+
+    p = m*m - 3.0_rb*c1
+    r = m*(p - 1.5_rb*c1) - half*c0
+    sqrtp = sqrt(abs(p))
+    phi = third*atan2(sqrt(abs(6.75_rb*c1*c1*(p - c1) + c0*(r + 0.25_rb*c0))),r)
+
+    c = sqrtp*cos(phi)
+    s = (one/sqrt3)*sqrtp*sin(phi)
+
+    p = third*(m - c)
+    w1 = p + c
+    w2 = p - s
+    w3 = p + s
+
+    ! Sort eigenvalues:
+    if (abs(w1) > abs(w3)) call swap( w1, w3 )
+    if (abs(w1) > abs(w2)) call swap( w1, w2 )
+    if (abs(w2) > abs(w3)) call swap( w2, w3 )
+    w = [w1, w2, w3]
+
+    wmax8eps = 8.0_rb*eps*abs(w1)
+    thresh = wmax8eps**2
+
+    ! Prepare calculation of eigenvectors
+    n1 = a(1,2)**2 + a(1,3)**2
+    n2 = a(1,2)**2 + a(2,3)**2
+    q(1,1) = a(1,2)*a(2,3) - a(1,3)*a(2,2)
+    q(1,2) = q(1,1)
+    q(2,1) = a(1,3)*a(1,2) - a(2,3)*a(1,1)
+    q(2,2) = q(2,1)
+    q(3,2) = a(1,2)**2
+
+    ! Calculate first eigenvector by the formula v(1) = (A - lambda(1)).e1 x (A - lambda(1)).e2
+    a(1,1) = a(1,1) - w1
+    a(2,2) = a(2,2) - w1
+    q(:,1) = [q(1,2) + a(1,3)*w1, q(2,2) + a(2,3)*w1, a(1,1)*a(2,2) - q(3,2)]
+    call compute_eigenvector( q(:,1), a, n1, n2 )
+
+    ! Prepare calculation of second eigenvector     
+    t = w1 - w2
+
+    ! Is this eigenvalue degenerate?
+    if (abs(t) > wmax8eps) then
+
+      ! For non-degenerate eigenvalue, calculate second eigenvector by the formula
+      !         v[1] = (A - lambda[1]).e1 x (A - lambda[1]).e2
+      a(1,1) = a(1,1) + t
+      a(2,2) = a(2,2) + t
+      q(:,2) = [q(1,2) + a(1,3)*w2, q(2,2) + a(2,3)*w2, a(1,1)*a(2,2) - q(3,2)]
+      call compute_eigenvector( q(:,2), a, n1, n2 )
+
+    else
+
+      ! For degenerate eigenvalue, calculate second eigenvector according to
+      !         v[1] = v(1) x (A - lambda[1]).e[i]
+
+      ! This would really get too complicated if we could not assume all of A to
+      !       contain meaningful values.
+      a(2,1) = a(1,2)
+      a(3,1) = a(1,3)
+      a(3,2) = a(2,3)
+      a(1,1) = a(1,1) + w1
+      a(2,2) = a(2,2) + w1
+      i = 0
+      success = .false.
+      do while ((i < 3).and.(.not.success))
+        i = i + 1
+        a(i,i) = a(i,i) - w2
+        n1 = sum(a(:,i)**2)
+        success = n1 > thresh
+        if (success) then
+          q(:,2) = cross_product( q(:,1), a(:,i) )
+          norm = sum(q(:,2)**2)
+          success = norm > (256.0_rb*eps)**2*n1
+          if (success) q(:,2) = q(:,2)*sqrt(one/norm)
+        end if
+      end do
+
+      ! This means that any vector orthogonal to v(1) is an EV.
+      if (.not.success) then
+        i = 1
+        do while (q(i,1) == zero)
+          i = i + 1
+        end do
+        j = 1 + mod(i,3)
+        norm = one/sqrt(q(i,1)**2 + q(j,1)**2)
+        q(i,2) =  q(j,1)*norm
+        q(j,2) = -q(i,1)*norm
+        q(1+mod(i+1,3),2) = zero
+      end if
+    end if
+
+    ! Calculate third eigenvector according to v[2] = v(1) x v[1]
+    q(:,3) = cross_product( q(:,1), q(:,2) )
+
+    contains
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      pure subroutine compute_eigenvector( q, a, n1tmp, n2tmp )
+        real(rb), intent(inout) :: q(3)
+        real(rb), intent(in)    :: a(3,3), n1tmp, n2tmp
+
+        real(rb) :: norm, n1, n2, error, t, f
+
+        norm = sum(q**2)
+        n1 = n1tmp + a(1,1)**2
+        n2 = n2tmp + a(2,2)**2
+        error = n1*n2
+
+        ! If the first column is zero, then (1, 0, 0) is an eigenvector
+        if (n1 <= thresh) then
+          q = [one, zero, zero]
+
+        ! If the second column is zero, then (0, 1, 0) is an eigenvector
+        else if (n2 <= thresh) then
+          q = [zero, one, zero]
+
+        ! If angle between A(*,1) and A(*,2) is too small, don't use
+        !  cross product, but calculate v ~ (1, -A0/A1, 0)
+        else if (norm < (64.0_rb*eps)**2*error) then
+          t = abs(a(1,2))
+          f = -a(1,1)/a(1,2)
+          if (abs(a(2,2)) > t) then
+            t = abs(a(2,2))
+            f = -a(1,2)/a(2,2)
+          end if
+          if (abs(a(2,3)) > t) f = -a(1,3)/a(2,3)
+          norm = one/sqrt(one + f**2)
+          q = [norm, f*norm, zero]
+
+        ! This is the standard branch
+        else
+          q = q*sqrt(one/norm)
+        end if
+
+      end subroutine compute_eigenvector
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      pure subroutine swap( a, b )
+        real(rb), intent(inout) :: a, b
+        real(rb) :: c
+        c = a; a = b; b = c
+      end subroutine swap
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  end subroutine diagonalization
+
+  !=================================================================================================
+
+  pure function cross_product(a, b) result( c )
+    real(rb), intent(in) :: a(3), b(3)
+    real(rb)             :: c(3)
+    c = [ a(2)*b(3) - a(3)*b(2), a(3)*b(1) - a(1)*b(3), a(1)*b(2) - a(2)*b(1) ]
+  end function cross_product
+
+  !=================================================================================================
+
 end module mMolecule

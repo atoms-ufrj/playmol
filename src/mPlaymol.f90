@@ -444,7 +444,7 @@ contains
         character :: dir(3) = ["x","y","z"]
         real(rb) :: lb(3), ub(3)
         if (narg /= 4) call error( "invalid align command" )
-        call me % atomfix % apply( arg(2) )
+        if (arg(2)(1:4) == "mol(") call me % atomfix % apply( arg(2) )
         imol = me % molecules % index(arg(2))
         do i = 3, 4
           if (len_trim(arg(i)) /= 1) call error( "invalid align command" )
