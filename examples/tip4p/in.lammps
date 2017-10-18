@@ -1,0 +1,28 @@
+variable	temp equal 298 # K
+variable	press equal 1 # atm
+variable	dt equal 1 # fs
+variable	rc equal 9.0 # A
+variable	nsteps equal 2000
+
+units           real
+atom_style      full
+
+pair_style      hybrid lj/cut ${rc} coul/long ${rc}
+kspace_style    pppm 1e-4
+bond_style      zero
+
+read_data       tip4p-2005.lmp
+
+velocity        all create ${temp} 76125 
+
+variable	tdamp equal 100*${dt}
+variable	pdamp equal 1000*${dt}
+fix		NPT all rigid/npt/small molecule &
+                temp ${temp} ${temp} ${tdamp}  &
+                iso ${press} ${press} ${pdamp}
+
+thermo          100
+thermo_style	custom step temp press vol density pe evdwl ecoul elong
+
+timestep	${dt}
+run		${nsteps}

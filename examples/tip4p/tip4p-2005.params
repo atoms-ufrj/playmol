@@ -1,0 +1,8 @@
+# TIP4P/2005 model (J Chem Phys, 123, 234505 (2005); http://dx.doi.org/10.1063/1.2121687)
+define		kB     as 1.9872E-3
+define		EpsOO  as {93.2*$kB}
+define		SigOO  as 3.1589
+define		dOH    as 0.9572
+define		dOM    as 0.1546
+define		theta0 as 104.52
+define		qH     as 0.5564

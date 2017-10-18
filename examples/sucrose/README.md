@@ -6,11 +6,26 @@
 > Visualization created using [VMD](www.ks.uiuc.edu/Research/vmd/)
 
 ----------------------------------------------------------------------------------------------------
+Description
+----------------------------------------------------------------------------------------------------
+
+This example uses Playmol and LAMMPS to simulate a single sucrose molecule solvated in water. The
+solute is modeled as two rigid bodies connected by two consecutive chemical bonds to an oxygen atom.
+
+**NOTE**: this example uses the Playmol capabilities of dealing with rigid bodies and requires
+some new commands to be present in LAMMPS:
+
+    neigh_modify exclude custom/match property group-ID
+    fix ID group-ID rigid/npt/small custom property keywords
+
+----------------------------------------------------------------------------------------------------
 Requirements
 ----------------------------------------------------------------------------------------------------
 
 1. [AMBER Tools](http://ambermd.org/#AmberTools) installed
 2. Environmental variable AMBERHOME containing the path to AMBER Tools' directory
+3. [LAMMPS](https://github.com/lammps/lammps) installed and compiled
+4. Environmental variable LAMMPSHOME containing the path to the LAMMPS executable `lmp_mpi`
 
 ----------------------------------------------------------------------------------------------------
 Preparation Steps (Done!)
@@ -37,3 +52,6 @@ Run Playmol to create a system containing one sucrose molecule solvated in water
 
     playmol sucrose_in_water.playmol
 
+Execute LAMMPS to simulate the system:
+
+    mpirun -n 4 $LAMMPSHOME/lmp_mpi -in in.sucrose_in_water

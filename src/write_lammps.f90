@@ -130,9 +130,10 @@
         use mMixingRule
         type(TypeHolder),  intent(inout) :: types(:)
         type(StrucList),   intent(in)    :: list
-        integer :: i, j, k, m, ntypes, npairs, narg, found, first
-        character(sl) :: rule, arg(20), itype(20), jtype(20)
+        integer :: i, j, k, m, ntypes, npairs, narg, found, first, wc, minwc
+        character(sl) :: rule, arg(20), itype(20), jtype(20), typepair(2)
         character(sl), allocatable :: pair(:), model(:)
+        type(Struc), pointer :: ptr, chosen
         if (size(types) > 0) then
           ntypes = size(types)
           npairs = ntypes*(ntypes - 1)/2 + ntypes
@@ -151,8 +152,22 @@
               call split( list % parameters( [types(j)%types] ), narg, jtype )
               jtype(narg+1:) = ""
               k = k + 1
-              rule = me % mixing_rule_list % parameters( [types(i)%types,types(j)%types] )
-              if (rule /= "") then
+              minwc = huge(0)
+              chosen => null()
+              typepair = [ types(i)%types, types(j)%types ]
+              ptr => me % mixing_rule_list % first
+              do while (associated(ptr))
+                if (ptr % match_id( typepair )) then
+                  wc = count( has_macros(ptr % id) )
+                  if (wc < minwc) then
+                    minwc = wc
+                    chosen => ptr
+                  end if
+                end if
+                ptr => ptr % next
+              end do
+              if (associated(chosen)) then
+                rule = chosen % params
                 found = found + 1
                 pair(k) = ""
                 call split( rule, narg, arg )

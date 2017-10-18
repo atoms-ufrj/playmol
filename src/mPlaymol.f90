@@ -444,7 +444,7 @@ contains
         character :: dir(3) = ["x","y","z"]
         real(rb) :: lb(3), ub(3)
         if (narg /= 4) call error( "invalid align command" )
-        call me % atomfix % apply( arg(2) )
+        if (arg(2)(1:4) == "mol(") call me % atomfix % apply( arg(2) )
         imol = me % molecules % index(arg(2))
         do i = 3, 4
           if (len_trim(arg(i)) /= 1) call error( "invalid align command" )
@@ -666,8 +666,7 @@ contains
           mass = me % molecules % per_molecule( me % atom_masses )
           call me % box % compute( me % packmol % total_mass( mass, me % molecules ) )
           call writeln( "Box lengths are ", join(real2str(me % box % length)))
-          call me % packmol % run( me % molecules, me % molecules % xyz, &
-                                   me % atom_list, me % diameter_list,   &
+          call me % packmol % run( me % molecules, me % atom_list, me % diameter_list, &
                                    me % box % length )
         end if
       end subroutine packmol_command
