@@ -30,20 +30,29 @@ contains
 
   character(sl) function apply_rule( a, b, rule ) result( mix )
     character(sl), intent(in) :: a, b, rule
-    if ((rule == "arithmetic").or.(rule == "geometric")) then
-      if ((.not.is_real(a)) .or. (.not.is_real(b))) then
-        call error( "cannot apply mixing rule ", rule, "to parameters", &
-                    '"'//trim(a)//'" and "'//trim(b)//'"' )
-      end if
-    end if
+    real(rb) :: aa, bb
     select case (rule)
       case ("arithmetic")
-        mix = real2str(0.5_rb*(str2real(a) + str2real(b)))
+        
+        mix = real2str(0.5_rb*(numeric(a) + numeric(b)))
       case ("geometric")
-        mix = real2str(sqrt(str2real(a)*str2real(b)))
+        mix = real2str(sqrt(numeric(a)*numeric(b)))
       case default
         mix = rule
       end select
+
+      contains
+        function numeric(str) result(val)
+          character(sl), intent(in) :: str
+          real(rb)                  :: val
+          if (str == "") then
+            val = 0.0
+          else if (is_real(str)) then
+            val = str2real(str)
+          else
+            call error( "cannot apply mixing rule ", rule, "with parameters", a, "and", b )
+          end if
+        end function numeric 
   end function apply_rule
 
   !=================================================================================================

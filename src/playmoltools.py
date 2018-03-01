@@ -38,6 +38,7 @@ def amber2playmol( inp, out ):
       break
     block = blocks[m]
 
+    print(block)
     if (block == 'title'):
       title = string
       m += 1
@@ -48,6 +49,7 @@ def amber2playmol( inp, out ):
 
     elif (block == 'atom'):
       word = string.split()
+      print(word)
       mass[word[0]] = word[1]
       note[word[0]] = ' '.join(word[3:])
 
