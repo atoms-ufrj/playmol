@@ -259,7 +259,7 @@
             m = natoms(imol)
             forall (j=1:m) catom(katom+j) = atom(prev+j)%atoms(1)
             do j = 1, m
-              iatom(j:j) = pack([(k,k=1,m)],catom(1:m) == patom%id(1))
+              iatom(j:j) = pack([(k,k=1,m)], catom(katom+1:katom+m) == patom%id(1))
               xyz(j) = patom%params
               patom => patom % next
             end do
