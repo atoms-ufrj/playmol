@@ -20,49 +20,63 @@
   subroutine tPlaymol_write_pdb( me, unit )
     class(tPlaymol), intent(inout) :: me
     integer,         intent(in)    :: unit
-    integer :: molcount(me%molecules%N), iatom, itype, i, imol, jmol, narg, natoms(me%molecules%N)
-    real(rb) :: mass(me%molecules%N)
-    character(sl) :: limits, arg(1)
-    type(Struc), pointer :: current, atom_type
-    logical :: found
-    if (.not.me % box % exists()) call error( "simulation box has not been defined" )
-    write(unit,'("ITEM: TIMESTEP",/,"0")')
-    write(unit,'("ITEM: NUMBER OF ATOMS")')
-    write(unit,'(A)') trim(int2str(me % molecules % xyz % count))
-    write(unit,'("ITEM: BOX BOUNDS pp pp pp")')
-    molcount = me % molecules % count()
-    mass = me % molecules % per_molecule( me % atom_masses )
-    call me % box % compute( sum(molcount*mass) )
-    do i = 1, 3
-      limits = join(real2str( me%box%length(i)*[-0.5_rb,+0.5_rb] ))
-      write(unit,'(A)') trim(limits)
-    end do
-!    write(unit,'("ITEM: ATOMS id mol type x y z ix iy iz ")')
-    write(unit,'("ITEM: ATOMS id mol type x y z")')
+    integer :: iatom, i, j, imol, jmol, narg, n
+    integer :: natoms(me%molecules%N)
+    character(2)  :: element
+    character(sl) :: limits, atom_type(1), xyz(3)
+    character(sl), allocatable :: atom_id(:)
+    integer,       allocatable :: atom_index(:)
+    type(Struc), pointer :: current, atom_element, bond
+
+    if (me % box % exists()) then
+      write(unit,'("CRYST1",3F9.3,3F7.2)') me%box%length, me%box%angle
+    else
+      call warning( "created PDB file does not contain box info" )
+    end if
+
     natoms = me % molecules % number_of_atoms()
-    current => me % molecules % xyz % first
     iatom = 0
     jmol = 0
+    current => me % molecules % xyz % first
     do while (associated(current))
       jmol = jmol + 1
       imol = str2int(me % molecules % list % parameters( current % id ) )
       do i = 1, natoms(imol)
         iatom = iatom + 1
-        call split( me % atom_list % parameters( current % id ), narg, arg )
-        atom_type => me % atom_type_list % first
-        itype = 0
-        found = .false.
-        do while (associated(atom_type).and.(.not.found))
-          if (atom_type % usable) then
-            itype = itype + 1
-            found = atom_type % match_id( arg )
-          end if
-          if (.not.found) atom_type => atom_type % next
-        end do
-!        write(unit,'(3(A,X),"0 0 0")') trim(join(int2str([iatom,jmol,itype]))), trim(current%params)
-        write(unit,'(3(A,X))') trim(join([int2str([iatom,jmol]),atom_type%id(1)])), trim(current%params)
+        call split( me % atom_list % parameters( current % id ), narg, atom_type )
+        call split( current%params, narg, xyz )
+        element = me % element_list % parameters( atom_type )
+        write(unit,'("HETATM",I5,X,A4,X,I3,2X,I4,4X,3F8.3,"  1.0   0.0 ",A2)') &
+          iatom, adjustl(atom_type(1)(1:4)), jmol, jmol, (str2real(xyz(j)),j=1,3), element
         current => current % next
       end do
     end do
-  end subroutine tPlaymol_write_pdb
 
+    iatom = 0
+    allocate( atom_id(maxval(natoms)), atom_index(maxval(natoms)) )
+    current => me % molecules % xyz % first
+    do while (associated(current))
+      imol = str2int(me % molecules % list % parameters( current % id ) )
+      n = natoms(imol)
+      do i = 1, n
+        iatom = iatom + 1
+        atom_id(i) = current % id(1)
+        atom_index(i) = iatom
+        current => current % next
+      end do
+      bond => me % bond_list % first
+      do while (associated(bond))
+        do i = 1, n
+          if (atom_id(i) == bond % id(1)) then
+            do j = 1, n
+              if (atom_id(j) == bond % id(2)) exit
+            end do
+            write(unit,'("CONECT",2I5)') atom_index(i), atom_index(j)   
+            exit
+          end if
+        end do
+        bond => bond % next
+      end do
+    end do
+    write(unit,'("END")')
+  end subroutine tPlaymol_write_pdb

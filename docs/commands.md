@@ -1664,7 +1664,7 @@ write
 
 	write		 <format> [<file>]
 
-* _format_ = _playmol_ or _lammps_ or _lammps/models_ or _emdee_ or _summary_ or _xyz_ or _pdb_
+* _format_ = _playmol_ or _pdb_ or _lammps_ or _lammps/models_ or _emdee_ or _summary_ or _xyz_
 or _lammpstrj_
 * _file_ (optional) = name of a file to be created
 
@@ -1677,6 +1677,9 @@ The parameter _format_ must be one of the following options:
 * __playmol__: the output will contain Playmol commands that could be used in another script to
 build the same system. For illustration, detected angles and dihedrals appear as commented lines.
 Type and atom prefixes are explicitly added to the corresponding identifiers.
+
+* __pdb__: writes down the list of atom types and coordinates, as well as the atomic connectivity
+using the [PDB file format].
 
 * __lammps__: the command will produce information in the LAMMPS configuration file format, which
 can be used as an initial configuration for a Molecular Dynamics simulation using LAMMPS through its
@@ -1700,9 +1703,6 @@ of coordinates. This is useful for debugging purposes.
 * __xyz__: writes down the list of atomic coordinates using the [xyz file format], but with element
 symbols replaced by atom identifiers. This is useful for using with another Playmol script or for
 visualization purposes.
-
-* __pdb__: writes down the list of atom names, types, and coordinates, as well as atomic bonds
-using the [PDB file format].
 
 * __lammpstrj__: writes down the list of atomic coordinates using the LAMMPS trajectory format. This
 is useful for visualization with [VMD].

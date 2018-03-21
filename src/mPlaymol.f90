@@ -49,7 +49,7 @@ type tPlaymol
   type(tFix)      :: atomfix, typefix
   type(tVelocity) :: velocity
   
-  include "chemical_elements.inc"
+  include "elements.inc"
 
   type(StrucList) :: atom_type_list      = StrucList( "atom type" )
   type(StrucList) :: bond_type_list      = StrucList( "bond type", 2 )

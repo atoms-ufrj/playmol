@@ -35,7 +35,8 @@ src = $(addprefix $(SRCDIR)/, $(addsuffix .f90, $(1)))
 obj = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(1)))
 SRC  = $(call src, mBox mFix mMixingRule mMolecule mParser mString mCodeFlow mGlobal \
                    mPackmol mPlaymol mStruc playmol)
-AUX  = $(call src, $(addprefix write_, pdb emdee lammps lammpstrj summary internals))
+AUX  = $(call src, $(addprefix write_, pdb emdee lammps lammpstrj summary internals)) \
+       $(SRCDIR)/elements.inc
 OBJ  = $(patsubst $(SRCDIR)/%.f90,$(OBJDIR)/%.o,$(SRC))
 
 all: $(BINDIR)/playmol $(BINDIR)/playmoltools $(BINDIR)/packmol

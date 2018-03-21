@@ -1,5 +1,5 @@
 define		g_cm3   as 0.602214
-define		density as {0.9979*$g_cm3}
+define		density as {0.09979*$g_cm3}
 define		model   as tip4p-2005
 define		number  as 360
 
