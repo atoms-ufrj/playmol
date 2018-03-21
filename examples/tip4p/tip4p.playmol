@@ -55,3 +55,4 @@ packmol		action execute
 
 write		lmp/models $model.lmp
 write       pdb $model.pdb
+write       openmm $model.xml

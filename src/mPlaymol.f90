@@ -78,6 +78,7 @@ type tPlaymol
     procedure :: analyze_struct => tPlaymol_analyze_struct
     procedure :: bodies_in_molecules => tPlaymol_bodies_in_molecules
     procedure :: write_lammps => tPlaymol_write_lammps
+    procedure :: write_openmm => tPlaymol_write_openmm
     procedure :: write_lammpstrj => tPlaymol_write_lammpstrj
     procedure :: write_emdee => tPlaymol_write_emdee
     procedure :: read_geometry => tPlaymol_read_geometry
@@ -250,14 +251,14 @@ contains
         integer :: i
         logical :: found
         if (narg /= 3) call error( "invalid element command" )
-        call me % typefix % apply( arg(2) )
-        call me % element_list % add( 2, arg(2:3) )
         found = .false.
         do i = 1, size(me%elements)
           found = me%elements(i) == arg(3)
           if (found) exit
         end do
-        if (.not.found) call error( "invalid element" )
+        if (.not.found) call error( "invalid element command: element", arg(3), "not found" )
+        call me % typefix % apply( arg(2) )
+        call me % element_list % add( 2, [arg(2), int2str(i)] )
       end subroutine element_command
       !---------------------------------------------------------------------------------------------
       subroutine diameter_command
@@ -286,16 +287,8 @@ contains
           arg(3) = ptr % params
         else
           call me % element_list % search( arg(3:3), ptr )
-          if (associated(ptr)) then
-            do i = 1, size(me%elements)
-              if (me%elements(i) == ptr % params) then
-                arg(3) = real2str(me%masses(i))
-                exit
-              end if
-            end do
-          else
-            call error( "mass/element of atom type",arg(3), "has not been defined" )
-          end if
+          if (.not.associated(ptr)) call error( "mass/element of atom type",arg(3), "not defined" )
+          arg(3) = real2str(me%masses(str2int(ptr % params)))
         end if
         ptr % usable = .true.
         call me % atom_masses % add( 2, arg(2:3), silent = .true. )
@@ -516,9 +509,9 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine write_command
         integer :: unit, nspec
-        character(sl) :: formats(9) = ["playmol   ", "lammps    ", "lmp/models", "summary   ", &
-                                       "xyz       ", "pdb       ", "lammpstrj ", "emdee     ", &
-                                       "internals "  ]
+        character(sl) :: formats(10) = ["playmol   ", "lammps    ", "lmp/models", "summary   ", &
+                                        "xyz       ", "pdb       ", "lammpstrj ", "emdee     ", &
+                                        "openmm    ", "internals "  ]
         if (narg < 2) call error( "invalid write command" )
         if (.not.any(formats == arg(2))) call error( "invalid format", arg(2), "in write command" )
         select case (arg(2))
@@ -537,6 +530,7 @@ contains
         select case (arg(2))
           case ("playmol"); call me % write( unit )
           case ("lammps"); call me % write_lammps( unit, models = .false. )
+          case ("openmm"); call me % write_openmm( unit )
           case ("lmp/models"); call me % write_lammps( unit, models = .true. )
           case ("summary"); call me % summarize( unit )
           case ("xyz"); call me % write_xyz( unit )
@@ -1286,6 +1280,8 @@ contains
 
   !=================================================================================================
   include "write_lammps.f90"
+  !=================================================================================================
+  include "write_openmm.f90"
   !=================================================================================================
   include "write_lammpstrj.f90"
   !=================================================================================================

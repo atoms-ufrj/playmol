@@ -1664,8 +1664,8 @@ write
 
 	write		 <format> [<file>]
 
-* _format_ = _playmol_ or _pdb_ or _lammps_ or _lammps/models_ or _emdee_ or _summary_ or _xyz_
-or _lammpstrj_
+* _format_ = _playmol_ or _pdb_ or _lammps_ or _lammps/models_ or _openmm_ or _emdee_ or _summary_
+or _xyz_ or _lammpstrj_
 * _file_ (optional) = name of a file to be created
 
 **Description**:
@@ -1679,9 +1679,9 @@ build the same system. For illustration, detected angles and dihedrals appear as
 Type and atom prefixes are explicitly added to the corresponding identifiers.
 
 * __pdb__: writes down the list of atom types and coordinates, as well as the atomic connectivity
-using the [PDB file format].
+using the [PDB file] format.
 
-* __lammps__: the command will produce information in the LAMMPS configuration file format, which
+* __lammps__: the command will write out information in the LAMMPS configuration file format, which
 can be used as an initial configuration for a Molecular Dynamics simulation using LAMMPS through its
 command [read_data].
 
@@ -1689,6 +1689,10 @@ command [read_data].
 first attribute of every defined [atom_type] as the specification of a [LAMMPS pair style] for such
 atom type, as well as the first attribute of every [bond_type], [angle_type], [dihedral_type], or
 [improper_type] as the specification of a corresponding style in [LAMMPS].
+
+* __openmm__: the command will generate an [OpenMM XML file] with force field parameters. Together
+with a [PDB File] (see above), this file can be used for running an efficient Molecular Dynamics
+simulation using [OpenMM].
 
 * __emdee__: the command will produce code in the [Julia] programming language, which can be used to
 define an initial configuration for a Molecular Dynamics simulation using the [EmDee] package. As
@@ -1715,6 +1719,7 @@ omitted, the info will be written in the standard output unit (the computer scre
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 write	playmol water.mol
 write	lammps water.data
+write   openmm water.xml
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ----------------------------------------------------------------------------------------------------
@@ -1898,9 +1903,11 @@ The example above writes a summary of the current molecular system and then quit
 [LAMMPS angle style]:		http://lammps.sandia.gov/doc/angle_style.html
 [LAMMPS dihedral style]:	http://lammps.sandia.gov/doc/dihedral_style.html
 [LAMMPS improper style]:	http://lammps.sandia.gov/doc/improper_style.html
+[OpenMM]:               http://openmm.org/
+[OpenMM XML file]:      http://docs.openmm.org/latest/userguide/application.html#writing-the-xml-file
 [read_data]:			http://lammps.sandia.gov/doc/read_data.html
 [xyz file format]:		http://openbabel.org/wiki/XYZ_(format)
-[PDB file format]:		http://www.wwpdb.org/documentation/file-format
+[PDB file]:		        http://www.wwpdb.org/documentation/file-format
 [Packmol package]:		http://www.ime.unicamp.br/~martinez/packmol
 [Packmol User's Guide]:		http://www.ime.unicamp.br/~martinez/packmol/quickguide
 [VMD]:				http://www.ks.uiuc.edu/Research/vmd

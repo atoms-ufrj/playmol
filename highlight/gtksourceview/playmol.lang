@@ -54,7 +54,7 @@
       <keyword>[^\$]+\.(p|play)?mol</keyword>
       <keyword>[^\$]+\.(l(mp|ammps)_)?data</keyword>
       <keyword>[^\$]+\.l(mp|ammps|ammpstrj)</keyword>
-      <keyword>[^\$]+\.jl</keyword>
+      <keyword>[^\$]+\.(jl|xml|pdb)</keyword>
     </context>
 
     <context id="commands" style-ref="keyword">

@@ -515,7 +515,7 @@ contains
     character (len = *), intent (in) :: letter
     character (len = 1) :: L
     character (len = 26), parameter :: Lower = "abcdefghijklmnopqrstuvwxyz", &
-       Upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                       Upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     integer :: k
     k = index(Lower, letter)
     if (k > 0) then
@@ -524,6 +524,26 @@ contains
       L = letter
     end if
   end function UpperCase
+
+  !=================================================================================================
+
+  function letterCode( value ) result( S )
+    integer, intent(in) :: value
+    character(sl)       :: S
+    integer :: n, k, i, code
+    if (value < 1) call error( "letterCode function requires positive argument" )
+    n = 1
+    do while (26**n < value)
+      n = n + 1
+    end do
+    S = ""
+    k = value - 1
+    do i = n, 1, -1
+      code = k/26**(i - 1)
+      k = k - code*26**(i - 1)
+      S = trim(S) // achar(65 + code)
+    end do
+  end function letterCode
 
   !=================================================================================================
 
