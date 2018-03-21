@@ -19,8 +19,8 @@ mixing_rule	HW MW coul/long
 mixing_rule	OW HW none
 mixing_rule	OW MW none
 
-mass		HW  1.0080
-mass		OW 15.9994
+element     HW H
+element     OW O
 mass		MW 1.0E-20
 
 diameter	OW 3.1
@@ -53,3 +53,4 @@ packmol		pack mol(OW) $number
 packmol		action execute
 
 write		lmp/models $model.lmp
+write       pdb $model.pdb

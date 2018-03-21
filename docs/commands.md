@@ -12,6 +12,7 @@ physically meaningful values are those corresponding to [LAMMPS real units].
 | [if/then/else]  | executes commands conditionally or selects between two command sequences  |
 | [atom_type]     | creates an atom type with given name and parameters                       |
 | [mass]          | specifies the mass of atoms of a given type                               |
+| [element]       | specifies the chemical element of atoms of a given type                   |
 | [diameter]      | specifies the diameter of atoms of a given type                           |
 | [bond_type]     | defines parameters for bonds between atoms of two given types             |
 | [angle_type]    | defines parameters for angles involving atoms of three given types        |
@@ -296,12 +297,15 @@ This command defines the mass of atoms of a given type.
 The parameter _type_ is an [atom_type] identifier. Wildcard characters (* or ?) can be used so that
 the same mass value is assigned to multiple atom types. If a type-related [prefix/suffix] has been
 previously activated, then the actual atom type identifier will contain such prefix and/or suffix
-added to _type_. Distinct atom types cannot have the same identifier. __Important__: the presence of
-wildcards makes a mass value applicable to atom types defined either beforehand or afterwards.
+added to _type_. __Important__: the presence of wildcards makes a mass value applicable to atom
+types defined either beforehand or afterwards.
 
-An [atom] will only be created if a mass value has been previously defined to its corresponding atom
-type. For models which contain massless atoms, such as a 4-point or a 5-point water model, one must
-define their masses as 0 (zero).
+The parameter _value_ must be a non-negative real number.
+
+An [atom] will only be created if a [mass] value (primarily) or a chemical [element] has been
+previously defined to its corresponding atom type. For models which contain massless atoms, such as
+a 4-point or a 5-point water model, one must define their masses as 0 (zero) or their element as
+'EP' (extra particle).
 
 **Examples**:
 
@@ -315,7 +319,59 @@ _1.008_ is assigned to all atoms types whose identifiers start with _H_.
 
 **See also**:
 
-[atom_type], [atom]
+[atom_type], [atom], [element]
+
+----------------------------------------------------------------------------------------------------
+<a name="element"></a>
+element
+----------------------------------------------------------------------------------------------------
+
+**Syntax**:
+
+	element		<type> <symbol>
+
+* _type_ = the name of a atom type
+* _symbol_ = chemical element of the atoms with the specified atom type
+
+**Description**:
+
+This command defines the chemical element of atoms of a given type.
+
+The parameter _type_ is an [atom_type] identifier. Wildcard characters (* or ?) can be used so that
+the same element is assigned to multiple atom types. If a type-related [prefix/suffix] has been
+previously activated, then the actual atom type identifier will contain such prefix and/or suffix
+added to _type_. __Important__: the presence of wildcards makes an element applicable to atom types
+defined either beforehand or afterwards.
+
+The parameter _symbol_ must be a valid, case-sensitive atomic symbol.
+
+An [atom] will only be created if a [mass] value (primarily) or a chemical [element] has been
+previously defined to its corresponding atom type. For models which contain massless atoms, such
+as a 4-point or a 5-point water model, one must define their masses as 0 (zero) or their element
+as 'EP' (extra particle).
+
+If only an [element] command has been issued for a given [atom type], then the mass assigned to
+an atom will be in Daltons (atomic mass unit). If another unit is required, then the command [mass] 
+becomes necessary. Another situation which requires a [mass] command is when [atom_type] defines
+a united-atom (UA) site (see the example below) rather than a single atom.
+
+**Examples**:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+element		H*	H
+element		CH2	C
+mass		CH2	14.0 # Da
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the example above, element hydrogen is assigned to all atom types whose identifiers start with
+_H_. When atoms are created with such types, a mass equal to 1.079 Da will be assigned to it. In
+addition, element carbon is assigned to atom type _CH2_. However, when atoms are created with such
+type, the assigned mass will be 14.0 Da (instead of 12.0107 Da) because the next command ([mass])
+will have precedence for the atom mass assignment.
+
+**See also**:
+
+[atom_type], [atom], [mass]
 
 ----------------------------------------------------------------------------------------------------
 <a name="diameter"></a>
@@ -648,7 +704,7 @@ cannot be assigned to distinct atoms.
 The parameter _type_ is the identifier of a previously defined atom type. A unique identifier must
 be provided, with no use of wildcard characters (* or ?). If a type-related [prefix/suffix] has been
 previously activated, then each actual atom type identifier will contain such prefix and/or suffix
-added to _type-x_. The specified atom type must have a [mass] already define to it.
+added to _type-x_. The specified atom type must have a [mass] or [element] already defined to it.
 
 The optional parameter _charge_ is the total or partial charge of the specified atom. Note that one
 can omit this parameter and assign the charge afterwards using the command [charge], which has the
@@ -669,7 +725,7 @@ atom    H1 H
 
 **See also**:
 
-[atom_type], [mass], [bond], [charge]
+[atom_type], [mass], [element], [bond], [charge]
 
 ----------------------------------------------------------------------------------------------------
 <a name="charge"></a>
@@ -1608,7 +1664,7 @@ write
 
 	write		 <format> [<file>]
 
-* _format_ = _playmol_ or _lammps_ or _lammps/models_ or _emdee_ or _summary_ or _xyz_
+* _format_ = _playmol_ or _lammps_ or _lammps/models_ or _emdee_ or _summary_ or _xyz_ or _pdb_
 or _lammpstrj_
 * _file_ (optional) = name of a file to be created
 
@@ -1644,6 +1700,9 @@ of coordinates. This is useful for debugging purposes.
 * __xyz__: writes down the list of atomic coordinates using the [xyz file format], but with element
 symbols replaced by atom identifiers. This is useful for using with another Playmol script or for
 visualization purposes.
+
+* __pdb__: writes down the list of atom names, types, and coordinates, as well as atomic bonds
+using the [PDB file format].
 
 * __lammpstrj__: writes down the list of atomic coordinates using the LAMMPS trajectory format. This
 is useful for visualization with [VMD].
@@ -1804,6 +1863,7 @@ The example above writes a summary of the current molecular system and then quit
 [if/then/else]:		#if_then_else
 [atom_type]:		#atom_type
 [mass]:			#mass
+[element]:		#element
 [diameter]:		#diameter
 [bond_type]:		#bond_type
 [angle_type]:		#angle_type
@@ -1840,6 +1900,7 @@ The example above writes a summary of the current molecular system and then quit
 [LAMMPS improper style]:	http://lammps.sandia.gov/doc/improper_style.html
 [read_data]:			http://lammps.sandia.gov/doc/read_data.html
 [xyz file format]:		http://openbabel.org/wiki/XYZ_(format)
+[PDB file format]:		http://www.wwpdb.org/documentation/file-format
 [Packmol package]:		http://www.ime.unicamp.br/~martinez/packmol
 [Packmol User's Guide]:		http://www.ime.unicamp.br/~martinez/packmol/quickguide
 [VMD]:				http://www.ks.uiuc.edu/Research/vmd

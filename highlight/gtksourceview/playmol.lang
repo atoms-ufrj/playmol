@@ -60,6 +60,7 @@
     <context id="commands" style-ref="keyword">
       <keyword>atom_type</keyword>
       <keyword>mass</keyword>
+      <keyword>element</keyword>
       <keyword>diameter</keyword>
       <keyword>bond_type</keyword>
       <keyword>angle_type</keyword>
@@ -82,7 +83,7 @@
       <keyword>align</keyword>
       <keyword>box\s+(lengths|density|volume|angles)</keyword>
       <keyword>packmol</keyword>
-      <keyword>write\s+(playmol|lammps|lmp\/models|emdee|summary|xyz|lammpstrj|internals)</keyword>
+      <keyword>write\s+(playmol|lammps|lmp\/models|openmm|emdee|summary|xyz|pdb|lammpstrj|internals)</keyword>
       <keyword>prefix\s+(atoms|types)</keyword>
       <keyword>prefix</keyword>
       <keyword>suffix\s+(atoms|types)</keyword>

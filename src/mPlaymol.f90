@@ -48,6 +48,8 @@ type tPlaymol
   type(tMolecule) :: molecules
   type(tFix)      :: atomfix, typefix
   type(tVelocity) :: velocity
+  
+  include "chemical_elements.inc"
 
   type(StrucList) :: atom_type_list      = StrucList( "atom type" )
   type(StrucList) :: bond_type_list      = StrucList( "bond type", 2 )
@@ -55,6 +57,7 @@ type tPlaymol
   type(StrucList) :: dihedral_type_list  = StrucList( "dihedral type", 4 )
   type(StrucList) :: improper_type_list  = StrucList( "improper type", 4 )
   type(StrucList) :: mass_list           = StrucList( "mass" )
+  type(StrucList) :: element_list        = StrucList( "element" )
   type(StrucList) :: atom_masses         = StrucList( "atom mass" )
   type(StrucList) :: diameter_list       = StrucList( "diameter" )
   type(StrucList) :: atom_list           = StrucList( "atom" )
@@ -79,6 +82,7 @@ type tPlaymol
     procedure :: write_emdee => tPlaymol_write_emdee
     procedure :: read_geometry => tPlaymol_read_geometry
     procedure :: write_xyz => tPlaymol_write_xyz
+    procedure :: write_pdb => tPlaymol_write_pdb
     procedure :: summarize => tPlaymol_write_summary
     procedure :: update_structure => tPlaymol_update_structure
     procedure :: search_impropers => tPlaymol_search_impropers
@@ -124,6 +128,7 @@ contains
         case ("dihedral_type"); call dihedral_type_command
         case ("improper_type"); call improper_type_command
         case ("mass"); call mass_command
+        case ("element"); call element_command
         case ("diameter"); call diameter_command
         case ("atom"); call atom_command
         case ("charge"); call charge_command
@@ -241,6 +246,20 @@ contains
         if (str2real(arg(3)) < 0.0_rb) call error( "invalid mass value" )
       end subroutine mass_command
       !---------------------------------------------------------------------------------------------
+      subroutine element_command
+        integer :: i
+        logical :: found
+        if (narg /= 3) call error( "invalid element command" )
+        call me % typefix % apply( arg(2) )
+        call me % element_list % add( 2, arg(2:3) )
+        found = .false.
+        do i = 1, size(me%elements)
+          found = me%elements(i) == arg(3)
+          if (found) exit
+        end do
+        if (.not.found) call error( "invalid element" )
+      end subroutine element_command
+      !---------------------------------------------------------------------------------------------
       subroutine diameter_command
         if (narg /= 3) call error( "invalid diameter command" )
         call me % typefix % apply( arg(2) )
@@ -249,6 +268,7 @@ contains
       end subroutine diameter_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_command
+        integer :: i
         type(Struc), pointer :: ptr
         if ((narg < 3).or.(narg > 4)) call error( "invalid atom command" )
         call me % atomfix % apply( arg(2) )
@@ -262,9 +282,22 @@ contains
         ptr % usable = .true.
 
         call me % mass_list % search( arg(3:3), ptr )
-        if (.not.associated(ptr)) call error( "mass of atom type",arg(3), "has not been defined" )
+        if (associated(ptr)) then
+          arg(3) = ptr % params
+        else
+          call me % element_list % search( arg(3:3), ptr )
+          if (associated(ptr)) then
+            do i = 1, size(me%elements)
+              if (me%elements(i) == ptr % params) then
+                arg(3) = real2str(me%masses(i))
+                exit
+              end if
+            end do
+          else
+            call error( "mass/element of atom type",arg(3), "has not been defined" )
+          end if
+        end if
         ptr % usable = .true.
-        arg(3) = ptr % params
         call me % atom_masses % add( 2, arg(2:3), silent = .true. )
 
         call me % charge_list % search( arg(2:2), ptr )
@@ -483,8 +516,8 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine write_command
         integer :: unit, nspec
-        character(sl) :: formats(8) = ["playmol   ", "lammps    ", "lmp/models", "summary   ", &
-                                       "xyz       ", "lammpstrj ", "emdee     ", &
+        character(sl) :: formats(9) = ["playmol   ", "lammps    ", "lmp/models", "summary   ", &
+                                       "xyz       ", "pdb       ", "lammpstrj ", "emdee     ", &
                                        "internals "  ]
         if (narg < 2) call error( "invalid write command" )
         if (.not.any(formats == arg(2))) call error( "invalid format", arg(2), "in write command" )
@@ -507,6 +540,7 @@ contains
           case ("lmp/models"); call me % write_lammps( unit, models = .true. )
           case ("summary"); call me % summarize( unit )
           case ("xyz"); call me % write_xyz( unit )
+          case ("pdb"); call me % write_pdb( unit )
           case ("lammpstrj"); call me % write_lammpstrj( unit )
           case ("emdee"); call me % write_emdee( unit )
           case ("internals"); call me % write_internals( unit, arg(3:2+nspec) )
@@ -1254,6 +1288,8 @@ contains
   include "write_lammps.f90"
   !=================================================================================================
   include "write_lammpstrj.f90"
+  !=================================================================================================
+  include "write_pdb.f90"
   !=================================================================================================
   include "write_emdee.f90"
   !=================================================================================================
