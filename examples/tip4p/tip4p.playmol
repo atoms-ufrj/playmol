@@ -21,6 +21,7 @@ mixing_rule	OW MW none
 
 element     HW H
 element     OW O
+element     MW EP
 mass		MW 1.0E-20
 
 diameter	OW 3.1

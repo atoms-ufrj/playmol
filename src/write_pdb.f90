@@ -22,6 +22,7 @@
     integer,         intent(in)    :: unit
     integer :: iatom, i, j, imol, jmol, narg, n
     integer :: natoms(me%molecules%N)
+    real(rb) :: HL(3)
     character(2)  :: element
     character(sl) :: limits, atom_type(1), xyz(3)
     character(sl), allocatable :: atom_id(:)
@@ -30,8 +31,10 @@
 
     if (me % box % exists()) then
       write(unit,'("CRYST1",3F9.3,3F7.2)') me%box%length, me%box%angle
+      HL = 0.5_rb*me%box%length
     else
       call warning( "created PDB file does not contain box info" )
+      HL = 0.0_rb
     end if
 
     natoms = me % molecules % number_of_atoms()
@@ -47,7 +50,7 @@
         call split( current%params, narg, xyz )
         element = me % element_list % parameters( atom_type )
         write(unit,'("HETATM",I5,X,A4,X,I3,2X,I4,4X,3F8.3,"  1.0   0.0 ",A2)') &
-          iatom, adjustl(atom_type(1)(1:4)), jmol, jmol, (str2real(xyz(j)),j=1,3), element
+          iatom, adjustl(atom_type(1)(1:4)), jmol, jmol, (str2real(xyz(j))+HL(j),j=1,3), element
         current => current % next
       end do
     end do
