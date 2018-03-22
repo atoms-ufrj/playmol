@@ -119,7 +119,6 @@ Here is a complete list of Playmol commands:
 | **if/then/else**  | executes commands conditionally or selects between two command sequences  |
 | **atom_type**     | creates an atom type with given name and parameters                       |
 | **mass**          | specifies the mass of atoms of a given type                               |
-| **element**       | specifies the chemical element of atoms of a given type                   |
 | **diameter**      | specifies the diameter of atoms of a given type                           |
 | **bond_type**     | defines parameters for bonds between atoms of two given types             |
 | **angle_type**    | defines parameters for angles involving atoms of three given types        |

@@ -17,30 +17,35 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
-  subroutine tPlaymol_write_openmm( me, unit )
-    class(tPlaymol),  intent(inout) :: me
-    integer,          intent(in)    :: unit
+  subroutine tPlaymol_write_openmm( me, unit, allow_ua )
+    class(tPlaymol),  intent(inout)        :: me
+    integer,          intent(in)           :: unit
+    logical,          intent(in), optional :: allow_ua
 
     integer :: i
+    logical :: united_atom
+    character(sl) :: name, class, element, mass
     type(Struc), pointer :: current
-    character(sl) :: mass, element
+
+    united_atom = present(allow_ua)
+    if (united_atom) united_atom = allow_ua
 
     write(unit,'("<ForceField>")')
 
-    write(unit,'("<AtomTypes>")')
+    write(unit,'(2X,"<AtomTypes>")')
     current => me % atom_type_list % first
     do while (associated(current))
       if (current % usable) then
-        i = str2int(me % element_list % parameters( current%id ))
-        element = me % elements(i)
-        mass = me % mass_list % parameters( current%id )
-        if (mass == "") mass = real2str(me % masses(i))
-        write(unit,'("<Type name=""",A,""" class=""",A,""" element=""",A,""" mass=""",A,"""/>")') &
-          trim(current%id(1)), trim(current%id(1)), trim(element), trim(mass)
+        name = " name = """//trim(current%id(1))//""""
+        class = " class = """//trim(current%id(1))//""""
+        call me % element_and_mass( current%id(1), element, mass )
+        element = " element = """//trim(element)//""""
+        mass = " mass = """//trim(mass)//""""
+        write(unit,'(4X,"<Type",A,"/>")') trim(name)//trim(class)//trim(element)//trim(mass)
       end if
       current => current % next
     end do
-    write(unit,'("</AtomTypes>")')
+    write(unit,'(2X,"</AtomTypes>")')
 
     write(unit,'("</ForceField>")')
 

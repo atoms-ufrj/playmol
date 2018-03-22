@@ -52,15 +52,17 @@ type tPlaymol
   include "elements.inc"
 
   type(StrucList) :: atom_type_list      = StrucList( "atom type" )
+  type(StrucList) :: raw_atom_type_list  = StrucList( "raw atom type name" )
   type(StrucList) :: bond_type_list      = StrucList( "bond type", 2 )
   type(StrucList) :: angle_type_list     = StrucList( "angle type", 3 )
   type(StrucList) :: dihedral_type_list  = StrucList( "dihedral type", 4 )
   type(StrucList) :: improper_type_list  = StrucList( "improper type", 4 )
   type(StrucList) :: mass_list           = StrucList( "mass" )
-  type(StrucList) :: element_list        = StrucList( "element" )
   type(StrucList) :: atom_masses         = StrucList( "atom mass" )
+  type(StrucList) :: atom_elements       = StrucList( "atom element" )
   type(StrucList) :: diameter_list       = StrucList( "diameter" )
   type(StrucList) :: atom_list           = StrucList( "atom" )
+  type(StrucList) :: raw_atom_list       = StrucList( "raw atom name" )
   type(StrucList) :: charge_list         = StrucList( "charge" )
   type(StrucList) :: bond_list           = StrucList( "bond", 2 )
   type(StrucList) :: link_list           = StrucList( "virtual link", 2 )
@@ -89,6 +91,7 @@ type tPlaymol
     procedure :: search_impropers => tPlaymol_search_impropers
     procedure :: get_types => tPlaymol_get_types
     procedure :: check_coordinates => tPlaymol_check_coordinates
+    procedure :: element_and_mass => tPlaymol_element_and_mass
 end type tPlaymol
 
 type StrucHolder
@@ -129,7 +132,6 @@ contains
         case ("dihedral_type"); call dihedral_type_command
         case ("improper_type"); call improper_type_command
         case ("mass"); call mass_command
-        case ("element"); call element_command
         case ("diameter"); call diameter_command
         case ("atom"); call atom_command
         case ("charge"); call charge_command
@@ -215,9 +217,12 @@ contains
       end subroutine box_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_type_command
+        character(sl) :: raw_name
+        raw_name = arg(2)
         call me % typefix % apply( arg(2) )
         call me % atom_type_list % add( narg-1, arg(2:narg) )
         if (has_macros(arg(2))) call error( "invalid atom_type name" )
+        call me % raw_atom_type_list % add( 2, [arg(2), raw_name], silent=.true. )
       end subroutine atom_type_command
       !---------------------------------------------------------------------------------------------
       subroutine bond_type_command
@@ -244,22 +249,12 @@ contains
         if (narg /= 3) call error( "invalid mass command" )
         call me % typefix % apply( arg(2) )
         call me % mass_list % add( narg-1, arg(2:narg) )
-        if (str2real(arg(3)) < 0.0_rb) call error( "invalid mass value" )
+        if (is_real(arg(3))) then
+          if (str2real(arg(3)) < 0.0_rb) call error( "invalid mass value" )
+        else
+          if (.not.any(me%elements == arg(3))) call error( "invalid chemical element" )
+        end if
       end subroutine mass_command
-      !---------------------------------------------------------------------------------------------
-      subroutine element_command
-        integer :: i
-        logical :: found
-        if (narg /= 3) call error( "invalid element command" )
-        found = .false.
-        do i = 1, size(me%elements)
-          found = me%elements(i) == arg(3)
-          if (found) exit
-        end do
-        if (.not.found) call error( "invalid element command: element", arg(3), "not found" )
-        call me % typefix % apply( arg(2) )
-        call me % element_list % add( 2, [arg(2), int2str(i)] )
-      end subroutine element_command
       !---------------------------------------------------------------------------------------------
       subroutine diameter_command
         if (narg /= 3) call error( "invalid diameter command" )
@@ -270,28 +265,39 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine atom_command
         integer :: i
+        character(sl) :: raw_name, mass
+        character(2)  :: element
         type(Struc), pointer :: ptr
         if ((narg < 3).or.(narg > 4)) call error( "invalid atom command" )
+        raw_name = arg(2)
         call me % atomfix % apply( arg(2) )
         call me % typefix % apply( arg(3) )
         call me % atom_list % add( 2, arg(2:3) )
         if (has_macros(arg(2))) call error( "invalid atom name" )
         if (has_macros(arg(3))) call error( "invalid atom type name" )
+        call me % raw_atom_list % add( 2, [arg(2), raw_name], silent=.true. )
 
         call me % atom_type_list % search( arg(3:3), ptr )
         if (.not.associated(ptr)) call error( "atom type", arg(3), "required, but not found")
         ptr % usable = .true.
 
         call me % mass_list % search( arg(3:3), ptr )
-        if (associated(ptr)) then
-          arg(3) = ptr % params
+        if (.not.associated(ptr)) call error( "mass of atom type",arg(3), "has not been defined" )
+        if (is_real(ptr%params)) then
+          mass = ptr%params
+          element = merge("EP", "UA", mass == real2str(0.0_rb))
         else
-          call me % element_list % search( arg(3:3), ptr )
-          if (.not.associated(ptr)) call error( "mass/element of atom type",arg(3), "not defined" )
-          arg(3) = real2str(me%masses(str2int(ptr % params)))
+          element = ptr%params
+          i = 1
+          do while (me%elements(i) /= element)
+            i = i + 1
+          end do
+          mass = real2str(me % masses(i))
         end if
+
         ptr % usable = .true.
-        call me % atom_masses % add( 2, arg(2:3), silent = .true. )
+        call me % atom_masses % add( 2, [arg(2), mass], silent = .true. )
+        call me % atom_elements % add( 2, [arg(2), element], silent = .true. )
 
         call me % charge_list % search( arg(2:2), ptr )
         if (associated(ptr)) ptr % usable = .true.
@@ -565,6 +571,9 @@ contains
         if (any(lists == 17)) call me % molecules % bonds % destroy
         if (any(lists == 18)) call me % molecules % list % destroy
         if (any(lists == 19)) call me % atom_masses % destroy
+        if (any(lists == 20)) call me % atom_elements % destroy
+        if (any(lists == 21)) call me % raw_atom_type_list % destroy        
+        if (any(lists == 22)) call me % raw_atom_list % destroy        
       end subroutine reset_lists
       !---------------------------------------------------------------------------------------------
       subroutine reset_command
@@ -586,8 +595,8 @@ contains
             end do
         end select
         select case (arg(2))
-          case ("all");      call reset_lists( [(i,i=1,19)] )
-          case ("atom");     call reset_lists( [(i,i=8,19)] )
+          case ("all");      call reset_lists( [(i,i=1,22)] )
+          case ("atom");     call reset_lists( [(i,i=8,21)] )
           case ("charge");   call reset_lists( [9] )
           case ("bond");     call reset_lists( [(i,i=10,14),17] )
           case ("angle");    call reset_lists( [11] )
@@ -1277,6 +1286,23 @@ contains
     forall (i=1:N) V(:,i) = V(:,i) - Vcm
     V = sqrt(kT*(3*N-3)/sum([(mass(i)*V(:,i)**2,i=1,N)]))*V
   end function velocities
+
+  !=================================================================================================
+
+  subroutine tPlaymol_element_and_mass( me, atom_type, element, mass )
+    class(tPlaymol), intent(inout) :: me
+    character(sl),   intent(in)    :: atom_type
+    character(sl),   intent(out)   :: element, mass
+
+!    character(sl) :: string, mass
+!    integer :: N
+!    element = me % element_list % parameters( [atom_type] )
+!    if (element == "") then
+!      mass = me % mass_list % parameters( [atom_type] )
+!      N = minloc(abs(me%masses - str2real(mass)), 1)
+!      element = int2str(N)
+!    end if
+  end subroutine tPlaymol_element_and_mass
 
   !=================================================================================================
   include "write_lammps.f90"

@@ -19,10 +19,9 @@ mixing_rule	HW MW coul/long
 mixing_rule	OW HW none
 mixing_rule	OW MW none
 
-element     HW H
-element     OW O
-element     MW EP
-mass		MW 1.0E-20
+mass        HW H
+mass        OW O
+mass        MW EP
 
 diameter	OW 3.1
 diameter	HW 2.0

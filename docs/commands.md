@@ -12,7 +12,6 @@ physically meaningful values are those corresponding to [LAMMPS real units].
 | [if/then/else]  | executes commands conditionally or selects between two command sequences  |
 | [atom_type]     | creates an atom type with given name and parameters                       |
 | [mass]          | specifies the mass of atoms of a given type                               |
-| [element]       | specifies the chemical element of atoms of a given type                   |
 | [diameter]      | specifies the diameter of atoms of a given type                           |
 | [bond_type]     | defines parameters for bonds between atoms of two given types             |
 | [angle_type]    | defines parameters for angles involving atoms of three given types        |
@@ -287,8 +286,13 @@ mass
 
 	mass		<type> <value>
 
+or
+
+	mass		<type> <symbol>
+
 * _type_ = the name of a atom type
 * _value_ = mass of any atom with the specified atom type
+* _symbol_ = symbol of a chemical element (case-sensitive)
 
 **Description**:
 
@@ -302,76 +306,26 @@ types defined either beforehand or afterwards.
 
 The parameter _value_ must be a non-negative real number.
 
-An [atom] will only be created if a [mass] value (primarily) or a chemical [element] has been
-previously defined to its corresponding atom type. For models which contain massless atoms, such as
-a 4-point or a 5-point water model, one must define their masses as 0 (zero) or their element as
-'EP' (extra particle).
+The parameter _symbol_ must either be a valid, case-sensitive atomic symbol or _EP_ (standing for
+extra particle). In the former case, Playmol will assign a mass value equal to the atomic mass in
+Daltons. In the latter case, Playmol will assign a mass value equal to zero.
+
+An [atom] will only be created if a [mass] value (primarily) or a chemical element has been
+previously defined to its corresponding atom type.
 
 **Examples**:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 mass		CH2	14.0
-mass		H*	1.008
+mass		H*	H
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, a mass value of _14.0_ is assigned to atom type _CH2_ and a mass value of
-_1.008_ is assigned to all atoms types whose identifiers start with _H_.
+_1.0079_ is assigned to all atoms types whose identifiers start with _H_.
 
 **See also**:
 
-[atom_type], [atom], [element]
-
-----------------------------------------------------------------------------------------------------
-<a name="element"></a>
-element
-----------------------------------------------------------------------------------------------------
-
-**Syntax**:
-
-	element		<type> <symbol>
-
-* _type_ = the name of a atom type
-* _symbol_ = chemical element of the atoms with the specified atom type
-
-**Description**:
-
-This command defines the chemical element of atoms of a given type.
-
-The parameter _type_ is an [atom_type] identifier. Wildcard characters (* or ?) can be used so that
-the same element is assigned to multiple atom types. If a type-related [prefix/suffix] has been
-previously activated, then the actual atom type identifier will contain such prefix and/or suffix
-added to _type_. __Important__: the presence of wildcards makes an element applicable to atom types
-defined either beforehand or afterwards.
-
-The parameter _symbol_ must be a valid, case-sensitive atomic symbol.
-
-An [atom] will only be created if a [mass] value (primarily) or a chemical [element] has been
-previously defined to its corresponding atom type. For models which contain massless atoms, such
-as a 4-point or a 5-point water model, one must define their masses as 0 (zero) or their element
-as 'EP' (extra particle).
-
-If only an [element] command has been issued for a given [atom type], then the mass assigned to
-an atom will be in Daltons (atomic mass unit). If another unit is required, then the command [mass] 
-becomes necessary. Another situation which requires a [mass] command is when [atom_type] defines
-a united-atom (UA) site (see the example below) rather than a single atom.
-
-**Examples**:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-element		H*	H
-element		CH2	C
-mass		CH2	14.0 # Da
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In the example above, element hydrogen is assigned to all atom types whose identifiers start with
-_H_. When atoms are created with such types, a mass equal to 1.079 Da will be assigned to it. In
-addition, element carbon is assigned to atom type _CH2_. However, when atoms are created with such
-type, the assigned mass will be 14.0 Da (instead of 12.0107 Da) because the next command ([mass])
-will have precedence for the atom mass assignment.
-
-**See also**:
-
-[atom_type], [atom], [mass]
+[atom_type], [atom]
 
 ----------------------------------------------------------------------------------------------------
 <a name="diameter"></a>
@@ -704,7 +658,7 @@ cannot be assigned to distinct atoms.
 The parameter _type_ is the identifier of a previously defined atom type. A unique identifier must
 be provided, with no use of wildcard characters (* or ?). If a type-related [prefix/suffix] has been
 previously activated, then each actual atom type identifier will contain such prefix and/or suffix
-added to _type-x_. The specified atom type must have a [mass] or [element] already defined to it.
+added to _type-x_. The specified atom type must have a [mass] (or element) already defined to it.
 
 The optional parameter _charge_ is the total or partial charge of the specified atom. Note that one
 can omit this parameter and assign the charge afterwards using the command [charge], which has the
@@ -725,7 +679,7 @@ atom    H1 H
 
 **See also**:
 
-[atom_type], [mass], [element], [bond], [charge]
+[atom_type], [mass], [bond], [charge]
 
 ----------------------------------------------------------------------------------------------------
 <a name="charge"></a>
@@ -1868,7 +1822,6 @@ The example above writes a summary of the current molecular system and then quit
 [if/then/else]:		#if_then_else
 [atom_type]:		#atom_type
 [mass]:			#mass
-[element]:		#element
 [diameter]:		#diameter
 [bond_type]:		#bond_type
 [angle_type]:		#angle_type

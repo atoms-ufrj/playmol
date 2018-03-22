@@ -60,7 +60,6 @@
     <context id="commands" style-ref="keyword">
       <keyword>atom_type</keyword>
       <keyword>mass</keyword>
-      <keyword>element</keyword>
       <keyword>diameter</keyword>
       <keyword>bond_type</keyword>
       <keyword>angle_type</keyword>
