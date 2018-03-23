@@ -17,13 +17,17 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
+! TODO: Check whether it is possible to repeat proper dihedral types for the same set of atom types
+! TODO: Implement improper dihedrals (check order conformity with LAMMPS)
+! TODO: Implement non-bonded models
+
   subroutine tPlaymol_write_openmm( me, unit, keywords )
     class(tPlaymol), intent(inout)        :: me
     integer,         intent(in)           :: unit
     character(*),    intent(in)           :: keywords
 
     integer :: imol, nmols(me % molecules % N), natoms(me % molecules % N)
-    real(rb) :: length, energy
+    real(rb) :: length, energy, angle
     logical :: guess, water(me % molecules % N)
 
     call process( keywords )
@@ -40,7 +44,18 @@
     end do
     write(unit,'("  </Residues>")')
 
+    write(unit,'(2X,"<HarmonicBondForce>")')
     call write_bond_types()
+    write(unit,'(2X,"</HarmonicBondForce>")')
+
+    write(unit,'(2X,"<HarmonicAngleForce>")')
+    call write_angle_types()
+    write(unit,'(2X,"</HarmonicAngleForce>")')
+
+    write(unit,'(2X,"<PeriodicTorsionForce>")')
+    call write_dihedral_types()
+    write(unit,'(2X,"</PeriodicTorsionForce>")')
+
     write(unit,'("</ForceField>")')
 
     contains
@@ -59,6 +74,8 @@
               length = str2real(value)
             case ("energy")
               energy = str2real(value)
+            case ("angle")
+              angle = str2real(value)
             case ("elements")
               if (.not.any(value == ["yes", "no "])) call error( "invalid write openmm command" )
               guess = (value == "yes")
@@ -94,37 +111,6 @@
         end do
         write(unit,'(2X,"</AtomTypes>")')
       end subroutine write_atom_types
-      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      subroutine write_bond_types()
-        integer :: narg
-        real(rb) :: K, r0
-        character(sl) :: arg(20)
-        type(Struc), pointer :: current
-
-        write(unit,'(2X,"<HarmonicBondForce>")')
-        current => me % bond_type_list % first
-        do while (associated(current))
-          if (current % usable) then
-            call split( current%params, narg, arg )
-            if ((narg == 2).and.all(is_real(arg(1:2)))) then
-              K = 2.0_rb*str2real(arg(1)) * energy/length**2
-              r0 = str2real(arg(2)) * length
-            else if (arg(1) == "harmonic") then
-              K = 2.0_rb*str2real(arg(2)) * energy/length**2
-              r0 = str2real(arg(3)) * length
-            else if (arg(1) == "zero") then
-              current => current % next
-              cycle
-            else
-              call error( "bond model", arg(1), "not implemented" )
-            end if
-            call write_items(4, "Bond", [character(sl) :: "type1", "type2", "length", "k"], &
-                                        [current%id, real2str([r0, K])])
-          end if
-          current => current % next
-        end do
-        write(unit,'(2X,"</HarmonicBondForce>")')
-      end subroutine write_bond_types
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       subroutine write_residue( imol, natoms )
         integer, intent(in) :: imol, natoms
@@ -248,6 +234,98 @@
                   raw_atom(partner), (float2str(w(k)),k=1,3)]
         call write_items(6, "VirtualSite", properties, values)
       end subroutine virtual_site
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      subroutine write_bond_types()
+        integer :: narg
+        real(rb) :: K, r0
+        character(sl) :: arg(20)
+        type(Struc), pointer :: current
+        current => me % bond_type_list % first
+        do while (associated(current))
+          if (current % usable) then
+            if (any(has_macros(current%id))) call error( "wildcards not permitted in bond types" )
+            call split( current%params, narg, arg )
+            if ((narg == 2).and.all(is_real(arg(1:2)))) then
+              K = 2.0_rb*str2real(arg(1)) * energy/length**2
+              r0 = str2real(arg(2)) * length
+            else if (arg(1) == "harmonic") then
+              K = 2.0_rb*str2real(arg(2)) * energy/length**2
+              r0 = str2real(arg(3)) * length
+            else if (arg(1) == "zero") then
+              current => current % next
+              cycle
+            else
+              call error( "harmonic bond model required" )
+            end if
+            call write_items(4, "Bond", ["type1 ", "type2 ", "length", "k     "], &
+                                        [current%id, real2str([r0, K])])
+          end if
+          current => current % next
+        end do
+      end subroutine write_bond_types
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      subroutine write_angle_types()
+        integer :: narg
+        real(rb) :: K, theta0
+        character(sl) :: arg(20)
+        type(Struc), pointer :: current
+        current => me % angle_type_list % first
+        do while (associated(current))
+          if (current % usable) then
+            if (any(has_macros(current%id))) call error( "wildcards not permitted in angle types" )
+            call split( current%params, narg, arg )
+            if ((narg == 2).and.all(is_real(arg(1:2)))) then
+              K = 2.0_rb*str2real(arg(1)) * energy
+              theta0 = str2real(arg(2)) * angle
+            else if (arg(1) == "harmonic") then
+              K = 2.0_rb*str2real(arg(2)) * energy
+              theta0 = str2real(arg(3)) * angle
+            else
+              call error( "harmonic angle model required" )
+            end if
+            call write_items(4, "Angle", ["type1", "type2", "type3", "angle", "k    "], &
+                                        [current%id, real2str([theta0, K])])
+          end if
+          current => current % next
+        end do
+      end subroutine write_angle_types
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      subroutine write_dihedral_types()
+        integer :: i, narg, n
+        real(rb) :: K, phase
+        character(sl) :: arg(20), atom_type(4), S
+        type(Struc), pointer :: current
+        current => me % dihedral_type_list % first
+        do while (associated(current))
+          if (current % usable) then
+            do i = 1, 4
+              S = current%id(i)
+              if (has_macros(S)) then
+                if (S /= "*") call error( "partial wildcard not permitted in dihedral types" )
+                atom_type(i) = ""
+              else
+                atom_type(i) = S
+              end if
+            end do
+            call split( current%params, narg, arg )
+            if ((arg(1) == "harmonic").or.((narg == 3).and.all(is_real(arg(1:narg))))) then
+              K = str2real(arg(2)) * energy
+              n = str2int(arg(4))
+              phase = 90*(1 - str2int(arg(3))) * angle
+            else if ((arg(1) == "charmm").or.((narg == 4).and.all(is_real(arg(1:narg))))) then
+              K = str2real(arg(2)) * energy
+              n = str2int(arg(3))
+              phase = str2int(arg(4)) * angle
+            else
+              call error( "harmonic or charmm angle model required" )
+            end if
+            call write_items(4, "Proper", [character(sl) :: "type1", "type2", "type3", "type4", &
+                                                            "periodicity1", "phase1", "k1"],    &
+                                        [atom_type, [int2str(n), real2str(phase), real2str(K)]] )
+          end if
+          current => current % next
+        end do
+      end subroutine write_dihedral_types
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       subroutine write_items( ident, title, property, value )
         integer,      intent(in) :: ident

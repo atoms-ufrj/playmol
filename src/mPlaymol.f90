@@ -520,7 +520,7 @@ contains
           ! FORMAT KEYWORDS DEFAULTS
           "playmol", "", "", &
           "lammps", "models", "no", &
-          "openmm", "length energy elements", "0.1 4.184 yes", &
+          "openmm", "length energy angle elements", "0.1 4.184 0.01745329252 yes", &
           "lmp/models", "", "", &
           "summary", "", "", &
           "xyz", "elements", "no", &

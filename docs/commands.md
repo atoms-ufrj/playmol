@@ -1647,7 +1647,7 @@ visualization purposes.
 4. __lammps__: the command will write out information in the [LAMMPS] configuration file format,
 which can be used as an initial configuration for a Molecular Dynamics simulation using [LAMMPS]
 through its command [read_data].
-    * models yes/no (default = no): If set to yes, Playmol will consider the first attribute of
+    * models <yes/no> (default = no): If set to yes, Playmol will consider the first attribute of
 every defined [atom_type] as the specification of a [LAMMPS pair style] for such atom type, as
 well as the first attribute of every [bond_type], [angle_type], [dihedral_type], or [improper_type]
 as the specification of a corresponding style in LAMMPS.
@@ -1655,12 +1655,16 @@ as the specification of a corresponding style in LAMMPS.
 5. __openmm__: the command will generate an [OpenMM XML file] with force field parameters. Together
 with a [PDB File] (see above), this file can be used for running an efficient Molecular Dynamics
 simulation using [OpenMM]. Accepted keywords are:
-    * length value (default = 0.1): the length unit employed throughout the current script,
+    * length <value> (default = 0.1): the length unit employed throughout the current script,
 expressed in nanometers.
-    * energy value (default = 4.184): the energy unit employed throughout the current script,
+    * energy <value> (default = 4.184): the energy unit employed throughout the current script,
 expressed in kJ/mol.
-    * elements yes/no (default = yes): if set to yes, missing chemical elements will be guessed from
-the masses of the defined atom types.
+    * angle <value> (default = 0.0174533): the angle unit employed throughout the current script,
+expressed in radians. __IMPORTANT__: Playmol considers that spring constants for angle bending
+models are expressed in energy/radians^2, regardless of the unit in which the angles themselves are
+expressed.
+    * elements <yes/no> (default = yes): if set to yes, missing chemical elements will be guessed
+from the masses of the defined atom types.
 
 6. __emdee__: the command will produce code in the [Julia] programming language, which can be used to
 define an initial configuration for a Molecular Dynamics simulation using the [EmDee] package. As
@@ -1827,55 +1831,55 @@ The example above writes a summary of the current molecular system and then quit
 
 ----------------------------------------------------------------------------------------------------
 
-[define]:		#define
-[for/next]:		#for_next
-[if/then/else]:		#if_then_else
-[atom_type]:		#atom_type
-[mass]:			#mass
-[diameter]:		#diameter
-[bond_type]:		#bond_type
-[angle_type]:		#angle_type
-[dihedral_type]:	#dihedral_type
-[improper_type]:	#improper_type
-[atom]:			#atom
-[charge]:		#charge
-[bond]:			#bond
-[improper]:		#improper
-[rigid_body]:		#rigid_body
-[mixing_rule]:		#mixing_rule
-[extra]:		#extra
-[link]:			#link
-[unlink]:		#unlink
-[build]:		#build
-[box]:			#box
-[velocity]:		#velocity
-[packmol]:		#packmol
-[align]:		#align
-[write]:		#write
-[prefix/suffix]:	#prefix_suffix
-[include]:		#include
-[reset]:		#reset
-[shell]:		#shell
-[quit]:			#quit
+[define]:        #define
+[for/next]:      #for_next
+[if/then/else]:  #if_then_else
+[atom_type]:     #atom_type
+[mass]:          #mass
+[diameter]:      #diameter
+[bond_type]:     #bond_type
+[angle_type]:    #angle_type
+[dihedral_type]: #dihedral_type
+[improper_type]: #improper_type
+[atom]:          #atom
+[charge]:        #charge
+[bond]:          #bond
+[improper]:      #improper
+[rigid_body]:    #rigid_body
+[mixing_rule]:   #mixing_rule
+[extra]:         #extra
+[link]:          #link
+[unlink]:        #unlink
+[build]:         #build
+[box]:           #box
+[velocity]:      #velocity
+[packmol]:       #packmol
+[align]:         #align
+[write]:         #write
+[prefix/suffix]: #prefix_suffix
+[include]:       #include
+[reset]:         #reset
+[shell]:         #shell
+[quit]:          #quit
 
-[Playmol Basics]:		basics.html
-[LAMMPS]:		http://lammps.sandia.gov
-[LAMMPS real units]:		http://lammps.sandia.gov/doc/units.html
-[LAMMPS data file]:		http://lammps.sandia.gov/doc/read_data.html
-[LAMMPS pair style]:		http://lammps.sandia.gov/doc/pair_style.html
-[LAMMPS bond style]:		http://lammps.sandia.gov/doc/bond_style.html
-[LAMMPS angle style]:		http://lammps.sandia.gov/doc/angle_style.html
-[LAMMPS dihedral style]:	http://lammps.sandia.gov/doc/dihedral_style.html
-[LAMMPS improper style]:	http://lammps.sandia.gov/doc/improper_style.html
-[OpenMM]:               http://openmm.org
-[OpenMM XML file]:      http://docs.openmm.org/latest/userguide/application.html#writing-the-xml-file
-[read_data]:			http://lammps.sandia.gov/doc/read_data.html
-[xyz file format]:		http://openbabel.org/wiki/XYZ_(format)
-[PDB file]:             http://www.wwpdb.org/documentation/file-format
-[Packmol package]:		http://www.ime.unicamp.br/~martinez/packmol
-[Packmol User's Guide]:		http://www.ime.unicamp.br/~martinez/packmol/quickguide
-[VMD]:				http://www.ks.uiuc.edu/Research/vmd
-[Avogadro]:			http://avogadro.cc/wiki/Main_Page
-[ASCII]:			https://en.wikipedia.org/wiki/ASCII#ASCII_printable_code_chart
-[Julia]:			http://julialang.org
-[EmDee]:			https://github.com/craabreu/emdee
+[Playmol Basics]:        basics.html
+[LAMMPS]:                http://lammps.sandia.gov
+[LAMMPS real units]:     http://lammps.sandia.gov/doc/units.html
+[LAMMPS data file]:      http://lammps.sandia.gov/doc/read_data.html
+[LAMMPS pair style]:     http://lammps.sandia.gov/doc/pair_style.html
+[LAMMPS bond style]:     http://lammps.sandia.gov/doc/bond_style.html
+[LAMMPS angle style]:    http://lammps.sandia.gov/doc/angle_style.html
+[LAMMPS dihedral style]: http://lammps.sandia.gov/doc/dihedral_style.html
+[LAMMPS improper style]: http://lammps.sandia.gov/doc/improper_style.html
+[OpenMM]:                http://openmm.org
+[OpenMM XML file]:       http://docs.openmm.org/latest/userguide/application.html
+[read_data]:             http://lammps.sandia.gov/doc/read_data.html
+[xyz file format]:       http://openbabel.org/wiki/XYZ_(format)
+[PDB file]:              http://www.wwpdb.org/documentation/file-format
+[Packmol package]:       http://www.ime.unicamp.br/~martinez/packmol
+[Packmol User's Guide]:  http://www.ime.unicamp.br/~martinez/packmol/quickguide
+[VMD]:                   http://www.ks.uiuc.edu/Research/vmd
+[Avogadro]:              http://avogadro.cc/wiki/Main_Page
+[ASCII]:                 https://en.wikipedia.org/wiki/ASCII#ASCII_printable_code_chart
+[Julia]:                 http://julialang.org
+[EmDee]:                 https://github.com/craabreu/emdee
