@@ -995,9 +995,9 @@ link
 
 **Syntax**:
 
-	link	<atom-1> <atom-2>
+	link		<atom-1> <atom-2> [<atom-3> <atom-4> ...]
 
-* _atom-x_ = name of a previously defined atom
+* _atom-x_ = the name of a previously defined atom
 
 **Description**:
 
@@ -1009,6 +1009,9 @@ The parameter _atom-x_ is the identifier of a previously created atom. A unique 
 provided, with no use of wildcard characters (* or ?). If an atom-related [prefix/suffix] has been
 previously activated, then the actual atom identifier will contain such prefix and/or suffix added
 to _atom-x_.
+
+Parameters _atom-1_ and _atom-2_ are mandatory. Additional parameters _atom-x_ (for _x_ > 2) are
+optional. In any case, _atom-1_ is the central atom to which all other atoms will be linked.
 
 NOTE: sometimes, it is useful to consider two molecules as if they were a single one. For instance,
 when ions are present, one might want to consider an anion/cation pair as a single rigid structure,

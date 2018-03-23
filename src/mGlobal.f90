@@ -25,6 +25,9 @@ integer,      parameter :: rb = 8      !< Default number of bytes for real numbe
 integer,      parameter :: sl = 256    !< Default character string length
 character(*), parameter :: csl = "256" !< String with default character string length
 
+real(rb),     parameter :: zero = 0.0_rb, &
+                           one = 1.0_rb
+
 character(*), parameter :: yellow =      achar(27)//"[0;93m", &
                            red =         achar(27)//"[0;91m", &
                            yellow_bold = achar(27)//"[1;93m", &

@@ -231,9 +231,12 @@
       !---------------------------------------------------------------------------------------------
       subroutine write_masses
         integer :: i
+        character(sl) :: mass, element
         write(unit,'(/,"Masses",/)')
         do i = 1, size(atom_types)
-          write(unit,'(A)') trim(join([int2str(i), atom_types(i)%mass, "#", atom_types(i)%types]))
+          call me % element_and_mass( atom_types(i)%types, element, mass )
+          if (mass == real2str(0.0_rb)) mass = "1.0E-20"
+          write(unit,'(A)') trim(join([int2str(i), mass, "#", atom_types(i)%types]))
         end do
       end subroutine write_masses
       !---------------------------------------------------------------------------------------------

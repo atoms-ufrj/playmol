@@ -42,8 +42,6 @@ implicit none
 
 integer, parameter, private :: is = 1 ! Data type of bytecode
 
-real(rb), parameter, private :: zero = 0.0_rb, one = 1.0_rb
-
 real(rb), parameter, private :: rbtol = 1.0e-8_rb
 
 integer(is), parameter, private :: cImmed   = 1_is,  &

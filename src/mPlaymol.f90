@@ -92,6 +92,7 @@ type tPlaymol
     procedure :: get_types => tPlaymol_get_types
     procedure :: check_coordinates => tPlaymol_check_coordinates
     procedure :: element_and_mass => tPlaymol_element_and_mass
+    procedure :: is_water => tPlaymol_is_water
 end type tPlaymol
 
 type StrucHolder
@@ -265,8 +266,7 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine atom_command
         integer :: i
-        character(sl) :: raw_name, mass
-        character(2)  :: element
+        character(sl) :: raw_name, mass, element
         type(Struc), pointer :: ptr
         if ((narg < 3).or.(narg > 4)) call error( "invalid atom command" )
         raw_name = arg(2)
@@ -279,23 +279,9 @@ contains
 
         call me % atom_type_list % search( arg(3:3), ptr )
         if (.not.associated(ptr)) call error( "atom type", arg(3), "required, but not found")
-        ptr % usable = .true.
-
-        call me % mass_list % search( arg(3:3), ptr )
-        if (.not.associated(ptr)) call error( "mass of atom type",arg(3), "has not been defined" )
-        if (is_real(ptr%params)) then
-          mass = ptr%params
-          element = merge("EP", "UA", mass == real2str(0.0_rb))
-        else
-          element = ptr%params
-          i = 1
-          do while (me%elements(i) /= element)
-            i = i + 1
-          end do
-          mass = real2str(me % masses(i))
-        end if
 
         ptr % usable = .true.
+        call me % element_and_mass( arg(3), element, mass )
         call me % atom_masses % add( 2, [arg(2), mass], silent = .true. )
         call me % atom_elements % add( 2, [arg(2), element], silent = .true. )
 
@@ -323,8 +309,17 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine add_bond( atom )
         character(sl), intent(inout) :: atom(2)
+        integer :: i
+        character(sl) :: atom_type(2), element, mass
         call me % bond_list % add( 2, atom, me % atom_list )
         call me % bond_list % handle( atom, me % atom_list, me % bond_type_list, 2 )
+        call me % get_types( atom, atom_type )
+        do i = 1, 2
+          call me % element_and_mass( atom_type(i), element, mass )
+          if (element == "EP") then
+            call error( "command bond cannot accept zero-mass atom (use command link instead)" )
+          end if
+        end do
         call me % molecules % fuse( atom )
         call me % update_structure()
       end subroutine add_bond
@@ -375,10 +370,17 @@ contains
       end subroutine mixing_rule_command
       !---------------------------------------------------------------------------------------------
       subroutine link_command
-        if (narg /= 3) call error( "invalid link command" )
-        call me % atomfix % apply( arg(2:3) )
-        call me % link_list % add( 2, arg(2:3), me % atom_list )
-        call me % molecules % fuse( arg(2:3) )
+        integer :: i
+        character(sl) :: central
+        if (narg < 3) call error( "invalid link command" )
+        call me % atomfix % apply( arg(2:narg) )
+        central = arg(2)
+        do i = 3, narg
+          arg(2) = central
+          arg(3) = arg(i)
+          call me % link_list % add( 2, arg(2:3), me % atom_list )
+          call me % molecules % fuse( arg(2:3) )
+        end do
       end subroutine link_command
       !---------------------------------------------------------------------------------------------
       subroutine unlink_command
@@ -1294,15 +1296,55 @@ contains
     character(sl),   intent(in)    :: atom_type
     character(sl),   intent(out)   :: element, mass
 
-!    character(sl) :: string, mass
-!    integer :: N
-!    element = me % element_list % parameters( [atom_type] )
-!    if (element == "") then
-!      mass = me % mass_list % parameters( [atom_type] )
-!      N = minloc(abs(me%masses - str2real(mass)), 1)
-!      element = int2str(N)
-!    end if
+    integer :: i
+    type(Struc), pointer :: ptr
+
+    call me % mass_list % search( [atom_type], ptr )
+    if (.not.associated(ptr)) call error( "mass of atom type", atom_type, "has not been defined" )
+    if (is_real(ptr%params)) then
+      mass = ptr%params
+      element = merge("EP", "UA", mass == real2str(0.0_rb))
+    else
+      element = ptr%params
+      i = 1
+      do while (me%elements(i) /= element)
+        i = i + 1
+      end do
+      mass = real2str(me % masses(i))
+    end if
   end subroutine tPlaymol_element_and_mass
+
+  !=================================================================================================
+
+  function tPlaymol_is_water( me ) result( water )
+    class(tPlaymol), intent(inout) :: me
+    logical                        :: water(me % Molecules % N)
+
+    integer :: imol, j, indx, narg
+    character(sl) :: atom_type(1)
+    integer, allocatable :: ecount(:,:)
+    type(Struc), pointer :: current, ptr
+
+    allocate( ecount(me % molecules % N, 4), source = 0 )
+    current => me % molecules % list % first
+    do while (associated(current))
+      imol = str2int(current%params)
+      call me % atom_list % search( current%id, ptr, indx )
+      call split( ptr%params, narg, atom_type )
+      ptr => me % atom_elements % point_to( indx )
+      select case (ptr%params)
+        case ("H"); j = 1 ! Hydrogen
+        case ("O"); j = 2 ! Oxygen
+        case ("EP"); j = 3 ! Extra particle
+        case default; j = 4 ! Others
+      end select
+      ecount(imol, j) = ecount(imol, j) + 1
+      current => current % next
+    end do
+    do imol = 1, me % molecules % N
+      water(imol) = (ecount(imol, 1) == 2).and.(ecount(imol, 2) == 1).and.(ecount(imol, 4) == 0)
+    end do
+  end function tPlaymol_is_water
 
   !=================================================================================================
   include "write_lammps.f90"

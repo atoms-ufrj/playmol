@@ -33,7 +33,7 @@ PACKMOL = ./lib
 
 src = $(addprefix $(SRCDIR)/, $(addsuffix .f90, $(1)))
 obj = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(1)))
-SRC  = $(call src, mBox mFix mMixingRule mMolecule mParser mString mCodeFlow mGlobal \
+SRC  = $(call src, mBox mFix mMixingRule mMolecule mParser mString mMath mCodeFlow mGlobal \
                    mPackmol mPlaymol mStruc playmol)
 AUX  = $(call src, $(addprefix write_, pdb emdee lammps openmm lammpstrj summary internals)) \
        $(SRCDIR)/elements.inc
@@ -79,7 +79,7 @@ $(OBJDIR)/mPlaymol.o: $(SRCDIR)/mPlaymol.f90 $(AUX) \
                       $(call obj,mCodeFlow mPackmol mFix mMixingRule mBox mMolecule)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/mMolecule.o: $(SRCDIR)/mMolecule.f90 $(call obj,mStruc mGlobal)
+$(OBJDIR)/mMolecule.o: $(SRCDIR)/mMolecule.f90 $(call obj,mStruc mGlobal mMath)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mCodeFlow.o: $(SRCDIR)/mCodeFlow.f90 $(OBJDIR)/mParser.o $(OBJDIR)/mStruc.o
@@ -104,6 +104,9 @@ $(OBJDIR)/mStruc.o: $(SRCDIR)/mStruc.f90 $(OBJDIR)/mString.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mString.o: $(SRCDIR)/mString.f90 $(OBJDIR)/mGlobal.o
+	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
+
+$(OBJDIR)/mMath.o: $(SRCDIR)/mMath.f90 $(OBJDIR)/mGlobal.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mGlobal.o: $(SRCDIR)/mGlobal.f90
