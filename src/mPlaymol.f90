@@ -516,36 +516,50 @@ contains
       end subroutine align_command
       !---------------------------------------------------------------------------------------------
       subroutine write_command
-        integer :: unit, nspec
-        character(sl) :: formats(10) = ["playmol   ", "lammps    ", "lmp/models", "summary   ", &
-                                        "xyz       ", "pdb       ", "lammpstrj ", "emdee     ", &
-                                        "openmm    ", "internals "  ]
+        character(sl), parameter :: formats(3,9) = reshape([character(sl) :: &
+          ! FORMAT KEYWORDS DEFAULTS
+          "playmol", "", "", &
+          "lammps", "models", "no", &
+          "openmm", "length energy elements", "0.1 4.184 yes", &
+          "lmp/models", "", "", &
+          "summary", "", "", &
+          "xyz", "elements", "no", &
+          "pdb", "", "", &
+          "lammpstrj", "", "", &
+          "emdee", "", "" ], [3, size(formats,2)])
+        integer, parameter :: nfmt = size(formats,2)
+        integer :: i, unit, ifmt
+        character(sl) :: keywords
+        integer, allocatable :: item(:)
+
         if (narg < 2) call error( "invalid write command" )
-        if (.not.any(formats == arg(2))) call error( "invalid format", arg(2), "in write command" )
-        select case (arg(2))
-          case ("internals"); nspec = 3
-          case default; nspec = 0
-        end select
-        if (narg == nspec+2) then
+        item = pack([(i,i=1,nfmt)], formats(1,:) == arg(2))
+        if (size(item) /= 1) call error( "invalid format", arg(2), "in write command" )
+        ifmt = item(1)
+        keywords = zip(formats(2,ifmt), formats(3,ifmt))
+
+        if (narg == 2) then
+          unit = stdout
+        else if (index(trim(formats(2,ifmt)), trim(arg(3))) > 0) then
           call writeln( "Writing data in", arg(2), "format..." )
           unit = stdout
-        else if (narg == nspec+3) then
-          call writeln( "Writing data to file", arg(narg), "in", arg(2), "format..." )
-          open( newunit = unit, file = arg(narg), status = "replace" )
+          keywords = join([keywords, arg(3:narg)])
         else
-          call error( "invalid write command" )
+          call writeln( "Writing data to file", arg(3), "in", arg(2), "format..." )
+          open( newunit = unit, file = arg(3), status = "replace" )
+          keywords = join([keywords, arg(4:narg)])
         end if
+
         select case (arg(2))
           case ("playmol"); call me % write( unit )
-          case ("lammps"); call me % write_lammps( unit, models = .false. )
-          case ("openmm"); call me % write_openmm( unit )
-          case ("lmp/models"); call me % write_lammps( unit, models = .true. )
+          case ("lammps"); call me % write_lammps( unit, keywords )
+          case ("lmp/models"); call me % write_lammps( unit, "models yes" )
           case ("summary"); call me % summarize( unit )
           case ("xyz"); call me % write_xyz( unit )
           case ("pdb"); call me % write_pdb( unit )
           case ("lammpstrj"); call me % write_lammpstrj( unit )
           case ("emdee"); call me % write_emdee( unit )
-          case ("internals"); call me % write_internals( unit, arg(3:2+nspec) )
+          case ("openmm"); call me % write_openmm( unit, keywords )
         end select
         if (unit /= stdout) close(unit)
       end subroutine write_command

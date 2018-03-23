@@ -11,7 +11,7 @@ dihedrals).
 * Multiple copies of a molecule are automatically created when new coordinates are defined for their
 atoms.
 * Integration with [Packmol] provides a way of creating complex molecular systems.
-* Generation of [LAMMPS] configuration files provides a way of performing efficient MD simulations.
+* Generation of [LAMMPS] and [OpenMM] files provides a way of performing efficient MD simulations.
 
 Copyright: GNU Public License.
 
@@ -21,6 +21,7 @@ Federal University of Rio de Janeiro, Brazil
 
 [Packmol]:	http://www.ime.unicamp.br/~martinez/packmol
 [LAMMPS]:	http://lammps.sandia.gov
+[OpenMM]:   http://openmm.org
 [ATOMS]:	http://atoms.peq.coppe.ufrj.br
 
 --------------------------------------------------------------------------------
@@ -140,7 +141,7 @@ Here is a complete list of Playmol commands:
 | **velocity**      | defines parameters for generating Maxwell-Boltzmann atomic velocities     |
 | **align**         | aligns the principal axes of a molecule to the Cartesian axes             |
 | **packmol**       | executes Packmol in order to create a packed molecular system             |
-| **write**         | saves system info in different file formats (including LAMMPS data files) |
+| **write**         | saves system info in different file formats (including LAMMPS and OpenMM) |
 | **include**       | includes commands from another script                                     |
 | **reset**         | resets a list of entities together with its dependent lists               |
 | **shell**         | executes an external shell command                                        |

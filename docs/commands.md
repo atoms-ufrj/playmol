@@ -32,7 +32,7 @@ physically meaningful values are those corresponding to [LAMMPS real units].
 | [velocity]      | defines parameters for genarating Maxwell-Boltzmann atomic velocities     |
 | [align]         | aligns the principal axes of a molecule to the Cartesian axes             |
 | [packmol]       | executes Packmol in order to create a packed molecular system             |
-| [write]         | saves system info in different file formats (including LAMMPS data files) |
+| [write]         | saves system info in different file formats (including LAMMPS and OpenMM) |
 | [include]       | includes commands from another script                                     |
 | [reset]         | resets a list of entities together with its dependent lists               |
 | [shell]         | executes an external shell command                                        |
@@ -1619,11 +1619,11 @@ write
 
 **Syntax**:
 
-	write		 <format> [<file>]
+	write		 <format> [<file>] [keyword value keyword value...]
 
-* _format_ = _playmol_ or _pdb_ or _lammps_ or _lammps/models_ or _openmm_ or _emdee_ or _summary_
-or _xyz_ or _lammpstrj_
+* _format_ = _summary_ or _pdb_ or _xyz_ or _lammps_ or _openmm_ or _emdee_ or _playmol_
 * _file_ (optional) = name of a file to be created
+* _keyword_ _value_ (optional) = a valid format-specific keyword and its assigned value
 
 **Description**:
 
@@ -1631,45 +1631,52 @@ This command writes down the molecular system in a file or in the standard outpu
 
 The parameter _format_ must be one of the following options:
 
-* __playmol__: the output will contain Playmol commands that could be used in another script to
-build the same system. For illustration, detected angles and dihedrals appear as commented lines.
-Type and atom prefixes are explicitly added to the corresponding identifiers.
-
-* __pdb__: writes down the list of atom types and coordinates, as well as the atomic connectivity
-using the [PDB file] format.
-
-* __lammps__: the command will write out information in the LAMMPS configuration file format, which
-can be used as an initial configuration for a Molecular Dynamics simulation using LAMMPS through its
-command [read_data].
-
-* __lmp/models__: identical to the _lammps_ option above, except that [Playmol] will consider the
-first attribute of every defined [atom_type] as the specification of a [LAMMPS pair style] for such
-atom type, as well as the first attribute of every [bond_type], [angle_type], [dihedral_type], or
-[improper_type] as the specification of a corresponding style in [LAMMPS].
-
-* __openmm__: the command will generate an [OpenMM XML file] with force field parameters. Together
-with a [PDB File] (see above), this file can be used for running an efficient Molecular Dynamics
-simulation using [OpenMM].
-
-* __emdee__: the command will produce code in the [Julia] programming language, which can be used to
-define an initial configuration for a Molecular Dynamics simulation using the [EmDee] package. As
-with the __lammps/models__ option, Playmol will consider the first attribute of every defined type
-as a model specification (in this case, slashes will be replaced by underscores in model names).
-
-* __summary__: this option will print a summary of the system characteristics, including the amount
+1. __summary__: this option will print a summary of the system characteristics, including the amount
 of every defined and detected structure such as angles, dihedrals, and molecules. Properties of each
 molecular species will also be printed, such as its mass, its atoms, and the number of defined sets
 of coordinates. This is useful for debugging purposes.
 
-* __xyz__: writes down the list of atomic coordinates using the [xyz file format], but with element
+2. __pdb__: writes down the list of atom types and coordinates, as well as the atomic connectivity
+using the [PDB file] format. This is useful for visualization with [VMD] and for executing Molecular
+Dynamics simulations with [OpenMM].
+
+3. __xyz__: writes down the list of atomic coordinates using the [xyz file format], but with element
 symbols replaced by atom identifiers. This is useful for using with another Playmol script or for
 visualization purposes.
 
-* __lammpstrj__: writes down the list of atomic coordinates using the LAMMPS trajectory format. This
-is useful for visualization with [VMD].
+4. __lammps__: the command will write out information in the [LAMMPS] configuration file format,
+which can be used as an initial configuration for a Molecular Dynamics simulation using [LAMMPS]
+through its command [read_data].
+    * models yes/no (default = no): If set to yes, Playmol will consider the first attribute of
+every defined [atom_type] as the specification of a [LAMMPS pair style] for such atom type, as
+well as the first attribute of every [bond_type], [angle_type], [dihedral_type], or [improper_type]
+as the specification of a corresponding style in LAMMPS.
+
+5. __openmm__: the command will generate an [OpenMM XML file] with force field parameters. Together
+with a [PDB File] (see above), this file can be used for running an efficient Molecular Dynamics
+simulation using [OpenMM]. Accepted keywords are:
+    * length value (default = 0.1): the length unit employed throughout the current script,
+expressed in nanometers.
+    * energy value (default = 4.184): the energy unit employed throughout the current script,
+expressed in kJ/mol.
+    * elements yes/no (default = yes): if set to yes, missing chemical elements will be guessed from
+the masses of the defined atom types.
+
+6. __emdee__: the command will produce code in the [Julia] programming language, which can be used to
+define an initial configuration for a Molecular Dynamics simulation using the [EmDee] package. As
+with the _lammps model yes_ option, Playmol will consider the first attribute of every defined type
+as a model specification (in this case, slashes will be replaced by underscores in model names).
+
+7. __playmol__: the output will contain Playmol commands that could be used in another script to
+build the same system. For illustration, detected angles and dihedrals appear as commented lines.
+Type and atom prefixes are explicitly added to the corresponding identifiers.
+
 
 The optional parameter _file_ is the name of the file which will contain the system info. If it is
 omitted, the info will be written in the standard output unit (the computer screen, in most cases).
+
+
+
 
 **Examples**:
 
@@ -1852,6 +1859,7 @@ The example above writes a summary of the current molecular system and then quit
 [quit]:			#quit
 
 [Playmol Basics]:		basics.html
+[LAMMPS]:		http://lammps.sandia.gov
 [LAMMPS real units]:		http://lammps.sandia.gov/doc/units.html
 [LAMMPS data file]:		http://lammps.sandia.gov/doc/read_data.html
 [LAMMPS pair style]:		http://lammps.sandia.gov/doc/pair_style.html
@@ -1859,11 +1867,11 @@ The example above writes a summary of the current molecular system and then quit
 [LAMMPS angle style]:		http://lammps.sandia.gov/doc/angle_style.html
 [LAMMPS dihedral style]:	http://lammps.sandia.gov/doc/dihedral_style.html
 [LAMMPS improper style]:	http://lammps.sandia.gov/doc/improper_style.html
-[OpenMM]:               http://openmm.org/
+[OpenMM]:               http://openmm.org
 [OpenMM XML file]:      http://docs.openmm.org/latest/userguide/application.html#writing-the-xml-file
 [read_data]:			http://lammps.sandia.gov/doc/read_data.html
 [xyz file format]:		http://openbabel.org/wiki/XYZ_(format)
-[PDB file]:		        http://www.wwpdb.org/documentation/file-format
+[PDB file]:             http://www.wwpdb.org/documentation/file-format
 [Packmol package]:		http://www.ime.unicamp.br/~martinez/packmol
 [Packmol User's Guide]:		http://www.ime.unicamp.br/~martinez/packmol/quickguide
 [VMD]:				http://www.ks.uiuc.edu/Research/vmd

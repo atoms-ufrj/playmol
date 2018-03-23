@@ -17,17 +17,17 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
-  subroutine tPlaymol_write_openmm( me, unit, guess_elements )
-    class(tPlaymol),  intent(inout)        :: me
-    integer,          intent(in)           :: unit
-    logical,          intent(in), optional :: guess_elements ! default = true
+  subroutine tPlaymol_write_openmm( me, unit, keywords )
+    class(tPlaymol), intent(inout)        :: me
+    integer,         intent(in)           :: unit
+    character(*),    intent(in)           :: keywords
 
     integer :: imol, nmols(me % molecules % N), natoms(me % molecules % N)
+    real(rb) :: length, energy
     logical :: guess, water(me % molecules % N)
 
-    guess = .not.present(guess_elements)
-    if (.not.guess) guess = guess_elements
-    
+    call process( keywords )
+
     write(unit,'("<ForceField>")')
     call write_atom_types()
 
@@ -40,13 +40,38 @@
     end do
     write(unit,'("  </Residues>")')
 
+    call write_bond_types()
     write(unit,'("</ForceField>")')
 
     contains
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      subroutine write_atom_types
+      subroutine process( keywords )
+        character(*), intent(in) :: keywords
+        integer :: i, narg
+        character(sl) :: keyword, value, arg(40)
+        call split( keywords, narg, arg)
+        if (mod(narg, 2) == 1) call error( "invalid write openmm command" )
+        do i = 1, narg/2
+          keyword = arg(2*i-1)
+          value = arg(2*i)
+          select case (keyword)
+            case ("length")
+              length = str2real(value)
+            case ("energy")
+              energy = str2real(value)
+            case ("elements")
+              if (.not.any(value == ["yes", "no "])) call error( "invalid write openmm command" )
+              guess = (value == "yes")
+            case default
+              call error( "invalid write openmm command" )
+          end select
+        end do
+      end subroutine process
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      subroutine write_atom_types()
         character(sl) :: atom_type, name, class, element, mass
         type(Struc), pointer :: current
+
         write(unit,'(2X,"<AtomTypes>")')
         current => me % atom_type_list % first
         do while (associated(current))
@@ -69,6 +94,37 @@
         end do
         write(unit,'(2X,"</AtomTypes>")')
       end subroutine write_atom_types
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      subroutine write_bond_types()
+        integer :: narg
+        real(rb) :: K, r0
+        character(sl) :: arg(20)
+        type(Struc), pointer :: current
+
+        write(unit,'(2X,"<HarmonicBondForce>")')
+        current => me % bond_type_list % first
+        do while (associated(current))
+          if (current % usable) then
+            call split( current%params, narg, arg )
+            if ((narg == 2).and.all(is_real(arg(1:2)))) then
+              K = 2.0_rb*str2real(arg(1)) * energy/length**2
+              r0 = str2real(arg(2)) * length
+            else if (arg(1) == "harmonic") then
+              K = 2.0_rb*str2real(arg(2)) * energy/length**2
+              r0 = str2real(arg(3)) * length
+            else if (arg(1) == "zero") then
+              current => current % next
+              cycle
+            else
+              call error( "bond model", arg(1), "not implemented" )
+            end if
+            call write_items(4, "Bond", [character(sl) :: "type1", "type2", "length", "k"], &
+                                        [current%id, real2str([r0, K])])
+          end if
+          current => current % next
+        end do
+        write(unit,'(2X,"</HarmonicBondForce>")')
+      end subroutine write_bond_types
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       subroutine write_residue( imol, natoms )
         integer, intent(in) :: imol, natoms

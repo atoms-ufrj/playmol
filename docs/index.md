@@ -12,8 +12,8 @@ dihedrals).
 atoms.
 * Integration with [Packmol] \cite Martinez_2009 provides a way of creating complex molecular
 systems.
-* Generation of [LAMMPS] \cite Plimpton_1995 configuration files provides a way of performing
-efficient MD simulations.
+* Generation of [LAMMPS] \cite Plimpton_1995 and [OpenMM] \cite Eastman_2017 files provides a way
+of performing efficient MD simulations.
 
 The sections of this manual are:
 
@@ -38,5 +38,6 @@ Federal University of Rio de Janeiro, Brazil
 
 [Packmol]:	http://www.ime.unicamp.br/~martinez/packmol
 [LAMMPS]:	http://lammps.sandia.gov
+[OpenMM]:   http://openmm.org
 [ATOMS]:	http://atoms.peq.coppe.ufrj.br
 

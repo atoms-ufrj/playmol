@@ -547,4 +547,23 @@ contains
 
   !=================================================================================================
 
+  function zip( a, b ) result( c )
+    character(sl), intent(in) :: a, b
+    character(sl)             :: c
+    integer :: i, nu, nv
+    character(sl) :: arg(40)
+    character(sl), allocatable :: u(:), v(:)
+    call split( a, nu, arg )
+    u = arg(1:nu)
+    call split( b, nv, arg )
+    v = arg(1:nv)
+    c = ""
+    do i = 1, max(nu, nv)
+      if (i <= nu) c = trim(c)//" "//trim(u(i))
+      if (i <= nv) c = trim(c)//" "//trim(v(i))
+    end do
+  end function zip
+
+  !=================================================================================================
+
 end module mString

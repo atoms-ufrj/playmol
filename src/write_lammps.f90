@@ -17,11 +17,12 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
-  subroutine tPlaymol_write_lammps( me, unit, models )
-    class(tPlaymol),  intent(inout) :: me
-    integer,          intent(in)    :: unit
-    logical,          intent(in)    :: models
+  subroutine tPlaymol_write_lammps( me, unit, keywords )
+    class(tPlaymol), intent(inout) :: me
+    integer,         intent(in)    :: unit
+    character(*),    intent(in)    :: keywords
     integer :: i, j
+    logical :: models
     type(StrucHolder) :: atom(me % atom_list % count), bond(me % bond_list % count),    &
                          ang(me % angle_list % count), dih(me % dihedral_list % count), &
                          imp(me % improper_list % count)
@@ -34,6 +35,7 @@
     type(tCounter) :: n(me%molecules%N), total(me%molecules%N)
     type(Struc), pointer :: ptr
     integer, allocatable :: mol_index(:)
+    call process( keywords )
     ! Molecules:
     n%mols = me % molecules % count()
     ! Atoms:
@@ -90,6 +92,27 @@
     call write_structure( "Dihedrals", dih,  n%dihs,  mol_index, n%atoms )
     call write_structure( "Impropers", imp,  n%imps,  mol_index, n%atoms )
     contains
+      !---------------------------------------------------------------------------------------------
+      subroutine process( keywords )
+        character(*), intent(in) :: keywords
+        integer :: i, narg
+        character(sl) :: keyword, value, arg(40)
+        call split( keywords, narg, arg)
+        if (mod(narg, 2) == 1) call error( "invalid write lammps command" )
+        do i = 1, narg/2
+          keyword = arg(2*i-1)
+          value = arg(2*i)
+          select case (keyword)
+            case ("models")
+              print*, trim(keyword)
+              print*, trim(value)
+              if (.not.any(value == ["yes", "no "])) call error( "invalid write lammps command" )
+              models = (value == "yes")
+            case default
+              call error( "invalid write lammps command" )
+          end select
+        end do
+      end subroutine process
       !---------------------------------------------------------------------------------------------
       subroutine write_count( n, name )
         integer,      intent(in) :: n
