@@ -265,7 +265,6 @@ contains
       end subroutine diameter_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_command
-        integer :: i
         character(sl) :: raw_name, mass, element
         type(Struc), pointer :: ptr
         if ((narg < 3).or.(narg > 4)) call error( "invalid atom command" )
@@ -338,7 +337,7 @@ contains
       end subroutine bond_command
       !---------------------------------------------------------------------------------------------
       subroutine rigid_body_command
-        integer :: nbodies, i, j
+        integer :: nbodies, i
         character(sl) :: imol, jmol
         type(Struc), pointer :: ptr
         if (narg < 3) call error( "invalid rigid_body command" )

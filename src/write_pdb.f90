@@ -23,7 +23,7 @@
     integer :: iatom, i, j, imol, jmol, narg, n, indx
     integer :: natoms(me%molecules%N)
     real(rb) :: HL(3)
-    character(sl) :: atom, element, residue, xyz(3), atom_name
+    character(sl) :: element, residue, xyz(3), atom_name
     character(sl), allocatable :: atom_id(:)
     integer,       allocatable :: atom_index(:)
     logical,       allocatable :: water(:)

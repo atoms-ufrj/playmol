@@ -26,21 +26,55 @@
     integer,         intent(in)           :: unit
     character(*),    intent(in)           :: keywords
 
-    integer :: imol, nmols(me % molecules % N), natoms(me % molecules % N)
+    integer :: imol, ntotal
     real(rb) :: length, energy, angle
     logical :: guess, water(me % molecules % N)
 
+    integer, allocatable :: natoms(:)
+    character(sl), allocatable :: atom(:), atom_type(:), raw_atom(:), charge(:), element(:), mass(:)
+
     call process( keywords )
+
+    natoms = me % molecules % number_of_atoms()
+    ntotal = sum(natoms)
+    allocate( atom(ntotal), &
+              atom_type(ntotal), &
+              raw_atom(ntotal), &
+              charge(ntotal), &
+              element(ntotal), &
+              mass(ntotal) )
+
+    block
+      integer :: i, n, mol(ntotal)
+      type(Struc), pointer :: current
+      n = 0
+      current => me % molecules % list % first
+      do while (associated(current))
+        imol = str2int(current % params)
+        if (natoms(imol) > 0) then
+          n = n + 1
+          mol(n) = imol
+          atom(n) = current % id(1)
+        end if
+        current => current % next
+      end do
+      atom = atom(sorted(mol))
+      do i = 1, ntotal
+        atom_type(i) = me % atom_list % parameters( atom(i:i) )
+        raw_atom(i) = me % raw_atom_list % parameters( atom(i:i) )
+        charge(i) = me % charge_list % parameters( atom(i:i), default = "0" )
+        call me % element_and_mass( atom_type(i), element(i), mass(i) )
+        if (guess.and.(element(i) == "UA")) element(i) = element_guess( mass(i) )
+      end do
+    end block
 
     write(unit,'("<ForceField>")')
     call write_atom_types()
 
     write(unit,'("  <Residues>")')
     water = me % is_water()
-    nmols = me % molecules % count()
-    natoms = me % molecules % number_of_atoms()
     do imol = 1, me % molecules % N
-      if (nmols(imol) > 0) call write_residue( imol, natoms(imol) )
+      call write_residue( imol )
     end do
     write(unit,'("  </Residues>")')
 
@@ -59,7 +93,9 @@
     write(unit,'("</ForceField>")')
 
     contains
+
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
       subroutine process( keywords )
         character(*), intent(in) :: keywords
         integer :: i, narg
@@ -84,110 +120,93 @@
           end select
         end do
       end subroutine process
+
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
       subroutine write_atom_types()
-        character(sl) :: atom_type, name, class, element, mass
-        type(Struc), pointer :: current
+        integer :: i, n
+        character(sl) :: itype, local_list(ntotal)
+        character(sl), parameter :: p3(3) = [character(sl) :: "name", "class", "mass"], &
+                                    p4(4) = [character(sl) :: "name", "class", "element", "mass"]
 
         write(unit,'(2X,"<AtomTypes>")')
-        current => me % atom_type_list % first
-        do while (associated(current))
-          if (current % usable) then
-            atom_type = current%id(1)
-            name = item("name", atom_type)
-            class = item("class", atom_type)
-            call me % element_and_mass( atom_type, element, mass )
-            if ((element == "EP").or.((element == "UA").and.(.not.guess))) then
-              element = ""
-            else if (guess) then
-              element = item("element", element_guess( mass ))
+        n = 0
+        do i = 1, ntotal
+          itype = atom_type(i)
+          if (all(local_list(1:n) /= itype)) then
+            n = n + 1
+            local_list(n) = itype
+            if ((element(i) == "EP").or.(element(i) == "UA")) then
+              call write_items(4, "Type", p3, [itype, itype, mass(i)])
             else
-              element = item("element", element)
+              call write_items(4, "Type", p4, [itype, itype, element(i), mass(i)])
             end if
-            mass = item("mass", mass)
-            write(unit,'(4X,"<Type ",A,"/>")') trim(join([name, class, element, mass]))
           end if
-          current => current % next
         end do
         write(unit,'(2X,"</AtomTypes>")')
       end subroutine write_atom_types
+
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      subroutine write_residue( imol, natoms )
-        integer, intent(in) :: imol, natoms
 
-        integer :: i, indx
-        character(sl) :: string, imol_c
-        character(sl) :: atom_type(natoms), charge(natoms), element(natoms), xyz(3)
-        integer, allocatable :: pos(:)
-        character(sl), allocatable :: atom(:), raw_atom(:)
-        type(Struc), pointer :: current, ptr
+      subroutine write_residue( imol )
+        integer, intent(in) :: imol
 
-        imol_c = int2str(imol)
-        allocate( atom(natoms), raw_atom(natoms) )
+        integer :: i, first, last
+        character(sl) :: resname
+        integer, allocatable :: indx(:), pos(:)
+        type(Struc), pointer :: current
+
+        character(sl), parameter :: pa(3) = [character(sl) :: "name", "type", "charge"], &
+                                    pb(2) = [character(sl) :: "atomName1", "atomName2"]
+
+        last = sum(natoms(1:imol))
+        first = last - natoms(imol) + 1
 
         if (water(imol)) then
-          string = "HOH"
+          resname = "HOH"
         else
-          string = letterCode( imol - count(water(1:imol-1)) )
+          resname = letterCode( imol - count(water(1:imol-1)) )
         end if
-        write(unit,'(4X,"<Residue ",A,">")') trim(item("name", string))
+        write(unit,'(4X,"<Residue ",A,">")') trim(item("name", resname))
 
-        i = 0
-        current => me % molecules % list % first
-        do while (associated(current))
-          if (current % params == imol_c) then
-            i = i + 1
-            atom(i) = current % id(1)
-            charge(i) = me % charge_list % parameters( current%id, default = "0" )
-            call me % atom_list % search( current%id, ptr, indx )
-            atom_type(i) = ptr%params
-            call me % element_and_mass( ptr%params, element(i), string )
-            ptr => me % raw_atom_list % point_to( indx )
-            raw_atom(i) = ptr%params
-          end if
-          current => current % next
-        end do
-
-        ! Atoms:
-        do i = 1, natoms
-          call write_items(6, "Atom", [character(sl) :: "name", "type", "charge"], &
-                                      [raw_atom(i), atom_type(i), charge(i)])
+        do i = first, last
+          call write_items(6, "Atom", pa, [raw_atom(i), atom_type(i), charge(i)])
         end do
 
         ! Virtual sites:
-        do i = 1, natoms
-          if (element(i) == "EP") call virtual_site(i, atom, raw_atom)
+        do i = first, last
+          if (element(i) == "EP") call virtual_site( i )
         end do
 
         ! Bonds:
-        atom = pack(atom, element /= "EP")
-        raw_atom = pack(raw_atom, element /= "EP")
+        indx = pack([(i,i=first,last)], element(first:last) /= "EP")
         current => me % bond_list % first
         do while (associated(current))
-          pos = pack([(i,i=1,size(atom))], (atom == current%id(1)).or.(atom == current%id(2)))
+          pos = pack(indx, (atom(indx) == current%id(1)).or.(atom(indx) == current%id(2)))
           if (size(pos) == 2) then
-            call write_items(6, "Bond", ["atomName1", "atomName2"], raw_atom(pos))
+            call write_items(6, "Bond", pb, raw_atom(pos))
           end if
           current => current % next
         end do
 
         write(unit,'(4X,"</Residue>")')
       end subroutine write_residue
+
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      subroutine virtual_site( i, atom, raw_atom )
+
+      subroutine virtual_site( i )
         integer, intent(in) :: i
-        character(sl), intent(in) :: atom(:), raw_atom(:)
 
         real(rb), parameter :: tol = 1.0E-4_rb
 
-        integer :: j, k, n
+        integer :: k, n
         character(sl) :: string
         integer :: partner(3)
         real(rb) :: a(3,3), b(3), w(3), axis(3,3)
         character(sl) :: xyz(3), average(3)
         integer, allocatable :: pos(:)
         character(sl), allocatable :: properties(:), values(:)
-        type(Struc), pointer :: current, ptr
+        type(Struc), pointer :: current
 
         string = me % molecules % xyz % parameters( [atom(i)] )
         call split(string, k, xyz)
@@ -228,18 +247,20 @@
           call error( "Extra particle must be linked to 2 or 3 atoms" )
         end if
         properties = [character(sl) :: "type", "siteName", &
-                      ("atomName"//int2str(k), k=1, n), &
-                      ("weight"//average(k), k=1, n)]
+                      ("atomName"//int2str(k), k=1, n), ("weight"//average(k), k=1, n)]
         values = [character(sl) :: "average"//average(n), raw_atom(i), &
                   raw_atom(partner), (float2str(w(k)),k=1,3)]
         call write_items(6, "VirtualSite", properties, values)
       end subroutine virtual_site
+
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
       subroutine write_bond_types()
         integer :: narg
         real(rb) :: K, r0
         character(sl) :: arg(20)
         type(Struc), pointer :: current
+!        type(StrucList) :: local_list = StrucList( "bond type", 2 )
         current => me % bond_type_list % first
         do while (associated(current))
           if (current % usable) then
@@ -263,7 +284,9 @@
           current => current % next
         end do
       end subroutine write_bond_types
+
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
       subroutine write_angle_types()
         integer :: narg
         real(rb) :: K, theta0
@@ -289,7 +312,9 @@
           current => current % next
         end do
       end subroutine write_angle_types
+
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
       subroutine write_dihedral_types()
         integer :: i, narg, n
         real(rb) :: K, phase
@@ -326,7 +351,9 @@
           current => current % next
         end do
       end subroutine write_dihedral_types
+
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
       subroutine write_items( ident, title, property, value )
         integer,      intent(in) :: ident
         character(*), intent(in) :: title, property(:), value(:)
@@ -334,16 +361,22 @@
         write(unit,'("'//repeat(" ",ident)//'","<",A,X,A,"/>")') trim(title), &
           trim(join([(item(property(i), value(i)), i=1, size(property))]))
       end subroutine write_items
+
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
       elemental character(sl) function item( property, value )
         character(*), intent(in) :: property, value
         item = trim(property)//"="""//trim(value)//""""
       end function item
+
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
       function element_guess( mass ) result( element )
         character(sl), intent(in) :: mass
         character(sl)             :: element
         element = me%elements(minloc(abs(me%masses - str2real(mass)), dim = 1))
       end function element_guess
+
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
   end subroutine tPlaymol_write_openmm

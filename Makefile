@@ -8,7 +8,7 @@ PREFIX ?= /usr/local
 
 # Compilers and their basic options:
 FORT ?= gfortran
-BASIC_F_OPTS = -march=native -m64 -cpp -fmax-errors=1
+BASIC_F_OPTS = -march=native -m64 -cpp -fmax-errors=1 -Wunused
 
 # Option FAST (default):
 FAST_F_OPTS = -Ofast
