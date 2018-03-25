@@ -17,18 +17,18 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
-! TODO: Check whether it is possible to repeat proper dihedral types for the same set of atom types
 ! TODO: Implement improper dihedrals (check order conformity with LAMMPS)
-! TODO: Implement non-bonded models
+! TODO: Implement other openmm torsion models
 
   subroutine tPlaymol_write_openmm( me, unit, keywords )
     class(tPlaymol), intent(inout)        :: me
     integer,         intent(in)           :: unit
     character(*),    intent(in)           :: keywords
 
-    integer :: imol, ntotal
+    integer :: ntotal
     real(rb) :: length, energy, angle
-    logical :: guess, water(me % molecules % N)
+    logical :: guess
+    character(sl) :: lj14, coul14
 
     integer, allocatable :: natoms(:)
     character(sl), allocatable :: atom(:), atom_type(:), raw_atom(:), charge(:), element(:), mass(:)
@@ -45,7 +45,7 @@
               mass(ntotal) )
 
     block
-      integer :: i, n, mol(ntotal)
+      integer :: i, imol, n, mol(ntotal)
       type(Struc), pointer :: current
       n = 0
       current => me % molecules % list % first
@@ -69,26 +69,16 @@
     end block
 
     write(unit,'("<ForceField>")')
-    call write_atom_types()
+    call atom_types()
 
-    write(unit,'("  <Residues>")')
-    water = me % is_water()
-    do imol = 1, me % molecules % N
-      call write_residue( imol )
-    end do
-    write(unit,'("  </Residues>")')
+    call residues()
+    call bond_types()
 
-    write(unit,'(2X,"<HarmonicBondForce>")')
-    call write_bond_types()
-    write(unit,'(2X,"</HarmonicBondForce>")')
+    call angle_types()
 
-    write(unit,'(2X,"<HarmonicAngleForce>")')
-    call write_angle_types()
-    write(unit,'(2X,"</HarmonicAngleForce>")')
+    call dihedral_types()
 
-    write(unit,'(2X,"<PeriodicTorsionForce>")')
-    call write_dihedral_types()
-    write(unit,'(2X,"</PeriodicTorsionForce>")')
+    call non_bonded_model()
 
     write(unit,'("</ForceField>")')
 
@@ -99,6 +89,7 @@
       subroutine process( keywords )
         character(*), intent(in) :: keywords
         integer :: i, narg
+        real(rb) :: rval
         character(sl) :: keyword, value, arg(40)
         call split( keywords, narg, arg)
         if (mod(narg, 2) == 1) call error( "invalid write openmm command" )
@@ -106,12 +97,21 @@
           keyword = arg(2*i-1)
           value = arg(2*i)
           select case (keyword)
-            case ("length")
-              length = str2real(value)
-            case ("energy")
-              energy = str2real(value)
-            case ("angle")
-              angle = str2real(value)
+            case ("length", "energy", "angle", "lj14", "coul14")
+              rval = str2real(value)
+              if (rval < 0.0_rb) call error( "invalid", keyword, "parameter value" )
+              select case (keyword)
+                case ("length")
+                  length = rval
+                case ("energy")
+                  energy = rval
+                case ("angle")
+                  angle = rval
+                case ("lj14")
+                  lj14 = value
+                case ("coul14")
+                  coul14 = value
+              end select
             case ("elements")
               if (.not.any(value == ["yes", "no "])) call error( "invalid write openmm command" )
               guess = (value == "yes")
@@ -123,36 +123,50 @@
 
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-      subroutine write_atom_types()
+      subroutine atom_types()
         integer :: i, n
-        character(sl) :: itype, local_list(ntotal)
+        type(StrucList) :: local_list = StrucList( "atom type", 1 )
         character(sl), parameter :: p3(3) = [character(sl) :: "name", "class", "mass"], &
                                     p4(4) = [character(sl) :: "name", "class", "element", "mass"]
 
         write(unit,'(2X,"<AtomTypes>")')
         n = 0
-        do i = 1, ntotal
-          itype = atom_type(i)
-          if (all(local_list(1:n) /= itype)) then
-            n = n + 1
-            local_list(n) = itype
+        do i = 1, ntotal 
+          if (.not. local_list % find(atom_type(i:i))) then
+            call local_list % add(1, atom_type(i:i), silent = .true.)
             if ((element(i) == "EP").or.(element(i) == "UA")) then
-              call write_items(4, "Type", p3, [itype, itype, mass(i)])
+              call items(4, "Type", p3, [atom_type(i), atom_type(i), mass(i)])
             else
-              call write_items(4, "Type", p4, [itype, itype, element(i), mass(i)])
+              call items(4, "Type", p4, [atom_type(i), atom_type(i), element(i), mass(i)])
             end if
           end if
         end do
+        call local_list % destroy(silent = .true.)
         write(unit,'(2X,"</AtomTypes>")')
-      end subroutine write_atom_types
+      end subroutine atom_types
 
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-      subroutine write_residue( imol )
-        integer, intent(in) :: imol
+      subroutine residues()
+        integer :: imol
+        character(sl) :: name(me%molecules%N)
 
-        integer :: i, first, last
-        character(sl) :: resname
+        write(unit,'(2X,"<Residues>")')
+        call me % get_molecule_names( name )
+        do imol = 1, me%molecules%N
+          call residue( imol, name(imol) )
+        end do
+        write(unit,'(2X,"</Residues>")')
+
+      end subroutine residues
+
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+      subroutine residue( imol, resname )
+        integer,       intent(in) :: imol
+        character(sl), intent(in) :: resname
+
+        integer :: i, j, first, last
         integer, allocatable :: indx(:), pos(:)
         type(Struc), pointer :: current
 
@@ -162,15 +176,10 @@
         last = sum(natoms(1:imol))
         first = last - natoms(imol) + 1
 
-        if (water(imol)) then
-          resname = "HOH"
-        else
-          resname = letterCode( imol - count(water(1:imol-1)) )
-        end if
         write(unit,'(4X,"<Residue ",A,">")') trim(item("name", resname))
 
         do i = first, last
-          call write_items(6, "Atom", pa, [raw_atom(i), atom_type(i), charge(i)])
+          call items(6, "Atom", pa, [raw_atom(i), atom_type(i), charge(i)])
         end do
 
         ! Virtual sites:
@@ -179,18 +188,16 @@
         end do
 
         ! Bonds:
-        indx = pack([(i,i=first,last)], element(first:last) /= "EP")
+        indx = [(i,i=first,last)]
         current => me % bond_list % first
         do while (associated(current))
-          pos = pack(indx, (atom(indx) == current%id(1)).or.(atom(indx) == current%id(2)))
-          if (size(pos) == 2) then
-            call write_items(6, "Bond", pb, raw_atom(pos))
-          end if
+          pos = [(pack(indx, atom(indx) == current%id(j)), j=1, 2)]
+          if (size(pos) == 2) call items(6, "Bond", pb, raw_atom(pos))
           current => current % next
         end do
 
         write(unit,'(4X,"</Residue>")')
-      end subroutine write_residue
+      end subroutine residue
 
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -250,88 +257,99 @@
                       ("atomName"//int2str(k), k=1, n), ("weight"//average(k), k=1, n)]
         values = [character(sl) :: "average"//average(n), raw_atom(i), &
                   raw_atom(partner), (float2str(w(k)),k=1,3)]
-        call write_items(6, "VirtualSite", properties, values)
+        call items(6, "VirtualSite", properties, values)
       end subroutine virtual_site
 
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-      subroutine write_bond_types()
+      subroutine bond_types()
+
         integer :: narg
         real(rb) :: K, r0
         character(sl) :: arg(20)
+        type(StrucList) :: list
         type(Struc), pointer :: current
-!        type(StrucList) :: local_list = StrucList( "bond type", 2 )
-        current => me % bond_type_list % first
+        character(sl), parameter :: p(4) = [character(sl) :: "type1", "type2", "length", "k"]
+
+        write(unit,'(2X,"<HarmonicBondForce>")')
+        list = local_list( me % bond_list, me % bond_type_list, .false. )
+        current => list % first
         do while (associated(current))
-          if (current % usable) then
-            if (any(has_macros(current%id))) call error( "wildcards not permitted in bond types" )
-            call split( current%params, narg, arg )
-            if ((narg == 2).and.all(is_real(arg(1:2)))) then
-              K = 2.0_rb*str2real(arg(1)) * energy/length**2
-              r0 = str2real(arg(2)) * length
-            else if (arg(1) == "harmonic") then
-              K = 2.0_rb*str2real(arg(2)) * energy/length**2
-              r0 = str2real(arg(3)) * length
-            else if (arg(1) == "zero") then
-              current => current % next
-              cycle
-            else
-              call error( "harmonic bond model required" )
-            end if
-            call write_items(4, "Bond", ["type1 ", "type2 ", "length", "k     "], &
-                                        [current%id, real2str([r0, K])])
+          call split( current%params, narg, arg )
+          if ((narg == 2).and.all(is_real(arg(1:2)))) then
+            K = 2.0_rb*str2real(arg(1)) * energy/length**2
+            r0 = str2real(arg(2)) * length
+          else if (arg(1) == "harmonic") then
+            K = 2.0_rb*str2real(arg(2)) * energy/length**2
+            r0 = str2real(arg(3)) * length
+          else if (arg(1) == "zero") then
+            current => current % next
+            cycle
+          else
+            call error( "harmonic bond model required" )
           end if
-          current => current % next
+          call items(4, "Bond", p, [current%id, real2str([r0, K])])
+        current => current % next
         end do
-      end subroutine write_bond_types
+        call list % destroy(silent = .true.)
+        write(unit,'(2X,"</HarmonicBondForce>")')
+      end subroutine bond_types
 
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-      subroutine write_angle_types()
+      subroutine angle_types()
+
         integer :: narg
         real(rb) :: K, theta0
         character(sl) :: arg(20)
+        type(StrucList) :: list
         type(Struc), pointer :: current
-        current => me % angle_type_list % first
+        character(sl), parameter :: p(5) = ["type1", "type2", "type3", "angle", "k    "]
+
+        write(unit,'(2X,"<HarmonicAngleForce>")')
+        list = local_list( me % angle_list, me % angle_type_list, .false. )
+        current => list % first
         do while (associated(current))
-          if (current % usable) then
-            if (any(has_macros(current%id))) call error( "wildcards not permitted in angle types" )
-            call split( current%params, narg, arg )
-            if ((narg == 2).and.all(is_real(arg(1:2)))) then
-              K = 2.0_rb*str2real(arg(1)) * energy
-              theta0 = str2real(arg(2)) * angle
-            else if (arg(1) == "harmonic") then
-              K = 2.0_rb*str2real(arg(2)) * energy
-              theta0 = str2real(arg(3)) * angle
-            else
-              call error( "harmonic angle model required" )
-            end if
-            call write_items(4, "Angle", ["type1", "type2", "type3", "angle", "k    "], &
-                                        [current%id, real2str([theta0, K])])
+          call split( current%params, narg, arg )
+          if ((narg == 2).and.all(is_real(arg(1:2)))) then
+            K = 2.0_rb*str2real(arg(1)) * energy
+            theta0 = str2real(arg(2)) * angle
+          else if (arg(1) == "harmonic") then
+            K = 2.0_rb*str2real(arg(2)) * energy
+            theta0 = str2real(arg(3)) * angle
+          else
+            call error( "harmonic angle model required" )
           end if
+          call items(4, "Angle", p, [current%id, real2str([theta0, K])])
           current => current % next
         end do
-      end subroutine write_angle_types
+        call list % destroy(silent = .true.)
+        write(unit,'(2X,"</HarmonicAngleForce>")')
+      end subroutine angle_types
 
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-      subroutine write_dihedral_types()
-        integer :: i, narg, n
+      subroutine dihedral_types()
+
+        integer :: narg, n, i, j
         real(rb) :: K, phase
-        character(sl) :: arg(20), atom_type(4), S
+        logical :: same
+        character(sl) :: arg(20), type_id(4), props(9), values(9)
+        type(StrucList) :: list
         type(Struc), pointer :: current
-        current => me % dihedral_type_list % first
+        character(sl), parameter :: empty(4) = "", &
+                                    pt(4) = ["type1", "type2", "type3", "type4"], &
+                                    pp(3) = [character(sl) :: "periodicity", "phase", "k"]
+        
+        write(unit,'(2X,"<PeriodicTorsionForce>")')
+        list = local_list( me % dihedral_list, me % dihedral_type_list, .true. )
+        current => list % first
         do while (associated(current))
-          if (current % usable) then
-            do i = 1, 4
-              S = current%id(i)
-              if (has_macros(S)) then
-                if (S /= "*") call error( "partial wildcard not permitted in dihedral types" )
-                atom_type(i) = ""
-              else
-                atom_type(i) = S
-              end if
-            end do
+          type_id = current%id
+          i = 0
+          same = .true.
+          do while (associated(current) .and. same)
+            i = i + 1
             call split( current%params, narg, arg )
             if ((arg(1) == "harmonic").or.((narg == 3).and.all(is_real(arg(1:narg))))) then
               K = str2real(arg(2)) * energy
@@ -342,25 +360,66 @@
               n = str2int(arg(3))
               phase = str2int(arg(4)) * angle
             else
-              call error( "harmonic or charmm angle model required" )
+              call error( "harmonic or charmm dihedral model required" )
             end if
-            call write_items(4, "Proper", [character(sl) :: "type1", "type2", "type3", "type4", &
-                                                            "periodicity1", "phase1", "k1"],    &
-                                        [atom_type, [int2str(n), real2str(phase), real2str(K)]] )
-          end if
-          current => current % next
+            forall (j=1:3) props(3*(i-1)+j) = trim(pp(j))//int2str(i)
+            values(3*i-2:3*i) = [int2str(n), real2str(phase), real2str(K)]
+            current => current % next
+            if (associated(current)) same = all(current%id == type_id)
+          end do
+          call items(4, "Proper", [pt, props(1:3*i)], &
+                                  [merge(empty, type_id, type_id == "*"), values(1:3*i)])
         end do
-      end subroutine write_dihedral_types
+        call list % destroy(silent = .true.)
+        write(unit,'(2X,"</PeriodicTorsionForce>")')
+      end subroutine dihedral_types
 
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-      subroutine write_items( ident, title, property, value )
+      subroutine non_bonded_model()
+
+        integer :: narg
+        character(sl) :: arg(20), eps, sig
+        type(StrucList) :: list
+        type(Struc), pointer :: current
+        real(rb), parameter :: tol = 1.0E-8_rb
+        character(sl), parameter :: zero = "0", &
+                                    p(4) = [character(sl) :: "type", "charge", "sigma", "epsilon"]
+
+        write(unit,'(2X,"<NonbondedForce ",A,X,A,">")') trim(item("coulomb14scale", coul14)), &
+                                                        trim(item("lj14scale", lj14))
+        list = local_list( me % atom_list, me % atom_type_list, .false. )
+        current => list % first
+        do while (associated(current))
+          call split( current%params, narg, arg )
+          if ((narg == 2).and.all(is_real(arg(1:2)))) then
+            eps = real2str(str2real(arg(1)) * energy)
+            sig = real2str(str2real(arg(2)) * length)
+          else if (arg(1)(1:2) == "lj") then
+            eps = real2str(str2real(arg(2)) * energy)
+            sig = real2str(str2real(arg(3)) * length)
+          else if ((arg(1) == "zero").or.(arg(1)(1:4) == "coul")) then
+            eps = zero
+            sig = zero
+          else
+            call error( "Lennard-Jones potential model required" )
+          end if
+          call items(4, "Atom", p, [current%id(1), zero, sig, eps])
+          current => current % next
+        end do
+        call list % destroy(silent = .true.)
+        write(unit,'(2X,"</NonbondedForce>")')
+      end subroutine non_bonded_model
+
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+      subroutine items( ident, title, property, value )
         integer,      intent(in) :: ident
         character(*), intent(in) :: title, property(:), value(:)
         integer :: i
         write(unit,'("'//repeat(" ",ident)//'","<",A,X,A,"/>")') trim(title), &
           trim(join([(item(property(i), value(i)), i=1, size(property))]))
-      end subroutine write_items
+      end subroutine items
 
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -376,6 +435,57 @@
         character(sl)             :: element
         element = me%elements(minloc(abs(me%masses - str2real(mass)), dim = 1))
       end function element_guess
+
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+      function find( a, b )
+        character(sl), intent(in) :: a(:), b(:)
+        logical                   :: find(size(b))
+        integer :: i
+        find = .false.
+        do i = 1, size(a)
+          find = find .or. (b == a(i))
+        end do
+      end function find
+
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+      function local_list( struc_list, type_list, macros ) result( list )
+        type(StrucList), intent(in) :: struc_list, type_list
+        logical,         intent(in) :: macros
+        type(StrucList)             :: list
+
+        integer :: i, indx(ntotal)
+        integer, allocatable :: pos(:)
+        character(sl) :: type_id(struc_list%number), arg(struc_list%number+1)
+        type(Struc), pointer :: current, ptr
+
+        list%number = struc_list%number
+
+        indx = [(i,i=1,ntotal)]
+        current => struc_list % first
+        do while (associated(current))
+          pos = pack(indx, find(current%id, atom))
+          if (size(pos) == list%number) then
+            call me % get_types( current%id, type_id )
+            if (.not. list % find( type_id )) then
+              ptr => type_list % first
+              do while (associated(ptr))
+                if (ptr % match_id( type_id )) then
+                  if (macros) then
+                    arg = [merge(ptr%id, type_id, ptr%id == "*"), ptr%params]
+                  else
+                    arg = [type_id, ptr%params]
+                  end if
+                  call list % add(list%number+1, arg, repeatable = .true., silent = .true.)
+                end if
+                ptr => ptr % next
+              end do
+            end if
+          end if
+          current => current % next
+        end do
+      end function local_list
 
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -92,7 +92,7 @@ type tPlaymol
     procedure :: get_types => tPlaymol_get_types
     procedure :: check_coordinates => tPlaymol_check_coordinates
     procedure :: element_and_mass => tPlaymol_element_and_mass
-    procedure :: is_water => tPlaymol_is_water
+    procedure :: get_molecule_names => tPlaymol_get_molecule_names
 end type tPlaymol
 
 type StrucHolder
@@ -519,7 +519,8 @@ contains
           ! FORMAT KEYWORDS DEFAULTS
           "playmol", "", "", &
           "lammps", "models", "no", &
-          "openmm", "length energy angle elements", "0.1 4.184 0.01745329252 yes", &
+          "openmm", "length energy angle lj14 coul14 elements", &
+                    "0.1 4.184 0.01745329252 0.5 0.833333 yes", &
           "lmp/models", "", "", &
           "summary", "", "", &
           "xyz", "elements", "no", &
@@ -1329,15 +1330,20 @@ contains
 
   !=================================================================================================
 
-  function tPlaymol_is_water( me ) result( water )
-    class(tPlaymol), intent(inout) :: me
-    logical                        :: water(me % Molecules % N)
+  subroutine tPlaymol_get_molecule_names( me, names )
+    class(tPlaymol), intent(in)  :: me
+    character(sl),   intent(out) :: names(me % Molecules % N)
 
-    integer :: imol, j, indx, narg
+    integer :: imol, i, indx, narg
     character(sl) :: atom_type(1)
+    logical :: water(me % Molecules % N), monoatomic(me % Molecules % N)
     integer, allocatable :: ecount(:,:)
     type(Struc), pointer :: current, ptr
 
+    ! Search for monoatomic molecules:
+    monoatomic = me % molecules % number_of_atoms() == 1
+
+    ! Search for water molecules:
     allocate( ecount(me % molecules % N, 4), source = 0 )
     current => me % molecules % list % first
     do while (associated(current))
@@ -1346,18 +1352,35 @@ contains
       call split( ptr%params, narg, atom_type )
       ptr => me % atom_elements % point_to( indx )
       select case (ptr%params)
-        case ("H"); j = 1 ! Hydrogen
-        case ("O"); j = 2 ! Oxygen
-        case ("EP"); j = 3 ! Extra particle
-        case default; j = 4 ! Others
+        case ("H"); i = 1 ! Hydrogen
+        case ("O"); i = 2 ! Oxygen
+        case ("EP"); i = 3 ! Extra particle
+        case default; i = 4 ! Others
       end select
-      ecount(imol, j) = ecount(imol, j) + 1
+      ecount(imol, i) = ecount(imol, i) + 1
       current => current % next
     end do
-    do imol = 1, me % molecules % N
+    forall (imol=1:me%molecules%N)
       water(imol) = (ecount(imol, 1) == 2).and.(ecount(imol, 2) == 1).and.(ecount(imol, 4) == 0)
+    end forall
+
+    i = 0
+    do imol = 1, me%molecules%N
+      if (water(imol)) then
+        names(imol) = "HOH"
+      else if (monoatomic(imol)) then
+        current => me % molecules % list % first
+        do while (current % params /= int2str(imol))
+          current => current%next
+        end do
+        names(imol) = me % raw_atom_list % parameters( current%id )
+      else
+        i = i + 1
+        names(imol) = letterCode(i)
+      end if
     end do
-  end function tPlaymol_is_water
+
+  end subroutine tPlaymol_get_molecule_names
 
   !=================================================================================================
   include "write_lammps.f90"

@@ -536,12 +536,16 @@ contains
     do while (26**n < value)
       n = n + 1
     end do
-    S = ""
+    select case (n)
+      case (1); S = "aa"
+      case (2); S = "a"
+      case default; S = ""
+    end select
     k = value - 1
     do i = n, 1, -1
       code = k/26**(i - 1)
       k = k - code*26**(i - 1)
-      S = trim(S) // achar(65 + code)
+      S = trim(S) // achar(97 + code)
     end do
   end function letterCode
 

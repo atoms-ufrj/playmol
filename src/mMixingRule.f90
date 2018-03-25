@@ -30,7 +30,6 @@ contains
 
   character(sl) function apply_rule( a, b, rule ) result( mix )
     character(sl), intent(in) :: a, b, rule
-    real(rb) :: aa, bb
     select case (rule)
       case ("arithmetic")
         

@@ -1663,6 +1663,10 @@ expressed in kJ/mol.
 expressed in radians. __IMPORTANT__: Playmol considers that spring constants for angle bending
 models are expressed in energy/radians^2, regardless of the unit in which the angles themselves are
 expressed.
+    * lj14 <value> (default = 0.5): the scale factor for the Lennard-Jones potential between pairs
+of atoms separated by three bonds.
+    * coul14 <value> (default = 0.833333): the scale factor for the Coulomb potential between pairs
+of atoms separated by three bonds.
     * elements <yes/no> (default = yes): if set to yes, missing chemical elements will be guessed
 from the masses of the defined atom types.
 
