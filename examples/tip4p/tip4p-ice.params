@@ -1,0 +1,8 @@
+# TIP4P/Ice model (J Chem Phys 122, 234511 (2005); https://doi.org/10.1063/1.1931662)
+define      density as {0.9979*$g_cm3}
+define      EpsOO   as {106.1*$kB}
+define      SigOO   as 3.1668
+define      rOH     as 0.9572
+define      rOM     as 0.1577
+define      theta0  as 104.52
+define      qH      as 0.5897

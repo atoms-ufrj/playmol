@@ -1647,7 +1647,7 @@ visualization purposes.
 4. __lammps__: the command will write out information in the [LAMMPS] configuration file format,
 which can be used as an initial configuration for a Molecular Dynamics simulation using [LAMMPS]
 through its command [read_data].
-    * models <yes/no> (default = no): If set to yes, Playmol will consider the first attribute of
+    * models _yes/no_ (default = no): If set to yes, Playmol will consider the first attribute of
 every defined [atom_type] as the specification of a [LAMMPS pair style] for such atom type, as
 well as the first attribute of every [bond_type], [angle_type], [dihedral_type], or [improper_type]
 as the specification of a corresponding style in LAMMPS.
@@ -1655,19 +1655,19 @@ as the specification of a corresponding style in LAMMPS.
 5. __openmm__: the command will generate an [OpenMM XML file] with force field parameters. Together
 with a [PDB File] (see above), this file can be used for running an efficient Molecular Dynamics
 simulation using [OpenMM]. Accepted keywords are:
-    * length <value> (default = 0.1): the length unit employed throughout the current script,
+    * length _value_ (default = 0.1): the length unit employed throughout the current script,
 expressed in nanometers.
-    * energy <value> (default = 4.184): the energy unit employed throughout the current script,
+    * energy _value_ (default = 4.184): the energy unit employed throughout the current script,
 expressed in kJ/mol.
-    * angle <value> (default = 0.0174533): the angle unit employed throughout the current script,
+    * angle _value_ (default = 0.0174533): the angle unit employed throughout the current script,
 expressed in radians. __IMPORTANT__: Playmol considers that spring constants for angle bending
 models are expressed in energy/radians^2, regardless of the unit in which the angles themselves are
 expressed.
-    * lj14 <value> (default = 0.5): the scale factor for the Lennard-Jones potential between pairs
+    * lj14 _value_ (default = 0.5): the scale factor for the Lennard-Jones potential between pairs
 of atoms separated by three bonds.
-    * coul14 <value> (default = 0.833333): the scale factor for the Coulomb potential between pairs
+    * coul14 _value_ (default = 0.833333): the scale factor for the Coulomb potential between pairs
 of atoms separated by three bonds.
-    * elements <yes/no> (default = yes): if set to yes, missing chemical elements will be guessed
+    * elements _yes/no_ (default = yes): if set to yes, missing chemical elements will be guessed
 from the masses of the defined atom types.
 
 6. __emdee__: the command will produce code in the [Julia] programming language, which can be used to
@@ -1679,12 +1679,8 @@ as a model specification (in this case, slashes will be replaced by underscores 
 build the same system. For illustration, detected angles and dihedrals appear as commented lines.
 Type and atom prefixes are explicitly added to the corresponding identifiers.
 
-
 The optional parameter _file_ is the name of the file which will contain the system info. If it is
 omitted, the info will be written in the standard output unit (the computer screen, in most cases).
-
-
-
 
 **Examples**:
 
