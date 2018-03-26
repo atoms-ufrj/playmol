@@ -2,7 +2,7 @@ variable      temp equal 298 # K
 variable      press equal 1 # atm
 variable      dt equal 1 # fs
 variable      rc equal 9.0 # A
-variable      nsteps equal 2000
+variable      nsteps equal 10000
 
 units         real
 atom_style    full
