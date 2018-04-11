@@ -21,8 +21,10 @@ diameter     OW 3.1
 diameter     HW 2.0
 diameter     MW 0.1
 
-bond_type    OW HW zero $rOH
+bond_type    OW HW harmonic 553 $rOH
 bond_type    OW MW zero $rOM
+
+angle_type   HW OW HW harmonic 100 $theta0
 
 atom         OW  OW  0.0000
 atom         HW1 HW  $qH

@@ -254,13 +254,17 @@
       !---------------------------------------------------------------------------------------------
       subroutine write_masses
         integer :: i
-        character(sl) :: mass, element
+        character(sl) :: mass, E(size(atom_types))
         write(unit,'(/,"Masses",/)')
         do i = 1, size(atom_types)
-          call me % element_and_mass( atom_types(i)%types, element, mass )
+          call me % element_and_mass( atom_types(i)%types, E(i), mass )
           if (mass == real2str(0.0_rb)) mass = "1.0E-20"
           write(unit,'(A)') trim(join([int2str(i), mass, "#", atom_types(i)%types]))
+          if (E(i) == "UA") then
+            E(i) = trim(me%elements(minloc(abs(me%masses - str2real(mass)), dim = 1)))//"?"
+          end if
         end do
+        write(unit,'(/,"# Elements: ",A)') trim(join(E))
       end subroutine write_masses
       !---------------------------------------------------------------------------------------------
       subroutine write_atoms( natoms )

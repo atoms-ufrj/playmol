@@ -6,7 +6,7 @@ from sys import stdout
 
 model = 'tip4p-2005'
 resorces = {1:'CPU', 2:'CUDA', 3:'OpenCL'}
-choice = 1
+choice = 2
 temp = 298*unit.kelvin
 press = 1.0*unit.atmosphere
 dt = 1.0*unit.femtosecond
@@ -42,4 +42,5 @@ simulation.reporters.append(app.StateDataReporter(stdout, 100, step=True,
 simulation.context.setVelocitiesToTemperature(temp)
 
 print('Running Production...')
-simulation.step(nsteps)
+for i in range(nsteps):
+    simulation.step(1)

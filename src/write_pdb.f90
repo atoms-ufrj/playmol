@@ -50,7 +50,6 @@
     do while (associated(current))
       jmol = jmol + 1
       imol = str2int(me % molecules % list % parameters( current % id ) )
-!      residue = me % molecule_names( imol )merge(HOH, letterCode(imol - count(water(1:imol-1))), water(imol))
       do i = 1, natoms(imol)
         iatom = iatom + 1
         call me % atom_list % search( current%id, ptr, indx )
@@ -69,7 +68,7 @@
           element ! Element symbol
         current => current % next
       end do
-!      if (.not.water(imol)) write(unit,'("TER")')
+      write(unit,'("TER")')
     end do
 
     ! Write out connectivity info:

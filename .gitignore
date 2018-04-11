@@ -1,8 +1,3 @@
-examples/*/*.xyz
-examples/*/*.lmp
-examples/*/*.lammpstrj
-examples/*/*.log
-examples/*/*.pdb
 bin/
 docs/html/
 lib/libpackmol.a
