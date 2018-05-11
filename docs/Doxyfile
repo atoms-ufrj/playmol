@@ -1,6 +1,6 @@
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = "Playmol"
-PROJECT_BRIEF = "(Version: 11 Apr 2018)"
+PROJECT_BRIEF = "(Version: 11 May 2018)"
 PROJECT_LOGO           = playmol_logo.gif
 OUTPUT_DIRECTORY       = .
 OUTPUT_DIRECTORY       = 

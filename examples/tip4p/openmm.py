@@ -20,6 +20,7 @@ system = forcefield.createSystem(
     pdb.topology,
     nonbondedMethod=app.PME,
     nonbondedCutoff=rc,
+    switchDistance=0.9*rc,
     constraints=app.HBonds,
     rigidWater=True,
     ewaldErrorTolerance=0.0005)
@@ -36,11 +37,10 @@ simulation.context.setPositions(pdb.positions)
 
 # simulation.reporters.append(app.DCDReporter('trajectory.dcd', 1000))
 simulation.reporters.append(app.StateDataReporter(stdout, 100, step=True, 
-    potentialEnergy=True, temperature=True, progress=True, remainingTime=True, 
-    speed=True, totalSteps=nsteps, separator='\t'))
+    potentialEnergy=True, totalEnergy=True, temperature=True, progress=True,
+    remainingTime=True, speed=True, totalSteps=nsteps, separator='\t'))
 
 simulation.context.setVelocitiesToTemperature(temp)
 
 print('Running Production...')
-for i in range(nsteps):
-    simulation.step(1)
+simulation.step(nsteps)
