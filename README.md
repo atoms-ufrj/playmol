@@ -1,6 +1,8 @@
 Playmol
 =======
 
+[![DOI](https://zenodo.org/badge/20236771.svg)](https://zenodo.org/badge/latestdoi/20236771)
+
 Playmol is a(nother) software for building molecular models.
 
 Its main distinguishing features are:
