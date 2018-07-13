@@ -10,13 +10,11 @@ atom_type   OW       $LJ_O
 mass        HW       1.008
 mass        OW       15.9994
 
-#This command defines the electric charge (total or partial) of an atom.
-#The presence of wildcards makes a charge value applicable to atoms defined either beforehand or afterwards.
-charge      HW*      0.415
-charge      OW*      -0.830
+define qH               as  0.42
+define qO               as -0.84
 
 define bond_OH_l0       as  0.9572
-define bond_OH_k       as  450.00
+define bond_OH_k        as  450.00
 define bond_OH          as  harmonic $bond_OH_k $bond_OH_l0
 
 define angle_HOH_theta0 as  104.52

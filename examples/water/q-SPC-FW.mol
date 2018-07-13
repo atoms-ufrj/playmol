@@ -1,0 +1,36 @@
+#@article{Paesani_2006,
+#	doi = {10.1063/1.2386157},
+#	year = 2006,
+#	month = {nov},
+#	publisher = {{AIP} Publishing},
+#	volume = {125},
+#	number = {18},
+#	pages = {184507},
+#	author = {Francesco Paesani and Wei Zhang and David A. Case and Thomas E. Cheatham and Gregory A. Voth},
+#	title = {An accurate and simple quantum model for liquid water},
+#	journal = {The Journal of Chemical Physics}
+#}
+
+define LJ_H             as  lj/cut/coul/long 0.0000 0.0000
+define LJ_O             as  lj/cut/coul/long 0.1554252 3.165492
+
+atom_type   HW       $LJ_H
+atom_type   OW       $LJ_O
+
+mass        HW       1.008
+mass        OW       15.9994
+
+define qH               as  0.42
+define qO               as -0.84
+
+define bond_OH_l0       as  1.000
+define bond_OH_k        as  1059.162
+define bond_OH          as  harmonic $bond_OH_k $bond_OH_l0
+
+define angle_HOH_theta0 as  112.0
+define angle_HOH_k      as  75.90
+define angle_HOH        as  harmonic $angle_HOH_k $angle_HOH_theta0
+
+bond_type   HW OW    $bond_OH
+angle_type  HW OW HW $angle_HOH
+
