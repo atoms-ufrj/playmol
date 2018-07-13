@@ -381,11 +381,11 @@
 
         integer :: narg
         character(sl) :: arg(20), eps, sig
+        real(rb) :: LJeps, LJsig
         type(StrucList) :: list
         type(Struc), pointer :: current
         real(rb), parameter :: tol = 1.0E-8_rb
-        character(sl), parameter :: zero = "0", one = "1", &
-                                    p(3) = [character(sl) :: "type", "sigma", "epsilon"]
+        character(sl), parameter :: p(3) = [character(sl) :: "type", "sigma", "epsilon"]
 
         write(unit,'(2X,"<NonbondedForce ",A,X,A,">")') trim(item("coulomb14scale", coul14)), &
                                                         trim(item("lj14scale", lj14))
@@ -395,16 +395,22 @@
         do while (associated(current))
           call split( current%params, narg, arg )
           if ((narg == 2).and.all(is_real(arg(1:2)))) then
-            eps = real2str(str2real(arg(1)) * energy)
-            sig = real2str(str2real(arg(2)) * length)
+            LJeps = str2real(arg(1)) * energy
+            LJsig = str2real(arg(2)) * length
           else if (arg(1)(1:2) == "lj") then
-            eps = real2str(str2real(arg(2)) * energy)
-            sig = real2str(str2real(arg(3)) * length)
+            LJeps = str2real(arg(2)) * energy
+            LJsig = str2real(arg(3)) * length
           else if ((arg(1) == "zero").or.(arg(1)(1:4) == "coul")) then
-            eps = zero
-            sig = one
+            LJeps = 0.0_rb
           else
             call error( "Lennard-Jones potential model required" )
+          end if
+          if (LJeps == 0.0_rb) then
+            eps = "0"
+            sig = "1"
+          else
+            eps = real2str(LJeps)
+            sig = real2str(LJsig)
           end if
           call items(4, "Atom", p, [current%id(1), sig, eps])
           current => current % next
