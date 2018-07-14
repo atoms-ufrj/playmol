@@ -1,14 +1,23 @@
 # Typification
-define      model as q-SPC-FW
+define      model as TIP3P
 include     $model.mol
+
+atom_type   HW       $LJ_H
+atom_type   OW       $LJ_O
+
+mass        HW       H
+mass        OW       O
+
+bond_type   HW OW    $bond_OH
+angle_type  HW OW HW $angle_HOH
 
 diameter    HW 2.0
 diameter    OW 3.0
 
 # Chemical topology definition
-atom        H1 HW    
-atom        O  OW    
-atom        H2 HW    
+atom        H1 HW
+atom        O  OW
+atom        H2 HW
 
 bond        O  H1 H2
 
