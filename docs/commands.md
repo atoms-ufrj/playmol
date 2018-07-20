@@ -1638,7 +1638,9 @@ of coordinates. This is useful for debugging purposes.
 
 2. __pdb__: writes down the list of atom types and coordinates, as well as the atomic connectivity
 using the [PDB file] format. This is useful for visualization with [VMD] and for executing Molecular
-Dynamics simulations with [OpenMM].
+Dynamics simulations with [OpenMM]. Accepted keyword is:
+    * elements _yes/no_ (default = yes): if set to yes, missing chemical elements will be guessed
+from the masses of the defined atom types.
 
 3. __xyz__: writes down the list of atomic coordinates using the [xyz file format], but with element
 symbols replaced by atom identifiers. This is useful for using with another Playmol script or for

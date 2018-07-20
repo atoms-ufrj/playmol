@@ -524,7 +524,7 @@ contains
           "lmp/models", "", "", &
           "summary", "", "", &
           "xyz", "elements", "no", &
-          "pdb", "", "", &
+          "pdb", "elements", "yes", &
           "lammpstrj", "", "", &
           "emdee", "", "" ], [3, size(formats,2)])
         integer, parameter :: nfmt = size(formats,2)
@@ -556,7 +556,7 @@ contains
           case ("lmp/models"); call me % write_lammps( unit, "models yes" )
           case ("summary"); call me % summarize( unit )
           case ("xyz"); call me % write_xyz( unit )
-          case ("pdb"); call me % write_pdb( unit )
+          case ("pdb"); call me % write_pdb( unit, keywords )
           case ("lammpstrj"); call me % write_lammpstrj( unit )
           case ("emdee"); call me % write_emdee( unit )
           case ("openmm"); call me % write_openmm( unit, keywords )

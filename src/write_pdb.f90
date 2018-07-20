@@ -17,17 +17,21 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
-  subroutine tPlaymol_write_pdb( me, unit )
+  subroutine tPlaymol_write_pdb( me, unit, keywords )
     class(tPlaymol), intent(in) :: me
     integer,         intent(in) :: unit
+    character(*),    intent(in) :: keywords
     integer :: iatom, i, j, imol, jmol, narg, n, indx
     integer :: natoms(me%molecules%N)
     real(rb) :: HL(3)
-    character(sl) :: element, residue(me%molecules%N), xyz(3), atom_name
+    logical  :: guess
+    character(sl) :: element, mass, residue(me%molecules%N), xyz(3), atom_name
     character(sl), allocatable :: atom_id(:)
     integer,       allocatable :: atom_index(:)
     type(Struc), pointer :: current, bond, ptr
     character(sl), parameter :: HOH = "HOH"
+
+    call process( keywords )
 
     ! Identify water molecules:
     call me % get_molecule_names( residue )
@@ -57,7 +61,14 @@
         atom_name = ptr%params
         ptr => me % atom_elements % point_to( indx )
         element = ptr%params
-        if (element == "UA") element = ""
+        if (element == "UA") then
+          if (guess) then
+            mass = me % atom_masses % parameters( [atom_name] )
+            element = element_guess( mass )
+          else
+            element = ""
+          end if
+        end if
         call split( current%params, narg, xyz )
         write(unit,'("HETATM",I5,X,A4,X,A3,2X,I4,4X,3F8.3,"  1.0   0.0 ",A2)') &
           iatom, & !Atom serial number
@@ -100,4 +111,38 @@
     end do
 
     write(unit,'("END")')
+    
+    contains
+    
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+      subroutine process( keywords )
+        character(*), intent(in) :: keywords
+        integer :: i, narg
+        character(sl) :: keyword, value, arg(40)
+        call split( keywords, narg, arg )
+        if (mod(narg, 2) == 1) call error( "invalid write openmm command" )
+        do i = 1, narg/2
+          keyword = arg(2*i-1)
+          value = arg(2*i)
+          select case (keyword)
+            case ("elements")
+              if (.not.any(value == ["yes", "no "])) call error( "invalid write openmm command" )
+              guess = (value == "yes")
+            case default
+              call error( "invalid write openmm command" )
+          end select
+        end do
+      end subroutine process
+
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+      function element_guess( mass ) result( element )
+        character(sl), intent(in) :: mass
+        character(sl)             :: element
+        element = me%elements(minloc(abs(me%masses - str2real(mass)), dim = 1))
+      end function element_guess
+
+      !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
   end subroutine tPlaymol_write_pdb
