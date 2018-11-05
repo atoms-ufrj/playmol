@@ -1,5 +1,5 @@
 # Typification
-define      model as TIP3P
+define      model as q-SPC-FW
 include     $model.mol
 
 atom_type   HW       $LJ_H

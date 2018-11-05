@@ -54,12 +54,14 @@ def amber2playmol( inp, out ):
         note[word[0]] = ' '.join(word[3:])
 
     elif (block == 'bond') and (string[0:4] != 'BOND'):
-        types = string[0:5].replace('-',' ')
-        bond.append(prefix(types)+'\t'.join(['bond_type',types,'$bond_style',string[5:22]]))
+      types = string[0:5].replace('-',' ')
+      K, r0 = string[5:22].split()
+      bond.append(prefix(types)+'\t'.join(['bond_type',types,'$bond_style {%s/2} %s' % (K, r0)]))
 
     elif (block == 'angle') and (string[0:5] != 'ANGLE'):
       types = string[0:8].replace('-',' ')
-      angle.append(prefix(types)+'\t'.join(['angle_type',types,'$angle_style',string[8:28]]))
+      K, a0 = string[8:28].split()
+      angle.append(prefix(types)+'\t'.join(['angle_type',types,'$angle_style {%s/2} %s' % (K, a0)]))
 
     elif (block == 'dihedral') and (string[0:4] != 'DIHE'):
       types = string[0:11].replace('-',' ').replace('X','*')
