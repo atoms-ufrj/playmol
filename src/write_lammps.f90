@@ -104,8 +104,6 @@
           value = arg(2*i)
           select case (keyword)
             case ("models")
-              print*, trim(keyword)
-              print*, trim(value)
               if (.not.any(value == ["yes", "no "])) call error( "invalid write lammps command" )
               models = (value == "yes")
             case default

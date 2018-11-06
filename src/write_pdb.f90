@@ -63,7 +63,7 @@
         element = ptr%params
         if (element == "UA") then
           if (guess) then
-            mass = me % atom_masses % parameters( [atom_name] )
+            mass = me % atom_masses % parameters( [current%id(1)] )
             element = element_guess( mass )
           else
             element = ""
