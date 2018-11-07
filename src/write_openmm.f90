@@ -343,6 +343,8 @@
                                     pp(3) = [character(sl) :: "periodicity", "phase", "k"]
         
         write(unit,'(2X,"<PeriodicTorsionForce>")')
+
+        ! Proper dihedrals:
         list = local_list( me % dihedral_list, me % dihedral_type_list, .true. )
         current => list % first
         do while (associated(current))
@@ -352,14 +354,22 @@
           do while (associated(current) .and. same)
             i = i + 1
             call split( current%params, narg, arg )
-            if ((arg(1) == "harmonic").or.((narg == 3).and.all(is_real(arg(1:narg))))) then
+            if (arg(1) == "harmonic") then
               K = str2real(arg(2)) * energy
               n = str2int(arg(4))
               phase = 90*(1 - str2int(arg(3))) * angle
-            else if ((arg(1) == "charmm").or.((narg == 4).and.all(is_real(arg(1:narg))))) then
+            else if ((narg == 3) .and. is_real(arg(1)) .and. all(is_int(arg(2:3)))) then
+              K = str2real(arg(1)) * energy
+              n = str2int(arg(3))
+              phase = 90*(1 - str2int(arg(2))) * angle
+            else if (arg(1) == "charmm") then
               K = str2real(arg(2)) * energy
               n = str2int(arg(3))
               phase = str2int(arg(4)) * angle
+            else if ((narg == 4) .and. all(is_real(arg([1,4]))) .and. all(is_int(arg([2,3])))) then
+              K = str2real(arg(1)) * energy
+              n = str2int(arg(2))
+              phase = str2int(arg(3)) * angle
             else
               call error( "harmonic or charmm dihedral model required" )
             end if
@@ -372,6 +382,7 @@
                                   [merge(empty, type_id, type_id == "*"), values(1:3*i)])
         end do
         call list % destroy(silent = .true.)
+
         write(unit,'(2X,"</PeriodicTorsionForce>")')
       end subroutine dihedral_types
 
