@@ -384,7 +384,7 @@
         call list % destroy(silent = .true.)
 
         ! Improper dihedrals
-        list = local_list( me % dihedral_list, me % dihedral_type_list, .true. )
+        list = local_list( me % improper_list, me % improper_type_list, .true. )
         current => list % first
         do while (associated(current))
           type_id = current%id
