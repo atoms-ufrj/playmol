@@ -332,7 +332,7 @@
 
       subroutine dihedral_types()
 
-        integer :: narg, n, i, j
+        integer :: narg, n, i, j, d
         real(rb) :: K, phase
         logical :: same
         character(sl) :: arg(20), type_id(4), props(9), values(9)
@@ -341,7 +341,7 @@
         character(sl), parameter :: empty(4) = "", &
                                     pt(4) = ["type1", "type2", "type3", "type4"], &
                                     pp(3) = [character(sl) :: "periodicity", "phase", "k"]
-        
+
         write(unit,'(2X,"<PeriodicTorsionForce>")')
 
         ! Proper dihedrals:
@@ -380,6 +380,42 @@
           end do
           call items(4, "Proper", [pt, props(1:3*i)], &
                                   [merge(empty, type_id, type_id == "*"), values(1:3*i)])
+        end do
+        call list % destroy(silent = .true.)
+
+        ! Improper dihedrals
+        list = local_list( me % dihedral_list, me % dihedral_type_list, .true. )
+        current => list % first
+        do while (associated(current))
+          type_id = current%id
+          i = 0
+          same = .true.
+          do while (associated(current) .and. same)
+            i = i + 1
+            call split( current%params, narg, arg )
+            if (arg(1) == "cvff") then
+              K = str2real(arg(2)) * energy
+              d = str2int(arg(3))
+              n = str2int(arg(4))
+            else if ((narg == 3) .and. is_real(arg(1)) .and. all(is_int(arg(2:3)))) then
+              K = str2real(arg(1)) * energy
+              d = str2int(arg(2))
+              n = str2int(arg(3))
+            else
+              call error( "cvff dihedral model required" )
+            end if
+            select case (d)
+              case (+1); phase = 0.0_rb
+              case (-1); phase = 3.1415926535897932_rb
+              case default; call error("wrong parameter d in cvff improper definition")
+            end select
+            forall (j=1:3) props(3*(i-1)+j) = trim(pp(j))//int2str(i)
+            values(3*i-2:3*i) = [int2str(n), real2str(phase), real2str(K)]
+            current => current % next
+            if (associated(current)) same = all(current%id == type_id)
+          end do
+          call items(4, "Improper", [pt, props(1:3*i)], &
+                                    [merge(empty, type_id, type_id == "*"), values(1:3*i)])
         end do
         call list % destroy(silent = .true.)
 
