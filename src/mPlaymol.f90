@@ -73,6 +73,8 @@ type tPlaymol
   type(StrucList) :: atom_bodies         = StrucList( "atom body" )
   type(StrucList) :: mixing_rule_list    = StrucList( "mixing rule", 2 )
 
+  logical :: detect_angles_and_dihedrals = .true.
+
   contains
     procedure :: read => tPlaymol_Read
     procedure :: write => tPlaymol_write
@@ -809,6 +811,7 @@ contains
     type(Struc), pointer :: b1, b2, bnew
     integer :: i, j
     character(sl) :: angle(3), atom(4), new1, new2
+    if (.not. me%detect_angles_and_dihedrals) return
     bnew => me % bond_list % last
     new1 = bnew%id(1)
     new2 = bnew%id(2)
