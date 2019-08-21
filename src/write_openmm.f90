@@ -211,7 +211,7 @@
         character(sl) :: string
         integer :: partner(3)
         real(rb) :: a(3,3), b(3), w(3), axis(3,3)
-        character(sl) :: xyz(3), average(3)
+        character(sl) :: xyz(3), average(3), average_type
         integer, allocatable :: pos(:)
         character(sl), allocatable :: properties(:), values(:)
         type(Struc), pointer :: current
@@ -240,6 +240,7 @@
           else
             call error( "VirtualSite type average2 requires colinearity")
           end if
+          average_type = "TwoParticleAverageSite"
         else if (n == 3) then
           axis(:,1) = unit_vector(a(:,1), a(:,2))
           axis(:,2) = unit_vector(a(:,1), a(:,3))
@@ -248,15 +249,17 @@
           if (abs(w(3)) < tol) then
             w = gaussian_elimination( a, b )
             average = [character(sl) :: "1", "2", "3"]
+            average_type = "ThreeParticleAverageSite"
           else
             average = [character(sl) :: "12", "13", "Cross"]
+            average_type = "OutOfPlaneSite"
           end if
         else
           call error( "Extra particle must be linked to 2 or 3 atoms" )
         end if
         properties = [character(sl) :: "type", "siteName", &
                       ("atomName"//int2str(k), k=1, n), ("weight"//average(k), k=1, n)]
-        values = [character(sl) :: "average"//average(n), raw_atom(i), &
+        values = [character(sl) :: average_type, raw_atom(i), &
                   raw_atom(partner), (float2str(w(k)),k=1,3)]
         call items(6, "VirtualSite", properties, values)
       end subroutine virtual_site
