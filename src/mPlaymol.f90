@@ -48,7 +48,7 @@ type tPlaymol
   type(tMolecule) :: molecules
   type(tFix)      :: atomfix, typefix
   type(tVelocity) :: velocity
-  
+
   include "elements.inc"
 
   type(StrucList) :: atom_type_list      = StrucList( "atom type" )
@@ -590,8 +590,8 @@ contains
         if (any(lists == 18)) call me % molecules % list % destroy
         if (any(lists == 19)) call me % atom_masses % destroy
         if (any(lists == 20)) call me % atom_elements % destroy
-        if (any(lists == 21)) call me % raw_atom_type_list % destroy        
-        if (any(lists == 22)) call me % raw_atom_list % destroy        
+        if (any(lists == 21)) call me % raw_atom_type_list % destroy
+        if (any(lists == 22)) call me % raw_atom_list % destroy
       end subroutine reset_lists
       !---------------------------------------------------------------------------------------------
       subroutine reset_command

@@ -66,7 +66,7 @@
             mass = me % atom_masses % parameters( [current%id(1)] )
             element = element_guess( mass )
           else
-            element = ""
+            element = "C"
           end if
         end if
         call split( current%params, narg, xyz )
@@ -102,7 +102,7 @@
             do j = 1, n
               if (atom_id(j) == bond % id(2)) exit
             end do
-            write(unit,'("CONECT",2I5)') atom_index(i), atom_index(j)   
+            write(unit,'("CONECT",2I5)') atom_index(i), atom_index(j)
             exit
           end if
         end do
@@ -111,9 +111,9 @@
     end do
 
     write(unit,'("END")')
-    
+
     contains
-    
+
       !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
       subroutine process( keywords )

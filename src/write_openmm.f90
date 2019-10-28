@@ -64,7 +64,13 @@
         raw_atom(i) = me % raw_atom_list % parameters( atom(i:i) )
         charge(i) = me % charge_list % parameters( atom(i:i), default = "0" )
         call me % element_and_mass( atom_type(i), element(i), mass(i) )
-        if (guess.and.(element(i) == "UA")) element(i) = element_guess( mass(i) )
+        if (element(i) == "UA") then
+          if (guess) then
+            element(i) = element_guess( mass(i) )
+          else
+            element(i) = "C"
+          end if
+        end if
       end do
     end block
 
@@ -132,10 +138,10 @@
 
         write(unit,'(2X,"<AtomTypes>")')
         n = 0
-        do i = 1, ntotal 
+        do i = 1, ntotal
           if (.not. local_list % find(atom_type(i:i))) then
             call local_list % add(1, atom_type(i:i), silent = .true.)
-            if ((element(i) == "EP").or.(element(i) == "UA")) then
+            if (element(i) == "EP") then
               call items(4, "Type", p3, [atom_type(i), atom_type(i), mass(i)])
             else
               call items(4, "Type", p4, [atom_type(i), atom_type(i), element(i), mass(i)])
