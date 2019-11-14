@@ -24,7 +24,7 @@ implicit none
 integer :: i, first, inp
 character(sl) :: infile
 type(tPlaymol) :: System
-call writeln( "Playmol (Version: 28 Oct 2019)" )
+call writeln( "Playmol (Version: 14 Nov 2019)" )
 if (iargc() == 0) call error( "Usage: playmol [-i] <file-1> <file-2> ..." )
 call init_log( file = "playmol.log" )
 call getarg( 1, infile )

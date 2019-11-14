@@ -24,8 +24,10 @@
     integer :: iatom, i, j, imol, jmol, narg, n, indx
     integer :: natoms(me%molecules%N)
     real(rb) :: HL(3)
+    real(rb), parameter :: occupancy = one, tempFactor = zero
     logical  :: guess
-    character(sl) :: element, mass, residue(me%molecules%N), xyz(3), atom_name
+    character(2)  :: element
+    character(sl) :: mass, residue(me%molecules%N), xyz(3), atom_name
     character(sl), allocatable :: atom_id(:)
     integer,       allocatable :: atom_index(:)
     type(Struc), pointer :: current, bond, ptr
@@ -66,16 +68,17 @@
             mass = me % atom_masses % parameters( [current%id(1)] )
             element = element_guess( mass )
           else
-            element = "C"
+            element = " C"
           end if
         end if
         call split( current%params, narg, xyz )
-        write(unit,'("HETATM",I5,X,A4,X,A3,2X,I4,4X,3F8.3,"  1.0   0.0 ",A2)') &
+        write(unit,'("HETATM",I5,X,A4,X,A3,2X,I4,4X,3F8.3,2F6.2,10X,A2)') &
           iatom, & !Atom serial number
           adjustl(atom_name(1:4)), & ! Atom name
           residue(imol), & ! Residue name
           jmol, & ! Residue sequence number
           (str2real(xyz(j)) + HL(j),j=1,3), & ! Coordinates
+          occupancy, tempFactor, &
           element ! Element symbol
         current => current % next
       end do
