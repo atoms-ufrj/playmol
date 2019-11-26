@@ -1,0 +1,7 @@
+log.lammps
+playmol.log
+*.xml
+*.pdb
+*.lammpstrj
+*.lmp
+*.xyz

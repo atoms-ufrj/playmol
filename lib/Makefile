@@ -6,7 +6,7 @@ all: packmol
 clean:
 	rm -f libpackmol.a
 
-cleanall:
+clean-all:
 	rm -rf packmol/
 	rm -f libpackmol.a
 

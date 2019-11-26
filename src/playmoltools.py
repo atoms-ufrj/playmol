@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import sys
 import datetime
 import argparse
@@ -48,18 +49,21 @@ def amber2playmol( inp, out ):
 
     elif (block == 'atom'):
       word = string.split()
-      mass[word[0]] = word[1]
-      note[word[0]] = ' '.join(word[3:])
+      if word[0] != 'MASS':
+        mass[word[0]] = word[1]
+        note[word[0]] = ' '.join(word[3:])
 
-    elif (block == 'bond'):
+    elif (block == 'bond') and (string[0:4] != 'BOND'):
       types = string[0:5].replace('-',' ')
-      bond.append(prefix(types)+'\t'.join(['bond_type',types,'$bond_style',string[5:22]]))
+      K, r0 = string[5:22].split()
+      bond.append(prefix(types)+'\t'.join(['bond_type',types,'$bond_style %s %s' % (K, r0)]))
 
-    elif (block == 'angle'):
+    elif (block == 'angle') and (string[0:5] != 'ANGLE'):
       types = string[0:8].replace('-',' ')
-      angle.append(prefix(types)+'\t'.join(['angle_type',types,'$angle_style',string[8:28]]))
+      K, a0 = string[8:28].split()
+      angle.append(prefix(types)+'\t'.join(['angle_type',types,'$angle_style %s %s' % (K, a0)]))
 
-    elif (block == 'dihedral'):
+    elif (block == 'dihedral') and (string[0:4] != 'DIHE'):
       types = string[0:11].replace('-',' ').replace('X','*')
       if not types.strip():
         types = dihedral[-1][14:25]
@@ -69,10 +73,10 @@ def amber2playmol( inp, out ):
       d = str(int(float(PHASE)))
       dihedral.append(prefix(types)+'\t'.join(['dihedral_type',types,'$dihedral_style',K,n,d,'0']))
 
-    elif (block == 'improper'):
+    elif (block == 'improper') and (string[0:8] != 'IMPROPER'):
       types = (string[6:9] + string[0:6] + string[9:11]).replace('-',' ').replace('X','*')
       PK, PHASE, PN = string[11:54].split()
-      K = str(float(PK)/float(IDIVF))
+      K = str(float(PK))
       n = str(abs(int(float(PN))))
       if (abs(float(PHASE)) < 0.01):
         improper.append(prefix(types)+'\t'.join(['improper_type',types,'$improper_style',K,' 1',n]))
@@ -97,50 +101,50 @@ def amber2playmol( inp, out ):
       sigma = str(round(1.78179743628*float(word[1]),5))
       params[word[0]] = '\t'.join([epsilon, sigma])
 
-  print >>out, '#', title
-  print >>out, '\n# Model definition:'
-  print >>out, 'define\tpair_style     as lj/cut/coul/long'
-  print >>out, 'define\tbond_style     as harmonic'
-  print >>out, 'define\tangle_style    as harmonic'
-  print >>out, 'define\tdihedral_style as charmm'
-  print >>out, 'define\timproper_style as cvff'
+  print('#', title, file=out)
+  print('\n# Model definition:', file=out)
+  print('define\tpair_style     as lj/cut/coul/long', file=out)
+  print('define\tbond_style     as harmonic', file=out)
+  print('define\tangle_style    as harmonic', file=out)
+  print('define\tdihedral_style as charmm', file=out)
+  print('define\timproper_style as cvff', file=out)
 
-  print >>out, '\n# Atom types:'
-  for key, value in mass.iteritems():
+  print('\n# Atom types:', file=out)
+  for key, value in mass.items():
     if key in params:
-      print >>out, '\t'.join(['atom_type', key, '$pair_style', params[key], '# '+note[key]])
+      print('\t'.join(['atom_type', key, '$pair_style', params[key], '# '+note[key]]), file=out)
     else:
-      print >>out, '\t'.join(['atom_type', key, '$pair_style', 'UNDEFINED', '# '+note[key]])
+      print('\t'.join(['atom_type', key, '$pair_style', 'UNDEFINED', '# '+note[key]]), file=out)
 
-  print >>out, '\n# Masses:'
-  for key, value in mass.iteritems():
-    print >>out, 'mass\t', key, '\t', value
+  print('\n# Masses:', file=out)
+  for key, value in mass.items():
+    print('mass\t', key, '\t', value, file=out)
 
-  print >>out, '\n# Diameters:'
-  for key, value in mass.iteritems():
+  print('\n# Diameters:', file=out)
+  for key, value in mass.items():
     if key in params:
       word = params[key].split()
       if float(word[1]) < 2.0:
         word[1] = "2.0"
-      print >>out, '\t'.join(['diameter', key, word[1]])
+      print('\t'.join(['diameter', key, word[1]]), file=out)
     else:
-      print >>out, '\t'.join(['#diameter', key, 'UNDEFINED'])
+      print('\t'.join(['#diameter', key, 'UNDEFINED']), file=out)
 
-  print >>out, '\n# Bond types:'
+  print('\n# Bond types:', file=out)
   for item in bond:
-    print >>out, item
+    print(item, file=out)
 
-  print >>out, '\n# Angle types:'
+  print('\n# Angle types:', file=out)
   for item in angle:
-    print >>out, item
+    print(item, file=out)
 
-  print >>out, '\n# Dihedral types:'
+  print('\n# Dihedral types:', file=out)
   for item in dihedral:
-    print >>out, item
+    print(item, file=out)
 
-  print >>out, '\n# Improper types:'
+  print('\n# Improper types:', file=out)
   for item in improper:
-    print >>out, item
+    print(item, file=out)
 
 #---------------------------------------------------------------------------------------------------
 
@@ -181,30 +185,30 @@ def pdb2playmol( inp, out, prepfile ):
   if (prepfile):
     prep = prep_dict( prepfile )
 
-  print >>out, "# Atom definitions:"
+  print("# Atom definitions:", file=out)
   for atom in atoms:
     if namecount[atom[1]] == 1:
       atom[0] = atom[1]
     if (prepfile):
       prepitem = prep[atom[2]][atom[1]]
       if prepitem:
-        print >>out, '\t'.join(["atom", atom[0], prepitem[0], prepitem[-1]])
+        print('\t'.join(["atom", atom[0], prepitem[0], prepitem[-1]]), file=out)
       else:
-        print >>sys.stderr, "Error: residue " + atom[2] + " not found in prep file"
+        print("Error: residue " + atom[2] + " not found in prep file", file=sys.stderr)
         exit()
     else:
-      print >>out, '\t'.join(["atom", atomname, atom[-1]])
+      print('\t'.join(["atom", atomname, atom[-1]]), file=out)
 
-  print >>out, "\n# Bond definitions:"
+  print("\n# Bond definitions:", file=out)
   for bond in bonds:
     i, j = bond
-    print >>out, '\t'.join(["bond", atoms[i][0], atoms[j][0]])
+    print('\t'.join(["bond", atoms[i][0], atoms[j][0]]), file=out)
 
-  print >>out, "\n# Molecular structure (xyz):"
-  print >>out, "\nbuild"
-  print >>out, len(atoms)
+  print("\n# Molecular structure (xyz):", file=out)
+  print("\nbuild", file=out)
+  print(len(atoms), file=out)
   for atom in atoms:
-    print >>out, atom[0], atom[4], atom[5], atom[6]
+    print(atom[0], atom[4], atom[5], atom[6], file=out)
 
 #---------------------------------------------------------------------------------------------------
 
@@ -242,26 +246,26 @@ def pqr2playmol( inp, out ):
         if (([i,j] not in bonds) and ([j,i] not in bonds)):
           bonds.append([i,j])
 
-  print >>out, "# Atom definitions:"
+  print("# Atom definitions:", file=out)
   for atom in atoms:
     if namecount[atom[1]] > 1:
       atom[1] = atom[0]
-    print >>out, '\t'.join(["atom", atom[1], atom[-1], atom[7]])
+    print('\t'.join(["atom", atom[1], atom[-1], atom[7]]), file=out)
 
-  print >>out, "\n# Bond definitions:"
+  print("\n# Bond definitions:", file=out)
   for bond in bonds:
     i, j = bond
-    print >>out, '\t'.join(["bond", atoms[i][1], atoms[j][1]])
+    print('\t'.join(["bond", atoms[i][1], atoms[j][1]]), file=out)
 
-  print >>out, "\n# Molecular structure (xyz):"
-  print >>out, "\nbuild"
-  print >>out, len(atoms)
+  print("\n# Molecular structure (xyz):", file=out)
+  print("\nbuild", file=out)
+  print(len(atoms), file=out)
   for atom in atoms:
-    print >>out, atom[1], atom[4], atom[5], atom[6]
+    print(atom[1], atom[4], atom[5], atom[6], file=out)
 
-  print >>out, "\n# Diameters for packing:"
-  for key, value in diameter.iteritems():
-    print >>out, '\t'.join(["diameter", key, value])
+  print("\n# Diameters for packing:", file=out)
+  for key, value in diameter.items():
+    print('\t'.join(["diameter", key, value]), file=out)
 
 
 #---------------------------------------------------------------------------------------------------
@@ -335,7 +339,7 @@ elif (args.format == 'pdb'):
 elif (args.format == 'pqr'):
   pqr2playmol( input, output )
 
-print >>output, '\n# Generated by playmoltools on', datetime.datetime.today()
+print('\n# Generated by playmoltools on', datetime.datetime.today(), file=output)
 
 if (args.input):
   input.close()

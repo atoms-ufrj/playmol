@@ -515,7 +515,7 @@ contains
     character (len = *), intent (in) :: letter
     character (len = 1) :: L
     character (len = 26), parameter :: Lower = "abcdefghijklmnopqrstuvwxyz", &
-       Upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                       Upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     integer :: k
     k = index(Lower, letter)
     if (k > 0) then
@@ -524,6 +524,49 @@ contains
       L = letter
     end if
   end function UpperCase
+
+  !=================================================================================================
+
+  function letterCode( value ) result( S )
+    integer, intent(in) :: value
+    character(sl)       :: S
+    integer :: n, k, i, code
+    if (value < 1) call error( "letterCode function requires positive argument" )
+    n = 1
+    do while (26**n < value)
+      n = n + 1
+    end do
+    select case (n)
+      case (1); S = "aa"
+      case (2); S = "a"
+      case default; S = ""
+    end select
+    k = value - 1
+    do i = n, 1, -1
+      code = k/26**(i - 1)
+      k = k - code*26**(i - 1)
+      S = trim(S) // achar(97 + code)
+    end do
+  end function letterCode
+
+  !=================================================================================================
+
+  function zip( a, b ) result( c )
+    character(sl), intent(in) :: a, b
+    character(sl)             :: c
+    integer :: i, nu, nv
+    character(sl) :: arg(40)
+    character(sl), allocatable :: u(:), v(:)
+    call split( a, nu, arg )
+    u = arg(1:nu)
+    call split( b, nv, arg )
+    v = arg(1:nv)
+    c = ""
+    do i = 1, max(nu, nv)
+      if (i <= nu) c = trim(c)//" "//trim(u(i))
+      if (i <= nv) c = trim(c)//" "//trim(v(i))
+    end do
+  end function zip
 
   !=================================================================================================
 

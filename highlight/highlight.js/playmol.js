@@ -37,7 +37,7 @@ function(hljs) {
 
   var KEYWORDS = {
     keyword:
-      'define as for from in to downto next if then else endif atom_type mass ' +
+      'define as for from in to downto next if then else endif atom_type mass' +
       'diameter bond_type angle_type dihedral_type improper_type atom charge ' +
       'bond link unlink build align include shell aspect packmol seed retry ' +
       'nloops fix copy pack velocity rigid_body mixing_rule geometric arithmetic',
@@ -50,7 +50,7 @@ function(hljs) {
     className: 'keyword',
     variants: [
       { begin: /\bbox\s+(lengths|density|volume|angles)\b/ },
-      { begin: /\bwrite\s+(playmol|lammps|lmp\/models|emdee|summary|xyz|lammpstrj|internals)\b/ },
+      { begin: /\bwrite\s+(playmol|lammps|lmp\/models|openmm|emdee|summary|xyz|pdb|lammpstrj|internals)\b/ },
       { begin: /\baction\s+(execute|setup)\b/ },
       { begin: /\b(pre|suf)fix\s+(atom|type)s(\s+none)?\b/ },
       { begin: /\bimproper(\s+search)?\b/ },

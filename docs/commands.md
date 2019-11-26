@@ -32,7 +32,7 @@ physically meaningful values are those corresponding to [LAMMPS real units].
 | [velocity]      | defines parameters for genarating Maxwell-Boltzmann atomic velocities     |
 | [align]         | aligns the principal axes of a molecule to the Cartesian axes             |
 | [packmol]       | executes Packmol in order to create a packed molecular system             |
-| [write]         | saves system info in different file formats (including LAMMPS data files) |
+| [write]         | saves system info in different file formats (including LAMMPS and OpenMM) |
 | [include]       | includes commands from another script                                     |
 | [reset]         | resets a list of entities together with its dependent lists               |
 | [shell]         | executes an external shell command                                        |
@@ -286,8 +286,13 @@ mass
 
 	mass		<type> <value>
 
+or
+
+	mass		<type> <symbol>
+
 * _type_ = the name of a atom type
 * _value_ = mass of any atom with the specified atom type
+* _symbol_ = symbol of a chemical element (case-sensitive)
 
 **Description**:
 
@@ -296,22 +301,27 @@ This command defines the mass of atoms of a given type.
 The parameter _type_ is an [atom_type] identifier. Wildcard characters (* or ?) can be used so that
 the same mass value is assigned to multiple atom types. If a type-related [prefix/suffix] has been
 previously activated, then the actual atom type identifier will contain such prefix and/or suffix
-added to _type_. Distinct atom types cannot have the same identifier. __Important__: the presence of
-wildcards makes a mass value applicable to atom types defined either beforehand or afterwards.
+added to _type_. __Important__: the presence of wildcards makes a mass value applicable to atom
+types defined either beforehand or afterwards.
 
-An [atom] will only be created if a mass value has been previously defined to its corresponding atom
-type. For models which contain massless atoms, such as a 4-point or a 5-point water model, one must
-define their masses as 0 (zero).
+The parameter _value_ must be a non-negative real number.
+
+The parameter _symbol_ must either be a valid, case-sensitive atomic symbol or _EP_ (standing for
+extra particle). In the former case, Playmol will assign a mass value equal to the atomic mass in
+Daltons. In the latter case, Playmol will assign a mass value equal to zero.
+
+An [atom] will only be created if a [mass] value (primarily) or a chemical element has been
+previously defined to its corresponding atom type.
 
 **Examples**:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 mass		CH2	14.0
-mass		H*	1.008
+mass		H*	H
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the example above, a mass value of _14.0_ is assigned to atom type _CH2_ and a mass value of
-_1.008_ is assigned to all atoms types whose identifiers start with _H_.
+_1.0079_ is assigned to all atoms types whose identifiers start with _H_.
 
 **See also**:
 
@@ -648,7 +658,7 @@ cannot be assigned to distinct atoms.
 The parameter _type_ is the identifier of a previously defined atom type. A unique identifier must
 be provided, with no use of wildcard characters (* or ?). If a type-related [prefix/suffix] has been
 previously activated, then each actual atom type identifier will contain such prefix and/or suffix
-added to _type-x_. The specified atom type must have a [mass] already define to it.
+added to _type-x_. The specified atom type must have a [mass] (or element) already defined to it.
 
 The optional parameter _charge_ is the total or partial charge of the specified atom. Note that one
 can omit this parameter and assign the charge afterwards using the command [charge], which has the
@@ -985,9 +995,9 @@ link
 
 **Syntax**:
 
-	link	<atom-1> <atom-2>
+	link		<atom-1> <atom-2> [<atom-3> <atom-4> ...]
 
-* _atom-x_ = name of a previously defined atom
+* _atom-x_ = the name of a previously defined atom
 
 **Description**:
 
@@ -999,6 +1009,9 @@ The parameter _atom-x_ is the identifier of a previously created atom. A unique 
 provided, with no use of wildcard characters (* or ?). If an atom-related [prefix/suffix] has been
 previously activated, then the actual atom identifier will contain such prefix and/or suffix added
 to _atom-x_.
+
+Parameters _atom-1_ and _atom-2_ are mandatory. Additional parameters _atom-x_ (for _x_ > 2) are
+optional. In any case, _atom-1_ is the central atom to which all other atoms will be linked.
 
 NOTE: sometimes, it is useful to consider two molecules as if they were a single one. For instance,
 when ions are present, one might want to consider an anion/cation pair as a single rigid structure,
@@ -1606,11 +1619,11 @@ write
 
 **Syntax**:
 
-	write		 <format> [<file>]
+	write		 <format> [<file>] [keyword value keyword value...]
 
-* _format_ = _playmol_ or _lammps_ or _lammps/models_ or _emdee_ or _summary_ or _xyz_
-or _lammpstrj_
+* _format_ = _summary_ or _pdb_ or _xyz_ or _lammps_ or _openmm_ or _emdee_ or _playmol_
 * _file_ (optional) = name of a file to be created
+* _keyword_ _value_ (optional) = a valid format-specific keyword and its assigned value
 
 **Description**:
 
@@ -1618,35 +1631,55 @@ This command writes down the molecular system in a file or in the standard outpu
 
 The parameter _format_ must be one of the following options:
 
-* __playmol__: the output will contain Playmol commands that could be used in another script to
-build the same system. For illustration, detected angles and dihedrals appear as commented lines.
-Type and atom prefixes are explicitly added to the corresponding identifiers.
-
-* __lammps__: the command will produce information in the LAMMPS configuration file format, which
-can be used as an initial configuration for a Molecular Dynamics simulation using LAMMPS through its
-command [read_data].
-
-* __lmp/models__: identical to the _lammps_ option above, except that [Playmol] will consider the
-first attribute of every defined [atom_type] as the specification of a [LAMMPS pair style] for such
-atom type, as well as the first attribute of every [bond_type], [angle_type], [dihedral_type], or
-[improper_type] as the specification of a corresponding style in [LAMMPS].
-
-* __emdee__: the command will produce code in the [Julia] programming language, which can be used to
-define an initial configuration for a Molecular Dynamics simulation using the [EmDee] package. As
-with the __lammps/models__ option, Playmol will consider the first attribute of every defined type
-as a model specification (in this case, slashes will be replaced by underscores in model names).
-
-* __summary__: this option will print a summary of the system characteristics, including the amount
+1. __summary__: this option will print a summary of the system characteristics, including the amount
 of every defined and detected structure such as angles, dihedrals, and molecules. Properties of each
 molecular species will also be printed, such as its mass, its atoms, and the number of defined sets
 of coordinates. This is useful for debugging purposes.
 
-* __xyz__: writes down the list of atomic coordinates using the [xyz file format], but with element
+2. __pdb__: writes down the list of atom types and coordinates, as well as the atomic connectivity
+using the [PDB file] format. This is useful for visualization with [VMD] and for executing Molecular
+Dynamics simulations with [OpenMM]. Accepted keyword is:
+    * elements _yes/no_ (default = yes): if set to yes, missing chemical elements will be guessed
+from the masses of the defined atom types.
+
+3. __xyz__: writes down the list of atomic coordinates using the [xyz file format], but with element
 symbols replaced by atom identifiers. This is useful for using with another Playmol script or for
 visualization purposes.
 
-* __lammpstrj__: writes down the list of atomic coordinates using the LAMMPS trajectory format. This
-is useful for visualization with [VMD].
+4. __lammps__: the command will write out information in the [LAMMPS] configuration file format,
+which can be used as an initial configuration for a Molecular Dynamics simulation using [LAMMPS]
+through its command [read_data].
+    * models _yes/no_ (default = no): If set to yes, Playmol will consider the first attribute of
+every defined [atom_type] as the specification of a [LAMMPS pair style] for such atom type, as
+well as the first attribute of every [bond_type], [angle_type], [dihedral_type], or [improper_type]
+as the specification of a corresponding style in LAMMPS.
+
+5. __openmm__: the command will generate an [OpenMM XML file] with force field parameters. Together
+with a [PDB File] (see above), this file can be used for running an efficient Molecular Dynamics
+simulation using [OpenMM]. Accepted keywords are:
+    * length _value_ (default = 0.1): the length unit employed throughout the current script,
+expressed in nanometers.
+    * energy _value_ (default = 4.184): the energy unit employed throughout the current script,
+expressed in kJ/mol.
+    * angle _value_ (default = 0.0174533): the angle unit employed throughout the current script,
+expressed in radians. __IMPORTANT__: Playmol considers that spring constants for angle bending
+models are expressed in energy/radians^2, regardless of the unit in which the angles themselves are
+expressed.
+    * lj14 _value_ (default = 0.5): the scale factor for the Lennard-Jones potential between pairs
+of atoms separated by three bonds.
+    * coul14 _value_ (default = 0.833333): the scale factor for the Coulomb potential between pairs
+of atoms separated by three bonds.
+    * elements _yes/no_ (default = yes): if set to yes, missing chemical elements will be guessed
+from the masses of the defined atom types.
+
+6. __emdee__: the command will produce code in the [Julia] programming language, which can be used to
+define an initial configuration for a Molecular Dynamics simulation using the [EmDee] package. As
+with the _lammps model yes_ option, Playmol will consider the first attribute of every defined type
+as a model specification (in this case, slashes will be replaced by underscores in model names).
+
+7. __playmol__: the output will contain Playmol commands that could be used in another script to
+build the same system. For illustration, detected angles and dihedrals appear as commented lines.
+Type and atom prefixes are explicitly added to the corresponding identifiers.
 
 The optional parameter _file_ is the name of the file which will contain the system info. If it is
 omitted, the info will be written in the standard output unit (the computer screen, in most cases).
@@ -1656,6 +1689,7 @@ omitted, the info will be written in the standard output unit (the computer scre
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 write	playmol water.mol
 write	lammps water.data
+write   openmm water.xml
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ----------------------------------------------------------------------------------------------------
@@ -1799,51 +1833,55 @@ The example above writes a summary of the current molecular system and then quit
 
 ----------------------------------------------------------------------------------------------------
 
-[define]:		#define
-[for/next]:		#for_next
-[if/then/else]:		#if_then_else
-[atom_type]:		#atom_type
-[mass]:			#mass
-[diameter]:		#diameter
-[bond_type]:		#bond_type
-[angle_type]:		#angle_type
-[dihedral_type]:	#dihedral_type
-[improper_type]:	#improper_type
-[atom]:			#atom
-[charge]:		#charge
-[bond]:			#bond
-[improper]:		#improper
-[rigid_body]:		#rigid_body
-[mixing_rule]:		#mixing_rule
-[extra]:		#extra
-[link]:			#link
-[unlink]:		#unlink
-[build]:		#build
-[box]:			#box
-[velocity]:		#velocity
-[packmol]:		#packmol
-[align]:		#align
-[write]:		#write
-[prefix/suffix]:	#prefix_suffix
-[include]:		#include
-[reset]:		#reset
-[shell]:		#shell
-[quit]:			#quit
+[define]:        #define
+[for/next]:      #for_next
+[if/then/else]:  #if_then_else
+[atom_type]:     #atom_type
+[mass]:          #mass
+[diameter]:      #diameter
+[bond_type]:     #bond_type
+[angle_type]:    #angle_type
+[dihedral_type]: #dihedral_type
+[improper_type]: #improper_type
+[atom]:          #atom
+[charge]:        #charge
+[bond]:          #bond
+[improper]:      #improper
+[rigid_body]:    #rigid_body
+[mixing_rule]:   #mixing_rule
+[extra]:         #extra
+[link]:          #link
+[unlink]:        #unlink
+[build]:         #build
+[box]:           #box
+[velocity]:      #velocity
+[packmol]:       #packmol
+[align]:         #align
+[write]:         #write
+[prefix/suffix]: #prefix_suffix
+[include]:       #include
+[reset]:         #reset
+[shell]:         #shell
+[quit]:          #quit
 
-[Playmol Basics]:		basics.html
-[LAMMPS real units]:		http://lammps.sandia.gov/doc/units.html
-[LAMMPS data file]:		http://lammps.sandia.gov/doc/read_data.html
-[LAMMPS pair style]:		http://lammps.sandia.gov/doc/pair_style.html
-[LAMMPS bond style]:		http://lammps.sandia.gov/doc/bond_style.html
-[LAMMPS angle style]:		http://lammps.sandia.gov/doc/angle_style.html
-[LAMMPS dihedral style]:	http://lammps.sandia.gov/doc/dihedral_style.html
-[LAMMPS improper style]:	http://lammps.sandia.gov/doc/improper_style.html
-[read_data]:			http://lammps.sandia.gov/doc/read_data.html
-[xyz file format]:		http://openbabel.org/wiki/XYZ_(format)
-[Packmol package]:		http://www.ime.unicamp.br/~martinez/packmol
-[Packmol User's Guide]:		http://www.ime.unicamp.br/~martinez/packmol/quickguide
-[VMD]:				http://www.ks.uiuc.edu/Research/vmd
-[Avogadro]:			http://avogadro.cc/wiki/Main_Page
-[ASCII]:			https://en.wikipedia.org/wiki/ASCII#ASCII_printable_code_chart
-[Julia]:			http://julialang.org
-[EmDee]:			https://github.com/craabreu/emdee
+[Playmol Basics]:        basics.html
+[LAMMPS]:                http://lammps.sandia.gov
+[LAMMPS real units]:     http://lammps.sandia.gov/doc/units.html
+[LAMMPS data file]:      http://lammps.sandia.gov/doc/read_data.html
+[LAMMPS pair style]:     http://lammps.sandia.gov/doc/pair_style.html
+[LAMMPS bond style]:     http://lammps.sandia.gov/doc/bond_style.html
+[LAMMPS angle style]:    http://lammps.sandia.gov/doc/angle_style.html
+[LAMMPS dihedral style]: http://lammps.sandia.gov/doc/dihedral_style.html
+[LAMMPS improper style]: http://lammps.sandia.gov/doc/improper_style.html
+[OpenMM]:                http://openmm.org
+[OpenMM XML file]:       http://docs.openmm.org/latest/userguide/application.html
+[read_data]:             http://lammps.sandia.gov/doc/read_data.html
+[xyz file format]:       http://openbabel.org/wiki/XYZ_(format)
+[PDB file]:              http://www.wwpdb.org/documentation/file-format
+[Packmol package]:       http://www.ime.unicamp.br/~martinez/packmol
+[Packmol User's Guide]:  http://www.ime.unicamp.br/~martinez/packmol/quickguide
+[VMD]:                   http://www.ks.uiuc.edu/Research/vmd
+[Avogadro]:              http://avogadro.cc/wiki/Main_Page
+[ASCII]:                 https://en.wikipedia.org/wiki/ASCII#ASCII_printable_code_chart
+[Julia]:                 http://julialang.org
+[EmDee]:                 https://github.com/craabreu/emdee

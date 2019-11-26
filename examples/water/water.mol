@@ -1,13 +1,28 @@
 # Typification
-define      model as TIP3P-long
+define      model as q-SPC-FW
 include     $model.mol
 
+atom_type   HW       $LJ_H
+atom_type   OW       $LJ_O
+
+mass        HW       H
+mass        OW       O
+
+bond_type   HW OW    $bond_OH
+angle_type  HW OW HW $angle_HOH
+
+diameter    HW 2.0
+diameter    OW 3.0
+
 # Chemical topology definition
-atom        H1 HW    
-atom        O  OW    
-atom        H2 HW    
+atom        H1 HW
+atom        O  OW
+atom        H2 HW
 
 bond        O  H1 H2
+
+charge      H*       $qH
+charge      O*       $qO
 
 # Instantiation
 build
@@ -17,15 +32,17 @@ H1    O     $bond_OH_l0
 H2    O     $bond_OH_l0    H1    $angle_HOH_theta0
 
 # Replication and packing
-define      density as .7 # g/cm³ - low density pack for a quick-running example
-define      N as 500
-box         density {0.602214*$density} # Da/Å³
+define      density as 0.970 # g/cm³ - low density pack for a quick-running example
+define      N as 512
+#box         density {0.602214*$density} # Da/Å³
+box         lengths 25 25 25
 
-packmol     diameter 3.0 retry 0.95 pack mol(O) $N action execute
+packmol     retry 0.98 pack mol(O) $N action execute
 
 # Formatting and storage
 write       lmp/models water_$model.lmp
-write       lammpstrj water_$model.lammpstrj
+write       openmm water_$model.xml
+write       pdb water_$model.pdb
 write       xyz water_$model.xyz
 
 write    summary

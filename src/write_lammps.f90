@@ -17,11 +17,12 @@
 !            Applied Thermodynamics and Molecular Simulation
 !            Federal University of Rio de Janeiro, Brazil
 
-  subroutine tPlaymol_write_lammps( me, unit, models )
-    class(tPlaymol),  intent(inout) :: me
-    integer,          intent(in)    :: unit
-    logical,          intent(in)    :: models
+  subroutine tPlaymol_write_lammps( me, unit, keywords )
+    class(tPlaymol), intent(inout) :: me
+    integer,         intent(in)    :: unit
+    character(*),    intent(in)    :: keywords
     integer :: i, j
+    logical :: models
     type(StrucHolder) :: atom(me % atom_list % count), bond(me % bond_list % count),    &
                          ang(me % angle_list % count), dih(me % dihedral_list % count), &
                          imp(me % improper_list % count)
@@ -34,6 +35,7 @@
     type(tCounter) :: n(me%molecules%N), total(me%molecules%N)
     type(Struc), pointer :: ptr
     integer, allocatable :: mol_index(:)
+    call process( keywords )
     ! Molecules:
     n%mols = me % molecules % count()
     ! Atoms:
@@ -90,6 +92,25 @@
     call write_structure( "Dihedrals", dih,  n%dihs,  mol_index, n%atoms )
     call write_structure( "Impropers", imp,  n%imps,  mol_index, n%atoms )
     contains
+      !---------------------------------------------------------------------------------------------
+      subroutine process( keywords )
+        character(*), intent(in) :: keywords
+        integer :: i, narg
+        character(sl) :: keyword, value, arg(40)
+        call split( keywords, narg, arg)
+        if (mod(narg, 2) == 1) call error( "invalid write lammps command" )
+        do i = 1, narg/2
+          keyword = arg(2*i-1)
+          value = arg(2*i)
+          select case (keyword)
+            case ("models")
+              if (.not.any(value == ["yes", "no "])) call error( "invalid write lammps command" )
+              models = (value == "yes")
+            case default
+              call error( "invalid write lammps command" )
+          end select
+        end do
+      end subroutine process
       !---------------------------------------------------------------------------------------------
       subroutine write_count( n, name )
         integer,      intent(in) :: n
@@ -231,10 +252,17 @@
       !---------------------------------------------------------------------------------------------
       subroutine write_masses
         integer :: i
+        character(sl) :: mass, E(size(atom_types))
         write(unit,'(/,"Masses",/)')
         do i = 1, size(atom_types)
-          write(unit,'(A)') trim(join([int2str(i), atom_types(i)%mass, "#", atom_types(i)%types]))
+          call me % element_and_mass( atom_types(i)%types, E(i), mass )
+          if (mass == real2str(0.0_rb)) mass = "1.0E-20"
+          write(unit,'(A)') trim(join([int2str(i), mass, "#", atom_types(i)%types]))
+          if (E(i) == "UA") then
+            E(i) = trim(me%elements(minloc(abs(me%masses - str2real(mass)), dim = 1)))//"?"
+          end if
         end do
+        write(unit,'(/,"# Elements: ",A)') trim(join(E))
       end subroutine write_masses
       !---------------------------------------------------------------------------------------------
       subroutine write_atoms( natoms )
@@ -259,7 +287,7 @@
             m = natoms(imol)
             forall (j=1:m) catom(katom+j) = atom(prev+j)%atoms(1)
             do j = 1, m
-              iatom(j:j) = pack([(k,k=1,m)],catom(1:m) == patom%id(1))
+              iatom(j:j) = pack([(k,k=1,m)], catom(katom+1:katom+m) == patom%id(1))
               xyz(j) = patom%params
               patom => patom % next
             end do

@@ -21,17 +21,24 @@ program playmol
 use mPlaymol
 use mGlobal
 implicit none
-integer :: i, inp
+integer :: i, first, inp
 character(sl) :: infile
 type(tPlaymol) :: System
-call writeln( "Playmol (Version: 05 Oct 2017)" )
-if (iargc() == 0) call error( "Usage: playmol <file-1> <file-2> ..." )
+call writeln( "Playmol (Version: 14 Nov 2019)" )
+if (iargc() == 0) call error( "Usage: playmol [-i] <file-1> <file-2> ..." )
 call init_log( file = "playmol.log" )
 call getarg( 1, infile )
+if (infile == "-i") then
+  System % detect_angles_and_dihedrals = .false.
+  call getarg( 2, infile )
+  first = 2
+else
+  first = 1
+end if
 if (infile == "-") then
   call System % Read( 5, trim(infile) )
 else
-  do i = 1, iargc()
+  do i = first, iargc()
     call getarg( i, infile )
     open( newunit = inp, file = infile, status = "old" )
     write(*,'("Reading file ",A,"...")') trim(infile)

@@ -8,7 +8,7 @@ PREFIX ?= /usr/local
 
 # Compilers and their basic options:
 FORT ?= gfortran
-BASIC_F_OPTS = -march=native -m64 -cpp -fmax-errors=1
+BASIC_F_OPTS = -march=native -cpp -fmax-errors=1 -Wunused
 
 # Option FAST (default):
 FAST_F_OPTS = -Ofast
@@ -33,9 +33,10 @@ PACKMOL = ./lib
 
 src = $(addprefix $(SRCDIR)/, $(addsuffix .f90, $(1)))
 obj = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(1)))
-SRC  = $(call src, mBox mFix mMixingRule mMolecule mParser mString mCodeFlow mGlobal \
+SRC  = $(call src, mBox mFix mMixingRule mMolecule mParser mString mMath mCodeFlow mGlobal \
                    mPackmol mPlaymol mStruc playmol)
-AUX  = $(call src, write_emdee write_lammps write_lammpstrj write_summary write_internals)
+AUX  = $(call src, $(addprefix write_, pdb emdee lammps openmm lammpstrj summary internals)) \
+       $(SRCDIR)/elements.inc
 OBJ  = $(patsubst $(SRCDIR)/%.f90,$(OBJDIR)/%.o,$(SRC))
 
 all: $(BINDIR)/playmol $(BINDIR)/playmoltools $(BINDIR)/packmol
@@ -50,7 +51,7 @@ clean:
 
 clean-all:
 	rm -rf $(OBJDIR) $(BINDIR)
-	cd $(PACKMOL) && make clean
+	cd $(PACKMOL) && make clean-all
 
 install:
 	cp -f $(BINDIR)/* /usr/local/bin
@@ -78,7 +79,7 @@ $(OBJDIR)/mPlaymol.o: $(SRCDIR)/mPlaymol.f90 $(AUX) \
                       $(call obj,mCodeFlow mPackmol mFix mMixingRule mBox mMolecule)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/mMolecule.o: $(SRCDIR)/mMolecule.f90 $(call obj,mStruc mGlobal)
+$(OBJDIR)/mMolecule.o: $(SRCDIR)/mMolecule.f90 $(call obj,mStruc mGlobal mMath)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mCodeFlow.o: $(SRCDIR)/mCodeFlow.f90 $(OBJDIR)/mParser.o $(OBJDIR)/mStruc.o
@@ -103,6 +104,9 @@ $(OBJDIR)/mStruc.o: $(SRCDIR)/mStruc.f90 $(OBJDIR)/mString.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mString.o: $(SRCDIR)/mString.f90 $(OBJDIR)/mGlobal.o
+	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
+
+$(OBJDIR)/mMath.o: $(SRCDIR)/mMath.f90 $(OBJDIR)/mGlobal.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/mGlobal.o: $(SRCDIR)/mGlobal.f90

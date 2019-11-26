@@ -49,15 +49,20 @@ type tPlaymol
   type(tFix)      :: atomfix, typefix
   type(tVelocity) :: velocity
 
+  include "elements.inc"
+
   type(StrucList) :: atom_type_list      = StrucList( "atom type" )
+  type(StrucList) :: raw_atom_type_list  = StrucList( "raw atom type name" )
   type(StrucList) :: bond_type_list      = StrucList( "bond type", 2 )
   type(StrucList) :: angle_type_list     = StrucList( "angle type", 3 )
   type(StrucList) :: dihedral_type_list  = StrucList( "dihedral type", 4 )
   type(StrucList) :: improper_type_list  = StrucList( "improper type", 4 )
   type(StrucList) :: mass_list           = StrucList( "mass" )
   type(StrucList) :: atom_masses         = StrucList( "atom mass" )
+  type(StrucList) :: atom_elements       = StrucList( "atom element" )
   type(StrucList) :: diameter_list       = StrucList( "diameter" )
   type(StrucList) :: atom_list           = StrucList( "atom" )
+  type(StrucList) :: raw_atom_list       = StrucList( "raw atom name" )
   type(StrucList) :: charge_list         = StrucList( "charge" )
   type(StrucList) :: bond_list           = StrucList( "bond", 2 )
   type(StrucList) :: link_list           = StrucList( "virtual link", 2 )
@@ -68,6 +73,8 @@ type tPlaymol
   type(StrucList) :: atom_bodies         = StrucList( "atom body" )
   type(StrucList) :: mixing_rule_list    = StrucList( "mixing rule", 2 )
 
+  logical :: detect_angles_and_dihedrals = .true.
+
   contains
     procedure :: read => tPlaymol_Read
     procedure :: write => tPlaymol_write
@@ -75,15 +82,19 @@ type tPlaymol
     procedure :: analyze_struct => tPlaymol_analyze_struct
     procedure :: bodies_in_molecules => tPlaymol_bodies_in_molecules
     procedure :: write_lammps => tPlaymol_write_lammps
+    procedure :: write_openmm => tPlaymol_write_openmm
     procedure :: write_lammpstrj => tPlaymol_write_lammpstrj
     procedure :: write_emdee => tPlaymol_write_emdee
     procedure :: read_geometry => tPlaymol_read_geometry
     procedure :: write_xyz => tPlaymol_write_xyz
+    procedure :: write_pdb => tPlaymol_write_pdb
     procedure :: summarize => tPlaymol_write_summary
     procedure :: update_structure => tPlaymol_update_structure
     procedure :: search_impropers => tPlaymol_search_impropers
     procedure :: get_types => tPlaymol_get_types
     procedure :: check_coordinates => tPlaymol_check_coordinates
+    procedure :: element_and_mass => tPlaymol_element_and_mass
+    procedure :: get_molecule_names => tPlaymol_get_molecule_names
 end type tPlaymol
 
 type StrucHolder
@@ -209,9 +220,12 @@ contains
       end subroutine box_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_type_command
+        character(sl) :: raw_name
+        raw_name = arg(2)
         call me % typefix % apply( arg(2) )
         call me % atom_type_list % add( narg-1, arg(2:narg) )
         if (has_macros(arg(2))) call error( "invalid atom_type name" )
+        call me % raw_atom_type_list % add( 2, [arg(2), raw_name], silent=.true. )
       end subroutine atom_type_command
       !---------------------------------------------------------------------------------------------
       subroutine bond_type_command
@@ -238,7 +252,11 @@ contains
         if (narg /= 3) call error( "invalid mass command" )
         call me % typefix % apply( arg(2) )
         call me % mass_list % add( narg-1, arg(2:narg) )
-        if (str2real(arg(3)) < 0.0_rb) call error( "invalid mass value" )
+        if (is_real(arg(3))) then
+          if (str2real(arg(3)) < 0.0_rb) call error( "invalid mass value" )
+        else
+          if (.not.any(me%elements == arg(3))) call error( "invalid chemical element" )
+        end if
       end subroutine mass_command
       !---------------------------------------------------------------------------------------------
       subroutine diameter_command
@@ -249,23 +267,24 @@ contains
       end subroutine diameter_command
       !---------------------------------------------------------------------------------------------
       subroutine atom_command
+        character(sl) :: raw_name, mass, element
         type(Struc), pointer :: ptr
         if ((narg < 3).or.(narg > 4)) call error( "invalid atom command" )
+        raw_name = arg(2)
         call me % atomfix % apply( arg(2) )
         call me % typefix % apply( arg(3) )
         call me % atom_list % add( 2, arg(2:3) )
         if (has_macros(arg(2))) call error( "invalid atom name" )
         if (has_macros(arg(3))) call error( "invalid atom type name" )
+        call me % raw_atom_list % add( 2, [arg(2), raw_name], silent=.true. )
 
         call me % atom_type_list % search( arg(3:3), ptr )
         if (.not.associated(ptr)) call error( "atom type", arg(3), "required, but not found")
-        ptr % usable = .true.
 
-        call me % mass_list % search( arg(3:3), ptr )
-        if (.not.associated(ptr)) call error( "mass of atom type",arg(3), "has not been defined" )
         ptr % usable = .true.
-        arg(3) = ptr % params
-        call me % atom_masses % add( 2, arg(2:3), silent = .true. )
+        call me % element_and_mass( arg(3), element, mass )
+        call me % atom_masses % add( 2, [arg(2), mass], silent = .true. )
+        call me % atom_elements % add( 2, [arg(2), element], silent = .true. )
 
         call me % charge_list % search( arg(2:2), ptr )
         if (associated(ptr)) ptr % usable = .true.
@@ -291,8 +310,17 @@ contains
       !---------------------------------------------------------------------------------------------
       subroutine add_bond( atom )
         character(sl), intent(inout) :: atom(2)
+        integer :: i
+        character(sl) :: atom_type(2), element, mass
         call me % bond_list % add( 2, atom, me % atom_list )
         call me % bond_list % handle( atom, me % atom_list, me % bond_type_list, 2 )
+        call me % get_types( atom, atom_type )
+        do i = 1, 2
+          call me % element_and_mass( atom_type(i), element, mass )
+          if (element == "EP") then
+            call error( "command bond cannot accept zero-mass atom (use command link instead)" )
+          end if
+        end do
         call me % molecules % fuse( atom )
         call me % update_structure()
       end subroutine add_bond
@@ -311,7 +339,7 @@ contains
       end subroutine bond_command
       !---------------------------------------------------------------------------------------------
       subroutine rigid_body_command
-        integer :: nbodies, i, j
+        integer :: nbodies, i
         character(sl) :: imol, jmol
         type(Struc), pointer :: ptr
         if (narg < 3) call error( "invalid rigid_body command" )
@@ -343,10 +371,17 @@ contains
       end subroutine mixing_rule_command
       !---------------------------------------------------------------------------------------------
       subroutine link_command
-        if (narg /= 3) call error( "invalid link command" )
-        call me % atomfix % apply( arg(2:3) )
-        call me % link_list % add( 2, arg(2:3), me % atom_list )
-        call me % molecules % fuse( arg(2:3) )
+        integer :: i
+        character(sl) :: central
+        if (narg < 3) call error( "invalid link command" )
+        call me % atomfix % apply( arg(2:narg) )
+        central = arg(2)
+        do i = 3, narg
+          arg(2) = central
+          arg(3) = arg(i)
+          call me % link_list % add( 2, arg(2:3), me % atom_list )
+          call me % molecules % fuse( arg(2:3) )
+        end do
       end subroutine link_command
       !---------------------------------------------------------------------------------------------
       subroutine unlink_command
@@ -482,34 +517,51 @@ contains
       end subroutine align_command
       !---------------------------------------------------------------------------------------------
       subroutine write_command
-        integer :: unit, nspec
-        character(sl) :: formats(8) = ["playmol   ", "lammps    ", "lmp/models", "summary   ", &
-                                       "xyz       ", "lammpstrj ", "emdee     ", &
-                                       "internals "  ]
+        character(sl), parameter :: formats(3,9) = reshape([character(sl) :: &
+          ! FORMAT KEYWORDS DEFAULTS
+          "playmol", "", "", &
+          "lammps", "models", "no", &
+          "openmm", "length energy angle lj14 coul14 elements", &
+                    "0.1 4.184 0.01745329252 0.5 0.833333 yes", &
+          "lmp/models", "", "", &
+          "summary", "", "", &
+          "xyz", "elements", "no", &
+          "pdb", "elements", "yes", &
+          "lammpstrj", "", "", &
+          "emdee", "", "" ], [3, size(formats,2)])
+        integer, parameter :: nfmt = size(formats,2)
+        integer :: i, unit, ifmt
+        character(sl) :: keywords
+        integer, allocatable :: item(:)
+
         if (narg < 2) call error( "invalid write command" )
-        if (.not.any(formats == arg(2))) call error( "invalid format", arg(2), "in write command" )
-        select case (arg(2))
-          case ("internals"); nspec = 3
-          case default; nspec = 0
-        end select
-        if (narg == nspec+2) then
+        item = pack([(i,i=1,nfmt)], formats(1,:) == arg(2))
+        if (size(item) /= 1) call error( "invalid format", arg(2), "in write command" )
+        ifmt = item(1)
+        keywords = zip(formats(2,ifmt), formats(3,ifmt))
+
+        if (narg == 2) then
+          unit = stdout
+        else if (index(trim(formats(2,ifmt)), trim(arg(3))) > 0) then
           call writeln( "Writing data in", arg(2), "format..." )
           unit = stdout
-        else if (narg == nspec+3) then
-          call writeln( "Writing data to file", arg(narg), "in", arg(2), "format..." )
-          open( newunit = unit, file = arg(narg), status = "replace" )
+          keywords = join([keywords, arg(3:narg)])
         else
-          call error( "invalid write command" )
+          call writeln( "Writing data to file", arg(3), "in", arg(2), "format..." )
+          open( newunit = unit, file = arg(3), status = "replace" )
+          keywords = join([keywords, arg(4:narg)])
         end if
+
         select case (arg(2))
           case ("playmol"); call me % write( unit )
-          case ("lammps"); call me % write_lammps( unit, models = .false. )
-          case ("lmp/models"); call me % write_lammps( unit, models = .true. )
+          case ("lammps"); call me % write_lammps( unit, keywords )
+          case ("lmp/models"); call me % write_lammps( unit, "models yes" )
           case ("summary"); call me % summarize( unit )
           case ("xyz"); call me % write_xyz( unit )
+          case ("pdb"); call me % write_pdb( unit, keywords )
           case ("lammpstrj"); call me % write_lammpstrj( unit )
           case ("emdee"); call me % write_emdee( unit )
-          case ("internals"); call me % write_internals( unit, arg(3:2+nspec) )
+          case ("openmm"); call me % write_openmm( unit, keywords )
         end select
         if (unit /= stdout) close(unit)
       end subroutine write_command
@@ -537,6 +589,9 @@ contains
         if (any(lists == 17)) call me % molecules % bonds % destroy
         if (any(lists == 18)) call me % molecules % list % destroy
         if (any(lists == 19)) call me % atom_masses % destroy
+        if (any(lists == 20)) call me % atom_elements % destroy
+        if (any(lists == 21)) call me % raw_atom_type_list % destroy
+        if (any(lists == 22)) call me % raw_atom_list % destroy
       end subroutine reset_lists
       !---------------------------------------------------------------------------------------------
       subroutine reset_command
@@ -558,8 +613,8 @@ contains
             end do
         end select
         select case (arg(2))
-          case ("all");      call reset_lists( [(i,i=1,19)] )
-          case ("atom");     call reset_lists( [(i,i=8,19)] )
+          case ("all");      call reset_lists( [(i,i=1,22)] )
+          case ("atom");     call reset_lists( [(i,i=8,21)] )
           case ("charge");   call reset_lists( [9] )
           case ("bond");     call reset_lists( [(i,i=10,14),17] )
           case ("angle");    call reset_lists( [11] )
@@ -756,6 +811,7 @@ contains
     type(Struc), pointer :: b1, b2, bnew
     integer :: i, j
     character(sl) :: angle(3), atom(4), new1, new2
+    if (.not. me%detect_angles_and_dihedrals) return
     bnew => me % bond_list % last
     new1 = bnew%id(1)
     new2 = bnew%id(2)
@@ -1251,9 +1307,92 @@ contains
   end function velocities
 
   !=================================================================================================
+
+  subroutine tPlaymol_element_and_mass( me, atom_type, element, mass )
+    class(tPlaymol), intent(inout) :: me
+    character(sl),   intent(in)    :: atom_type
+    character(sl),   intent(out)   :: element, mass
+
+    integer :: i
+    type(Struc), pointer :: ptr
+
+    call me % mass_list % search( [atom_type], ptr )
+    if (.not.associated(ptr)) call error( "mass of atom type", atom_type, "has not been defined" )
+    if (is_real(ptr%params)) then
+      mass = ptr%params
+      element = merge("EP", "UA", mass == real2str(0.0_rb))
+    else
+      element = ptr%params
+      i = 1
+      do while (me%elements(i) /= element)
+        i = i + 1
+      end do
+      mass = real2str(me % masses(i))
+    end if
+  end subroutine tPlaymol_element_and_mass
+
+  !=================================================================================================
+
+  subroutine tPlaymol_get_molecule_names( me, names )
+    class(tPlaymol), intent(in)  :: me
+    character(sl),   intent(out) :: names(me % Molecules % N)
+
+    integer :: imol, i, indx, narg
+    character(sl) :: atom_type(1)
+    logical :: water(me % Molecules % N), monoatomic(me % Molecules % N)
+    integer, allocatable :: ecount(:,:)
+    type(Struc), pointer :: current, ptr
+
+    ! Search for monoatomic molecules:
+    monoatomic = me % molecules % number_of_atoms() == 1
+
+    ! Search for water molecules:
+    allocate( ecount(me % molecules % N, 4), source = 0 )
+    current => me % molecules % list % first
+    do while (associated(current))
+      imol = str2int(current%params)
+      call me % atom_list % search( current%id, ptr, indx )
+      call split( ptr%params, narg, atom_type )
+      ptr => me % atom_elements % point_to( indx )
+      select case (ptr%params)
+        case ("H"); i = 1 ! Hydrogen
+        case ("O"); i = 2 ! Oxygen
+        case ("EP"); i = 3 ! Extra particle
+        case default; i = 4 ! Others
+      end select
+      ecount(imol, i) = ecount(imol, i) + 1
+      current => current % next
+    end do
+    forall (imol=1:me%molecules%N)
+      water(imol) = (ecount(imol, 1) == 2).and.(ecount(imol, 2) == 1).and.(ecount(imol, 4) == 0)
+    end forall
+
+    i = 0
+    do imol = 1, me%molecules%N
+      if (water(imol)) then
+        names(imol) = "HOH"
+      else if (monoatomic(imol)) then
+        current => me % molecules % list % first
+        do while (current % params /= int2str(imol))
+          current => current%next
+        end do
+        names(imol) = me % raw_atom_list % parameters( current%id )
+      else
+        i = i + 1
+        names(imol) = letterCode(i)
+      end if
+    end do
+
+  end subroutine tPlaymol_get_molecule_names
+
+  !=================================================================================================
   include "write_lammps.f90"
   !=================================================================================================
+  include "write_openmm.f90"
+  !=================================================================================================
   include "write_lammpstrj.f90"
+  !=================================================================================================
+  include "write_pdb.f90"
   !=================================================================================================
   include "write_emdee.f90"
   !=================================================================================================

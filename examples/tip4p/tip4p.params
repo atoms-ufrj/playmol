@@ -1,0 +1,8 @@
+# TIP4P model (J Chem Phys 79, 926 (1983); https://doi.org/10.1063/1.445869)
+define      density as {0.9979*$g_cm3}
+define      EpsOO   as {78.0*$kB}
+define      SigOO   as 3.154
+define      rOH     as 0.9572
+define      rOM     as 0.15
+define      theta0  as 104.52
+define      qH      as 0.52
