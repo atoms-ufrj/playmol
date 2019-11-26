@@ -11,7 +11,11 @@ FORT ?= gfortran
 BASIC_F_OPTS = -march=native -cpp -fmax-errors=1 -Wunused
 
 # Option FAST (default):
-FAST_F_OPTS = -Ofast
+FAST_F_OPTS = -O3
+#removed o -Ofast flag for suspicious of introducing bugs in the lmp file write step
+#https://wiki.gentoo.org/wiki/GCC_optimization
+#https://gcc.gnu.org/onlinedocs/gcc-4.6.2/gcc/Optimize-Options.html
+#https://stackoverflow.com/questions/14492436/g-optimization-beyond-o3-ofast
 
 # Option DEBUG:
 DEBUG_F_OPTS = -Wall -Wno-maybe-uninitialized
