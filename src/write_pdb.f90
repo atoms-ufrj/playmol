@@ -71,6 +71,7 @@
             element = " C"
           end if
         end if
+        element = adjustr(element)
         call split( current%params, narg, xyz )
         write(unit,'("HETATM",I5,X,A4,X,A3,2X,I4,4X,3F8.3,2F6.2,10X,A2)') &
           iatom, & !Atom serial number
