@@ -46,8 +46,8 @@ harmonic potentials for bond stretching and angle bending, these equations are, 
 The intermolecular potential is:
 
 \f[
-  V_{ij} = 4 \epsilon_{ij} \left[ \left(\frac{\sigma_{ij}}{r}\right)^{12} - 
-                                  \left(\frac{\sigma_{ij}}{r}\right)^6 
+  V_{ij} = 4 \epsilon_{ij} \left[ \left(\frac{\sigma_{ij}}{r}\right)^{12} -
+                                  \left(\frac{\sigma_{ij}}{r}\right)^6
                            \right] + C\frac{q_i q_j}{r}
 \f]
 where \f$\epsilon_{ij} = \sqrt{\epsilon_i \epsilon_j}\f$ and \f$\sigma_{ij} = (\sigma_i +
@@ -111,11 +111,11 @@ define nmols as 500
 define rho   as 0.6 # g/cm³
 define temp  as 180 # K
 
+include $FF.playmol
+
 mass CH4 16.04242 # Da
 mass CH3 15.03450 # Da
 mass CH2 14.02658 # Da
-
-include $FF.playmol
 
 if {$N == 1} then
   atom C1 CH4
@@ -159,10 +159,6 @@ define          theta   as 114      # degrees
 define          phi     as 180      # degrees
 define          kB      as 1.987E-3 # kcal/mol.K
 
-diameter        CH4     3.730 # Å
-diameter        CH3     3.910 # Å
-diameter        CH2     3.730 # Å
-
 atom_type       CH2     lj/cut  {45.8*$kB} 3.930 $cutoff
 if {$N == 2} then
   atom_type     CH3     lj/cut {100.6*$kB} 3.825 $cutoff
@@ -175,6 +171,10 @@ else
 endif
 atom_type       CH4     lj/cut {148.0*$kB} 3.730 $cutoff # TraPPE parameters
 
+diameter        CH4     3.730 # Å
+diameter        CH3     3.910 # Å
+diameter        CH2     3.730 # Å
+
 bond_type     CH? CH?         harmonic {96500*$kB/2} $L
 angle_type    CH? CH? CH?     harmonic {62500*$kB/2} $theta
 dihedral_type CH? CH? CH? CH? opls {355.04*2*$kB} {-68.19*2*$kB} {701.32*2*$kB} 0.0
@@ -184,4 +184,3 @@ dihedral_type CH? CH? CH? CH? opls {355.04*2*$kB} {-68.19*2*$kB} {701.32*2*$kB} 
 
 [Liquid Water]:			#liquid_water
 [Linear Hydrocarbons]:		#linear_hydrocarbons
-
