@@ -268,7 +268,7 @@ contains
     real(rb) :: u(size(a)), v(size(a))
     u = b - a
     v = c - a
-    colinear = abs(sum(u*v)) < tol*sqrt(sum(u*u)*sum(v*v))
+    colinear = abs(sum(u*v) - sqrt(sum(u*u)*sum(v*v))) < tol
   end function colinear
 
   !=================================================================================================
