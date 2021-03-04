@@ -266,7 +266,7 @@
         properties = [character(sl) :: "type", "siteName", &
                       ("atomName"//int2str(k), k=1, n), ("weight"//average(k), k=1, n)]
         values = [character(sl) :: average_type, raw_atom(i), &
-                  raw_atom(partner), (float2str(w(k)),k=1,3)]
+                  raw_atom(partner(1:n)), float2str(w(1:n))]
         call items(6, "VirtualSite", properties, values)
       end subroutine virtual_site
 
