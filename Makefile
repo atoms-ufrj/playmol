@@ -58,7 +58,7 @@ clean-all:
 	cd $(PACKMOL) && make clean-all
 
 install:
-	cp -f $(BINDIR)/* /usr/local/bin
+	cp -f $(BINDIR)/* $(PREFIX)/bin
 	bash $(GTKDIR)/install.sh
 
 $(BINDIR)/playmol: $(OBJ) $(PACKMOL)/libpackmol.a
